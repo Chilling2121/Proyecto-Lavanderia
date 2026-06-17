@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Órdenes de Servicio - LavaFácil{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    {% include 'includes/sidebar.html' with active_tab='ordenes' %}
+
+    <!-- CUERPO PRINCIPAL (MAIN LAYOUT) -->
+    <main class="main-layout">
+        
+        <!-- CABECERA SUPERIOR (HEADER) -->
+        {% include 'includes/header.html' with page_title='Órdenes de Servicio' %}
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content-wrapper">
+            
+            <!-- PANEL SUPERIOR: BÚSQUEDA Y BOTÓN NUEVA ORDEN -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                <!-- Barra de búsqueda con HTMX -->
+                <div style="position: relative; width: 100%; max-width: 450px; display: flex; align-items: center;">
+                    <span style="position: absolute; left: 1rem; color: var(--text-muted); pointer-events: none; display: flex; align-items: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </span>
+                    <input type="text" name="search" placeholder="Buscar orden por Nº o cliente..." 
+                           style="width: 100%; padding: 0.85rem 1rem 0.85rem 3rem; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius); color: var(--text); transition: var(--transition);"
+                           hx-get="{% url 'ordenes_search' %}" 
+                           hx-target="#ordenes-tbody" 
+                           hx-trigger="keyup changed delay:300ms"
+                           onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(37,99,235,0.1)';"
+                           onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+                </div>
+                
+                <!-- Botón Nueva Orden -->
+                <a href="{% url 'orden_create' %}" class="login-btn" style="width: auto; padding: 0.85rem 1.5rem; font-size: 0.95rem; box-shadow: var(--shadow-sm); display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Nueva Orden</span>
+                </a>
+            </div>
+
+            <!-- TABLA PRINCIPAL DE ÓRDENES -->
+            <section class="dashboard-card" style="width: 100%; overflow: hidden; padding: 1.5rem 0;">
+                <div class="table-responsive" style="overflow-x: auto;">
+                    <table class="custom-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="padding-left: 2rem;">Nº Orden</th>
+                                <th>Cliente</th>
+                                <th>Fecha Recepción</th>
+                                <th>Entrega Estimada</th>
+                                <th style="text-align: right;">Total</th>
+                                <th style="text-align: right;">Anticipo</th>
+                                <th style="text-align: right;">Saldo</th>
+                                <th>Estado Pago</th>
+                                <th>Estado Lavado</th>
+                                <th style="text-align: center;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordenes-tbody">
+                            {% include 'partials/ordenes_table.html' %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+        </div>
+    </main>
+</div>
+{% endblock %}

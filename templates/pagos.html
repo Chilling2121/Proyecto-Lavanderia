@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Pagos - LavaFácil{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    {% include 'includes/sidebar.html' with active_tab='pagos' %}
+
+    <!-- CUERPO PRINCIPAL (MAIN LAYOUT) -->
+    <main class="main-layout">
+        
+        <!-- CABECERA SUPERIOR (HEADER) -->
+        {% include 'includes/header.html' with page_title='Control de Pagos e Ingresos' %}
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content-wrapper" style="padding-bottom: 4rem;">
+            
+            <!-- TARJETAS DE MÉTRICAS (CAJA DIARIA) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+                
+                <!-- TOTAL DIARIO -->
+                <div class="dashboard-card" style="border-left: 5px solid var(--primary); display: flex; flex-direction: row; align-items: center; gap: 1rem; padding: 1.25rem; transition: var(--transition);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)';">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem;">Caja de Hoy</p>
+                        <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--text);">${{ total_recaudado|floatformat:2 }}</h3>
+                    </div>
+                </div>
+
+                <!-- TOTAL EFECTIVO -->
+                <div class="dashboard-card" style="border-left: 5px solid var(--success); display: flex; flex-direction: row; align-items: center; gap: 1rem; padding: 1.25rem; transition: var(--transition);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)';">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background-color: hsl(142, 72%, 93%); color: var(--success); display: flex; align-items: center; justify-content: center;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem;">Efectivo Hoy</p>
+                        <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--success);">${{ total_efectivo|floatformat:2 }}</h3>
+                    </div>
+                </div>
+
+                <!-- TOTAL TRANSFERENCIAS -->
+                <div class="dashboard-card" style="border-left: 5px solid hsl(200, 95%, 45%); display: flex; flex-direction: row; align-items: center; gap: 1rem; padding: 1.25rem; transition: var(--transition);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)';">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background-color: hsl(200, 95%, 93%); color: hsl(200, 95%, 45%); display: flex; align-items: center; justify-content: center;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 4L3 11l7 3 3 7 7-17z"></path></svg>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem;">Transf. Hoy</p>
+                        <h3 style="font-size: 1.35rem; font-weight: 800; color: hsl(200, 95%, 40%);">${{ total_transferencia|floatformat:2 }}</h3>
+                    </div>
+                </div>
+
+                <!-- TOTAL TARJETAS -->
+                <div class="dashboard-card" style="border-left: 5px solid hsl(271, 91%, 65%); display: flex; flex-direction: row; align-items: center; gap: 1rem; padding: 1.25rem; transition: var(--transition);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)';">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background-color: hsl(271, 91%, 94%); color: hsl(271, 91%, 60%); display: flex; align-items: center; justify-content: center;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem;">Tarjeta Hoy</p>
+                        <h3 style="font-size: 1.35rem; font-weight: 800; color: hsl(271, 91%, 55%);">${{ total_tarjeta|floatformat:2 }}</h3>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FILTROS Y HISTORIAL DE PAGOS -->
+            <section class="dashboard-card">
+                <div class="card-header-row" style="margin-bottom: 1.5rem;">
+                    <div>
+                        <h2>Historial General de Transacciones</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Consulta y concilia los cobros de la lavandería usando los filtros de búsqueda.</p>
+                    </div>
+                </div>
+
+                <!-- Barra de Búsqueda y Filtros con HTMX -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; align-items: end;">
+                    
+                    <!-- Buscar Texto (Cliente o Nro Orden) -->
+                    <div style="position: relative; flex: 1;">
+                        <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px;">Búsqueda</label>
+                        <span style="position: absolute; left: 1rem; bottom: 0.75rem; color: var(--text-muted); pointer-events: none; display: flex;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </span>
+                        <input type="text" id="pago_search" name="search" placeholder="Cliente o Nro. de orden..." 
+                               hx-get="{% url 'pagos_search' %}" 
+                               hx-trigger="keyup changed delay:300ms, change"
+                               hx-target="#pagos-table-container"
+                               hx-include="[name='metodo_pago'], [name='tipo_pago'], [name='fecha_rango']"
+                               style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.5rem; font-size: 0.9rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); transition: var(--transition);"
+                               autocomplete="off"
+                               onfocus="this.style.backgroundColor='var(--bg-card)'; this.style.borderColor='var(--primary)';"
+                               onblur="this.style.backgroundColor='var(--bg-app)'; this.style.borderColor='var(--border)';">
+                    </div>
+
+                    <!-- Filtro Método de Pago -->
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px;">Método</label>
+                        <select id="metodo_pago" name="metodo_pago" 
+                                hx-get="{% url 'pagos_search' %}"
+                                hx-trigger="change"
+                                hx-target="#pagos-table-container"
+                                hx-include="[name='search'], [name='tipo_pago'], [name='fecha_rango']">
+                            <option value="">Todos los métodos</option>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia</option>
+                            <option value="Tarjeta">Tarjeta</option>
+                        </select>
+                    </div>
+
+                    <!-- Filtro Tipo de Pago -->
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px;">Concepto</label>
+                        <select id="tipo_pago" name="tipo_pago"
+                                hx-get="{% url 'pagos_search' %}"
+                                hx-trigger="change"
+                                hx-target="#pagos-table-container"
+                                hx-include="[name='search'], [name='metodo_pago'], [name='fecha_rango']">
+                            <option value="">Todos los conceptos</option>
+                            <option value="Anticipo">Anticipo / Abono</option>
+                            <option value="Saldo Final">Saldo Final / Liquidación</option>
+                        </select>
+                    </div>
+
+                    <!-- Filtro Rango de Fechas -->
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px;">Rango de Fechas</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; display: flex;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            </span>
+                            <input type="text" id="fecha_rango" name="fecha_rango" placeholder="Seleccionar fechas..."
+                                   hx-get="{% url 'pagos_search' %}"
+                                   hx-trigger="change"
+                                   hx-target="#pagos-table-container"
+                                   hx-include="[name='search'], [name='metodo_pago'], [name='tipo_pago']"
+                                   style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.5rem; font-size: 0.9rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); transition: var(--transition); cursor: pointer;"
+                                   autocomplete="off">
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Tabla de Transacciones -->
+                <div class="table-responsive" id="pagos-table-container">
+                    {% include 'partials/pagos_table.html' %}
+                </div>
+
+            </section>
+        </div>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Inicializar Flatpickr con idioma español en rango
+        flatpickr("#fecha_rango", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            locale: "es",
+            maxDate: "today",
+            onChange: function(selectedDates, dateStr, instance) {
+                // Forzar trigger de cambio para que HTMX capture el valor
+                const input = document.getElementById('fecha_rango');
+                if (selectedDates.length === 2 || dateStr === "") {
+                    input.dispatchEvent(new Event('change'));
+                }
+            }
+        });
+
+        // Inicializar Tom Select para selects
+        new TomSelect("#metodo_pago", {
+            create: false,
+            controlInput: null
+        });
+        new TomSelect("#tipo_pago", {
+            create: false,
+            controlInput: null
+        });
+    });
+</script>
+{% endblock %}

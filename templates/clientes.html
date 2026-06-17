@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Clientes - LavaFácil{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    {% include 'includes/sidebar.html' with active_tab='clientes' %}
+
+    <!-- CUERPO PRINCIPAL (MAIN LAYOUT) -->
+    <main class="main-layout">
+        
+        <!-- CABECERA SUPERIOR (HEADER) -->
+        {% include 'includes/header.html' with page_title='Gestión de Clientes' %}
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content-wrapper">
+            
+            <!-- PANEL SUPERIOR: BÚSQUEDA Y BOTÓN NUEVO -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <!-- Barra de búsqueda con HTMX -->
+                <div style="position: relative; width: 100%; max-width: 450px; display: flex; align-items: center;">
+                    <span style="position: absolute; left: 1rem; color: var(--text-muted); pointer-events: none; display: flex; align-items: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </span>
+                    <input type="text" name="search" placeholder="Buscar cliente por nombre o teléfono..." 
+                           style="width: 100%; padding: 0.85rem 1rem 0.85rem 3rem; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius); color: var(--text); transition: var(--transition);"
+                           hx-get="{% url 'clientes_search' %}" 
+                           hx-target="#clientes-tbody" 
+                           hx-trigger="keyup changed delay:300ms"
+                           onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(37,99,235,0.1)';"
+                           onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+                </div>
+                
+                <!-- Botón Nuevo Cliente -->
+                <button onclick="toggleModal(true)" class="login-btn" style="width: auto; padding: 0.85rem 1.5rem; font-size: 0.95rem; box-shadow: var(--shadow-sm);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Nuevo Cliente</span>
+                </button>
+            </div>
+
+            <!-- GRILLA INFERIOR: TABLA DE CLIENTES + PANEL DE DETALLE -->
+            <div class="dashboard-grid" style="grid-template-columns: 1.25fr 1.05fr;">
+                
+                <!-- Tabla de Clientes -->
+                <section class="dashboard-card" style="max-height: 480px; overflow: hidden; display: flex; flex-direction: column;">
+                    <div class="card-header-row" style="margin-bottom: 0.5rem;">
+                        <h2>Clientes Registrados</h2>
+                    </div>
+                    
+                    <div class="table-responsive" style="flex: 1; overflow-y: auto;">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Teléfono</th>
+                                    <th>Correo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientes-tbody">
+                                {% include 'partials/clientes_table.html' %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Panel de Historial de Servicios (HTMX Target) -->
+                <section class="dashboard-card" id="historial-container" style="min-height: 250px; justify-content: center; align-items: center; text-align: center; color: var(--text-muted); border-style: dashed; border-width: 2px;">
+                    <div style="max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); opacity: 0.6;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        <p style="font-size: 0.95rem; font-weight: 500; line-height: 1.4;">Selecciona un cliente de la tabla para cargar su historial de servicios aquí en tiempo real.</p>
+                    </div>
+                </section>
+
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- MODAL PARA REGISTRO DE NUEVO CLIENTE -->
+<div id="new-client-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center;">
+    <div class="dashboard-card" style="width: 100%; max-width: 460px; margin: 1.5rem; box-shadow: var(--shadow-lg); animation: slideUp 0.3s ease-out; gap: 1.5rem;">
+        <div class="card-header-row" style="margin-bottom: 0; padding-bottom: 0.75rem;">
+            <h2 style="font-size: 1.25rem;">Registrar Nuevo Cliente</h2>
+            <button onclick="toggleModal(false)" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0.25rem;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+
+        <form id="new-client-form" method="post" action="{% url 'cliente_create' %}" style="display: flex; flex-direction: column; gap: 1.25rem;" novalidate>
+            {% csrf_token %}
+            
+            <!-- Campo Nombre -->
+            <div class="login-field" style="margin-bottom: 0;">
+                <label for="id_nombre" style="font-weight: 600;">Nombre Completo *</label>
+                <div class="login-input-wrapper">
+                    <span class="login-input-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </span>
+                    <input type="text" name="nombre" id="id_nombre" placeholder="Nombre del cliente" required>
+                </div>
+            </div>
+
+            <!-- Campo Teléfono -->
+            <div class="login-field" style="margin-bottom: 0;">
+                <label for="id_telefono" style="font-weight: 600;">Número de Teléfono *</label>
+                <div class="login-input-wrapper">
+                    <span class="login-input-icon">
+                        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    </span>
+                    <input type="tel" name="telefono" id="id_telefono" placeholder="Ej: 0991234567" pattern="[0-9]{10}" maxlength="10" minlength="10" title="Debe contener exactamente 10 dígitos numéricos (ej. 0991234567)." required>
+                </div>
+            </div>
+
+            <!-- Campo Correo -->
+            <div class="login-field" style="margin-bottom: 0;">
+                <label for="id_correo" style="font-weight: 600;">Correo Electrónico</label>
+                <div class="login-input-wrapper">
+                    <span class="login-input-icon">
+                        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    </span>
+                    <input type="email" name="correo" id="id_correo" placeholder="correo@ejemplo.com">
+                </div>
+            </div>
+
+            <!-- Campo Dirección -->
+            <div class="login-field" style="margin-bottom: 0;">
+                <label for="id_direccion" style="font-weight: 600;">Dirección</label>
+                <textarea name="direccion" id="id_direccion" placeholder="Dirección del domicilio..." rows="3" 
+                          style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid transparent; border-radius: var(--radius); color: var(--text); resize: none; transition: var(--transition);"
+                          onfocus="this.style.backgroundColor='var(--bg-card)'; this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(37,99,235,0.1)'; this.style.outline='none';"
+                          onblur="this.style.backgroundColor='var(--bg-app)'; this.style.borderColor='transparent'; this.style.boxShadow='none';"></textarea>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem;">
+                <button type="button" onclick="toggleModal(false)" style="padding: 0.85rem 1.5rem; border-radius: var(--radius); border: 1.5px solid var(--border); background: white; font-weight: 600; font-family: var(--font); cursor: pointer; color: var(--text-muted); transition: var(--transition);" onhover="this.style.borderColor='var(--text-muted)';">
+                    Cancelar
+                </button>
+                <button type="submit" class="login-btn" style="width: auto; padding: 0.85rem 1.5rem; font-size: 0.95rem;">
+                    <span>Registrar Cliente</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL PARA EDICIÓN DE CLIENTE -->
+<div id="edit-client-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center;">
+    <div class="dashboard-card" style="width: 100%; max-width: 460px; margin: 1.5rem; box-shadow: var(--shadow-lg); animation: slideUp 0.3s ease-out; gap: 1.5rem;">
+        <div class="card-header-row" style="margin-bottom: 0; padding-bottom: 0.75rem;">
+            <h2 style="font-size: 1.25rem;">Editar Datos de Cliente</h2>
+            <button onclick="toggleEditModal(false)" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0.25rem;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+
+        <form id="edit-client-form" method="post" action="" style="display: flex; flex-direction: column; gap: 1.25rem;" novalidate>
+            {% csrf_token %}
+            
+            <!-- Campo Nombre -->
+            <div class="login-field" style="margin-bottom: 0;">
+                <label for="edit_nombre" style="font-weight: 600;">Nombre Completo *</label>
+                <div class="login-input-wrapper">
+                    <span class="login-input-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </span>
+                    <input type="text" name="nombre" id="edit_nombre" placeholder="Nombre del cliente" required>
+                </div>
+            </div>
+
+            <!-- Campo Teléfono -->
+            <div class="login-field" style="margin-bottom: 0;">
+                <label for="edit_telefono" style="font-weight: 600;">Número de Teléfono *</label>
+                <div class="login-input-wrapper">
+                    <span class="login-input-icon">
+                        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    </span>
+                    <input type="tel" name="telefono" id="edit_telefono" placeholder="Ej: 0991234567" pattern="[0-9]{10}" maxlength="10" minlength="10" title="Debe contener exactamente 10 dígitos numéricos (ej. 0991234567)." required>
+                </div>
+            </div>
+
+            <!-- Campo Correo -->
+            <div class="login-field" style="margin-bottom: 0;">
+                <label for="edit_correo" style="font-weight: 600;">Correo Electrónico</label>
+                <div class="login-input-wrapper">
+                    <span class="login-input-icon">
+                        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    </span>
+                    <input type="email" name="correo" id="edit_correo" placeholder="correo@ejemplo.com">
+                </div>
+            </div>
+
+            <!-- Campo Dirección -->
+            <div class="login-field" style="margin-bottom: 0;">
+                <label for="edit_direccion" style="font-weight: 600;">Dirección</label>
+                <textarea name="direccion" id="edit_direccion" placeholder="Dirección del domicilio..." rows="3" 
+                          style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid transparent; border-radius: var(--radius); color: var(--text); resize: none; transition: var(--transition);"
+                          onfocus="this.style.backgroundColor='var(--bg-card)'; this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(37,99,235,0.1)'; this.style.outline='none';"
+                          onblur="this.style.backgroundColor='var(--bg-app)'; this.style.borderColor='transparent'; this.style.boxShadow='none';"></textarea>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem;">
+                <button type="button" onclick="toggleEditModal(false)" style="padding: 0.85rem 1.5rem; border-radius: var(--radius); border: 1.5px solid var(--border); background: white; font-weight: 600; font-family: var(--font); cursor: pointer; color: var(--text-muted); transition: var(--transition);">
+                    Cancelar
+                </button>
+                <button type="submit" class="login-btn" style="width: auto; padding: 0.85rem 1.5rem; font-size: 0.95rem;">
+                    <span>Guardar Cambios</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL PARA CONFIRMAR ELIMINACIÓN -->
+<div id="delete-confirm-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center;">
+    <div class="dashboard-card" style="width: 100%; max-width: 400px; margin: 1.5rem; box-shadow: var(--shadow-lg); animation: slideUp 0.3s ease-out; gap: 1.5rem; text-align: center;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+            <!-- Icono de Advertencia -->
+            <div style="width: 60px; height: 60px; border-radius: 50%; background-color: hsl(350, 80%, 95%); color: var(--danger); display: flex; justify-content: center; align-items: center;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </div>
+            <h2 style="font-size: 1.25rem; font-weight: 750; color: var(--text);">Confirmar Eliminación</h2>
+            <p id="delete-modal-text" style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.4;"></p>
+        </div>
+        <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 0.5rem;">
+            <button type="button" onclick="toggleDeleteModal(false)" style="padding: 0.85rem 1.5rem; border-radius: var(--radius); border: 1.5px solid var(--border); background: white; font-weight: 600; font-family: var(--font); cursor: pointer; color: var(--text-muted); transition: var(--transition);">
+                Cancelar
+            </button>
+            <button id="btn-confirm-delete" 
+                    hx-delete="" 
+                    hx-target="" 
+                    hx-swap="outerHTML swap:0.5s"
+                    onclick="toggleDeleteModal(false)"
+                    style="padding: 0.85rem 1.5rem; border-radius: var(--radius); border: none; background-color: var(--danger); color: white; font-weight: 600; font-family: var(--font); cursor: pointer; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); transition: var(--transition);">
+                Sí, Eliminar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Lógica JavaScript para control de Modales -->
+<script src="{% static 'js/clientes.js' %}"></script>
+
+<!-- Estilo para animación de aparición del modal y resaltado de fila -->
+<style>
+    @keyframes slideUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    /* Resaltado de fila seleccionada */
+    .custom-table tr.selected-row td {
+        background-color: var(--primary-light) !important;
+        color: var(--primary) !important;
+        font-weight: 550;
+    }
+    
+    .custom-table tr.selected-row .font-medium {
+        color: var(--primary) !important;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}

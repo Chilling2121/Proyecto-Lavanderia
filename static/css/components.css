@@ -1,0 +1,230 @@
+/* Grilla principal del Dashboard (Órdenes + Barra Lateral) */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 0.9fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.dashboard-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.card-header-row h2 {
+    font-size: 1.1rem;
+    font-weight: 750;
+    color: var(--text);
+}
+
+.card-header-link {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Tabla de Órdenes */
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.custom-table th {
+    padding: 0.85rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1.5px solid var(--border);
+}
+
+.custom-table td {
+    padding: 1rem;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+}
+
+.custom-table tr:last-child td {
+    border-bottom: none;
+}
+
+.font-medium {
+    font-weight: 600;
+}
+
+/* Etiquetas/Badges de Estado */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+}
+
+/* Estados de lavado */
+.state-recibida { background-color: hsl(210, 100%, 96%); color: hsl(210, 100%, 45%); }
+.state-clasificada { background-color: hsl(270, 80%, 96%); color: hsl(270, 80%, 50%); }
+.state-en-lavado { background-color: hsl(35, 100%, 94%); color: hsl(35, 100%, 45%); }
+.state-en-secado { background-color: hsl(25, 100%, 94%); color: hsl(25, 100%, 45%); }
+.state-en-planchado { background-color: hsl(190, 85%, 93%); color: hsl(190, 85%, 40%); }
+.state-empaquetada { background-color: hsl(300, 70%, 96%); color: hsl(300, 70%, 45%); }
+.state-lista-para-entrega { background-color: hsl(142, 72%, 94%); color: hsl(142, 72%, 30%); }
+.state-entregada { background-color: hsl(220, 10%, 92%); color: hsl(220, 10%, 45%); }
+
+/* Estados de pago */
+.payment-pendiente { background-color: hsl(350, 80%, 96%); color: var(--danger); }
+.payment-parcial { background-color: hsl(45, 90%, 94%); color: var(--warning); }
+.payment-liquidado { background-color: hsl(142, 72%, 94%); color: var(--success); }
+
+/* Panel de Accesos Rápidos */
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+}
+
+.btn-quick {
+    background-color: var(--bg-app);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    transition: var(--transition);
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.btn-quick svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.btn-quick:hover {
+    background-color: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-quick-blue { color: hsl(215, 90%, 50%); }
+.btn-quick-orange { color: hsl(25, 100%, 50%); }
+.btn-quick-indigo { color: hsl(240, 70%, 55%); }
+.btn-quick-purple { color: hsl(280, 80%, 55%); }
+
+/* Barra de progreso de estadísticas de servicios */
+.services-stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.service-stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.service-stat-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.service-stat-progress-bg {
+    height: 8px;
+    background-color: var(--bg-app);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.service-stat-progress-fill {
+    height: 100%;
+    border-radius: 20px;
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    transition: width 1s ease-in-out;
+}
+
+/* Colores de progreso específicos (Opcionales) */
+.bar-0 { background: linear-gradient(90deg, hsl(215, 90%, 50%) 0%, hsl(185, 85%, 45%) 100%); }
+.bar-1 { background: linear-gradient(90deg, hsl(270, 80%, 50%) 0%, hsl(240, 70%, 55%) 100%); }
+.bar-2 { background: linear-gradient(90deg, hsl(142, 72%, 40%) 0%, hsl(160, 80%, 40%) 100%); }
+.bar-3 { background: linear-gradient(90deg, hsl(25, 100%, 50%) 0%, hsl(45, 90%, 50%) 100%); }
+.bar-4 { background: hsl(220, 15%, 50%); }
+
+/* Efectos Interactivos para Tablas de Clientes */
+.custom-table tbody tr {
+    transition: var(--transition);
+}
+
+.custom-table tbody tr:hover {
+    background-color: var(--primary-light);
+}
+
+/* ==========================================
+   MÓDULO DE ÓRDENES Y CREACIÓN
+   ========================================== */
+.prenda-row {
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+
+.prenda-row:hover {
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+    background-color: var(--bg-card) !important;
+}
+
+@keyframes slideDownRow {
+    from { transform: translateY(-15px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideUpRow {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(-15px); opacity: 0; }
+}
+
+

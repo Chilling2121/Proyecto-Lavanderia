@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Iniciar Sesión - LavaFácil{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <!-- Columna Izquierda: Logo e Ilustración CSS animada -->
+    <div class="login-brand-side">
+        <div class="login-brand-content">
+            <div class="login-logo-container">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/>
+                    <circle cx="12" cy="12" r="6" stroke="white" stroke-width="2" stroke-dasharray="4 2"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="white" stroke-width="1.5"/>
+                </svg>
+            </div>
+            <h1 class="login-brand-title">LavaFácil</h1>
+            <p class="login-brand-subtitle">Sistema de Gestión para Lavanderías</p>
+            
+            <!-- Animación de Lavadora en CSS -->
+            <div class="laundry-illustration">
+                <div class="illustration-panel">
+                    <div class="illustration-knob"></div>
+                    <div class="illustration-display"></div>
+                </div>
+                <div class="illustration-drum-outer">
+                    <div class="illustration-drum-inner"></div>
+                    <div class="illustration-water"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna Derecha: Formulario de Autenticación -->
+    <div class="login-form-side">
+        <div class="login-form-wrapper">
+            <div class="login-header">
+                <h1 class="login-title-mobile">LavaFácil</h1>
+                <h2 class="login-form-title">Bienvenido</h2>
+                <p class="login-form-subtitle">Inicia sesión para continuar</p>
+            </div>
+
+            {% if form.errors %}
+            <div class="login-error-alert">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>Usuario o contraseña incorrectos.</span>
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                
+                <!-- Campo de Usuario -->
+                <div class="login-field">
+                    <label for="id_username">Usuario</label>
+                    <div class="login-input-wrapper">
+                        <span class="login-input-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </span>
+                        <input type="text" name="username" id="id_username" placeholder="Ingresa tu usuario" required autofocus>
+                    </div>
+                </div>
+
+                <!-- Campo de Contraseña -->
+                <div class="login-field">
+                    <label for="id_password">Contraseña</label>
+                    <div class="login-input-wrapper">
+                        <span class="login-input-icon">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </span>
+                        <input type="password" name="password" id="id_password" placeholder="Ingresa tu contraseña" required>
+                    </div>
+                </div>
+
+                <!-- Opciones adicionales -->
+                <div class="login-options">
+                    <label class="login-remember">
+                        <input type="checkbox" name="remember_me">
+                        Recordarme
+                    </label>
+                    <a href="#">¿Olvidaste tu contraseña?</a>
+                </div>
+
+                <!-- Botón de Envío -->
+                <button type="submit" class="login-btn">
+                    <span>Iniciar Sesión</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+            </form>
+
+            <div class="login-footer-info">
+                ¿No tienes cuenta? Contacta al administrador
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

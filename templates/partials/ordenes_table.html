@@ -1,0 +1,56 @@
+{% for orden in ordenes %}
+<tr style="transition: var(--transition);" onmouseover="this.style.backgroundColor='var(--bg-app)';" onmouseout="this.style.backgroundColor='transparent';">
+    <td class="font-medium" style="padding-left: 2rem; color: var(--primary);">#{{ orden.id|stringformat:"06d" }}</td>
+    <td class="font-medium">{{ orden.cliente.nombre }}</td>
+    <td>{{ orden.fecha_recepcion|date:"d/m/Y H:i" }}</td>
+    <td>{{ orden.fecha_entrega_estimada|date:"d/m/Y H:i"|default:"—" }}</td>
+    <td class="font-medium" style="text-align: right;">${{ orden.total_a_pagar|floatformat:2 }}</td>
+    <td style="text-align: right; color: var(--success); font-weight: 500;">${{ orden.anticipo|floatformat:2 }}</td>
+    <td class="font-medium" style="text-align: right; color: {% if orden.saldo_pendiente > 0 %}var(--danger){% else %}var(--success){% endif %};">
+        ${{ orden.saldo_pendiente|floatformat:2 }}
+    </td>
+    <td>
+        {% if orden.estado_pago == 'Liquidado' %}
+            <span class="badge state-entregada" style="background-color: hsl(142, 72%, 93%); color: var(--success);">Liquidado</span>
+        {% elif orden.estado_pago == 'Parcial' %}
+            <span class="badge state-en-secado" style="background-color: hsl(45, 90%, 93%); color: var(--warning);">Parcial</span>
+        {% else %}
+            <span class="badge state-recibida" style="background-color: hsl(350, 80%, 95%); color: var(--danger);">Pendiente</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if orden.estado_actual == 'Recibida' %}
+            <span class="badge state-recibida">Recibida</span>
+        {% elif orden.estado_actual == 'Clasificada' %}
+            <span class="badge state-clasificada">Clasificada</span>
+        {% elif orden.estado_actual == 'En lavado' %}
+            <span class="badge state-en-lavado">En lavado</span>
+        {% elif orden.estado_actual == 'En secado' %}
+            <span class="badge state-en-secado">En secado</span>
+        {% elif orden.estado_actual == 'En planchado' %}
+            <span class="badge state-en-planchado">En planchado</span>
+        {% elif orden.estado_actual == 'Empaquetada' %}
+            <span class="badge state-empaquetada">Empaquetada</span>
+        {% elif orden.estado_actual == 'Lista para entrega' %}
+            <span class="badge state-lista-para-entrega">Lista para entrega</span>
+        {% else %}
+            <span class="badge state-entregada">Entregada</span>
+        {% endif %}
+    </td>
+    <td style="text-align: center;">
+        <a href="{% url 'orden_detail' orden.id %}" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.85rem; font-size: 0.82rem; font-weight: 600; color: var(--primary); background-color: var(--primary-light); border-radius: var(--radius-sm); text-decoration: none; transition: var(--transition);" onmouseover="this.style.backgroundColor='rgba(37,99,235,0.15)'" onmouseout="this.style.backgroundColor='var(--primary-light)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            Ver detalle
+        </a>
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <span>No se encontraron órdenes que coincidan con la búsqueda.</span>
+        </div>
+    </td>
+</tr>
+{% endfor %}

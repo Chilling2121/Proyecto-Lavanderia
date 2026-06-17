@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Principal - LavaFácil{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    {% include 'includes/sidebar.html' with active_tab='dashboard' %}
+
+    <!-- CUERPO PRINCIPAL (MAIN LAYOUT) -->
+    <main class="main-layout">
+        
+        <!-- CABECERA SUPERIOR (HEADER) -->
+        {% include 'includes/header.html' with page_title='Dashboard' %}
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content-wrapper">
+            
+            <!-- PANEL DE MÉTRICAS (GRID DE 4 TARJETAS) -->
+            <section class="metrics-grid">
+                <!-- Pedidos Hoy -->
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <span class="metric-title">Pedidos Hoy</span>
+                        <span class="metric-value">{{ pedidos_hoy }}</span>
+                        <div class="metric-trend trend-up">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                            <span>+12%</span>
+                            <span class="trend-detail">vs ayer</span>
+                        </div>
+                    </div>
+                    <div class="metric-icon-container icon-blue">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    </div>
+                </div>
+
+                <!-- Pedidos Pendientes -->
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <span class="metric-title">Pedidos Pendientes</span>
+                        <span class="metric-value">{{ pedidos_pendientes }}</span>
+                        <a href="{% url 'ordenes_list' %}" class="metric-trend" style="color: var(--primary); font-weight: 600;">Ver detalles</a>
+                    </div>
+                    <div class="metric-icon-container icon-purple">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                </div>
+
+                <!-- Listos para Entrega -->
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <span class="metric-title">Listos para Entrega</span>
+                        <span class="metric-value">{{ listos_entrega }}</span>
+                        <a href="#" class="metric-trend" style="color: var(--success); font-weight: 600;">Ver detalles</a>
+                    </div>
+                    <div class="metric-icon-container icon-green">
+                        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                </div>
+
+                <!-- Ingresos del Día -->
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <span class="metric-title">Ingresos del Día</span>
+                        <span class="metric-value">${{ ingresos_hoy|floatformat:2 }}</span>
+                        <div class="metric-trend trend-up">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                            <span>+8%</span>
+                            <span class="trend-detail">vs ayer</span>
+                        </div>
+                    </div>
+                    <div class="metric-icon-container icon-emerald">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    </div>
+                </div>
+            </section>
+
+            <!-- GRILLA CENTRAL DE DOS COLUMNAS -->
+            <div class="dashboard-grid">
+                
+                <!-- COLUMNA IZQUIERDA: ÓRDENES RECIENTES -->
+                <section class="dashboard-card">
+                    <div class="card-header-row">
+                        <h2>Órdenes Recientes</h2>
+                        <a href="{% url 'ordenes_list' %}" class="card-header-link">Ver todas las órdenes &rarr;</a>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Nº Orden</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for orden in ordenes_recientes %}
+                                <tr>
+                                    <td class="font-medium">#{{ orden.id|stringformat:"06d" }}</td>
+                                    <td>{{ orden.cliente.nombre }}</td>
+                                    <td>{{ orden.fecha_recepcion|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <!-- Mapeo CSS de badges de estado -->
+                                        {% if orden.estado_actual == 'Recibida' %}
+                                            <span class="badge state-recibida">Recibida</span>
+                                        {% elif orden.estado_actual == 'Clasificada' %}
+                                            <span class="badge state-clasificada">Clasificada</span>
+                                        {% elif orden.estado_actual == 'En lavado' %}
+                                            <span class="badge state-en-lavado">En lavado</span>
+                                        {% elif orden.estado_actual == 'En secado' %}
+                                            <span class="badge state-en-secado">En secado</span>
+                                        {% elif orden.estado_actual == 'En planchado' %}
+                                            <span class="badge state-en-planchado">En planchado</span>
+                                        {% elif orden.estado_actual == 'Empaquetada' %}
+                                            <span class="badge state-empaquetada">Empaquetada</span>
+                                        {% elif orden.estado_actual == 'Lista para entrega' %}
+                                            <span class="badge state-lista-para-entrega">Lista para entrega</span>
+                                        {% else %}
+                                            <span class="badge state-entregada">Entregada</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="font-medium">${{ orden.total_a_pagar|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <!-- Mostrar datos simulados si la base de datos está vacía -->
+                                <tr>
+                                    <td class="font-medium">#000125</td>
+                                    <td>María López</td>
+                                    <td>16/05/2026</td>
+                                    <td><span class="badge state-en-lavado">En lavado</span></td>
+                                    <td class="font-medium">$12.50</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">#000124</td>
+                                    <td>Carlos Gómez</td>
+                                    <td>16/05/2026</td>
+                                    <td><span class="badge state-en-secado">En secado</span></td>
+                                    <td class="font-medium">$8.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">#000123</td>
+                                    <td>Ana Torres</td>
+                                    <td>16/05/2026</td>
+                                    <td><span class="badge state-en-planchado">En planchado</span></td>
+                                    <td class="font-medium">$15.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">#000122</td>
+                                    <td>Luis Martínez</td>
+                                    <td>15/05/2026</td>
+                                    <td><span class="badge state-lista-para-entrega">Lista para entrega</span></td>
+                                    <td class="font-medium">$10.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">#000121</td>
+                                    <td>Sofía Ramírez</td>
+                                    <td>15/05/2026</td>
+                                    <td><span class="badge state-entregada">Entregada</span></td>
+                                    <td class="font-medium">$7.50</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- COLUMNA DERECHA: ACCESOS RÁPIDOS Y ESTADÍSTICAS -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    
+                    <!-- Accesos Rápidos -->
+                    <section class="dashboard-card">
+                        <div class="card-header-row">
+                            <h2>Accesos Rápidos</h2>
+                        </div>
+                        
+                        <div class="quick-actions-grid">
+                            <a href="{% url 'orden_create' %}" class="btn-quick btn-quick-blue" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                                <span>Nueva Orden</span>
+                            </a>
+                            <button class="btn-quick btn-quick-orange">
+                                <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                <span>Registrar Pago</span>
+                            </button>
+                            <a href="{% url 'clientes_list' %}#nuevo" class="btn-quick btn-quick-indigo" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="16" y1="11" x2="22" y2="11"></line></svg>
+                                <span>Nuevo Cliente</span>
+                            </a>
+                            <button class="btn-quick btn-quick-purple">
+                                <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                                <span>Ver Reportes</span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Servicios Más Solicitados -->
+                    <section class="dashboard-card">
+                        <div class="card-header-row">
+                            <h2>Servicios Más Solicitados</h2>
+                        </div>
+                        
+                        <div class="services-stats-list">
+                            {% for stat in servicios_stats %}
+                            <div class="service-stat-item">
+                                <div class="service-stat-header">
+                                    <span>{{ stat.nombre }}</span>
+                                    <span>{{ stat.percentage }}%</span>
+                                </div>
+                                <div class="service-stat-progress-bg">
+                                    <!-- Mapeamos el color de barra según el índice del ciclo -->
+                                    <div class="service-stat-progress-fill bar-{{ forloop.counter0 }}" style="width: {{ stat.percentage }}%;"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+</div>
+{% endblock %}

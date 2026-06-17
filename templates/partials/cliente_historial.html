@@ -1,0 +1,58 @@
+<div class="card-header-row">
+    <h2>Historial de Servicios - {{ cliente.nombre }}</h2>
+</div>
+
+<div class="table-responsive">
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>Nº Orden</th>
+                <th>Fecha</th>
+                <th>Servicios / Prendas</th>
+                <th>Total</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for orden in ordenes %}
+            <tr>
+                <td class="font-medium">#{{ orden.id|stringformat:"06d" }}</td>
+                <td>{{ orden.fecha_recepcion|date:"d/m/Y" }}</td>
+                <td>
+                    {% for prenda in orden.prendas.all %}
+                        {{ prenda.cantidad }}x {{ prenda.tipo_prenda }} ({{ prenda.servicio.nombre }}){% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        —
+                    {% endfor %}
+                </td>
+                <td class="font-medium">${{ orden.total_a_pagar|floatformat:2 }}</td>
+                <td>
+                    {% if orden.estado_actual == 'Recibida' %}
+                        <span class="badge state-recibida">Recibida</span>
+                    {% elif orden.estado_actual == 'Clasificada' %}
+                        <span class="badge state-clasificada">Clasificada</span>
+                    {% elif orden.estado_actual == 'En lavado' %}
+                        <span class="badge state-en-lavado">En lavado</span>
+                    {% elif orden.estado_actual == 'En secado' %}
+                        <span class="badge state-en-secado">En secado</span>
+                    {% elif orden.estado_actual == 'En planchado' %}
+                        <span class="badge state-en-planchado">En planchado</span>
+                    {% elif orden.estado_actual == 'Empaquetada' %}
+                        <span class="badge state-empaquetada">Empaquetada</span>
+                    {% elif orden.estado_actual == 'Lista para entrega' %}
+                        <span class="badge state-lista-para-entrega">Lista para entrega</span>
+                    {% else %}
+                        <span class="badge state-entregada">Entregada</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                    Este cliente no posee historial de órdenes registrado.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

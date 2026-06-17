@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Servicios - LavaFácil{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    {% include 'includes/sidebar.html' with active_tab='servicios' %}
+
+    <!-- CUERPO PRINCIPAL (MAIN LAYOUT) -->
+    <main class="main-layout">
+        
+        <!-- CABECERA SUPERIOR (HEADER) -->
+        {% include 'includes/header.html' with page_title='Gestión de Servicios' %}
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content-wrapper">
+            
+            <!-- PANEL DE SERVICIOS -->
+            <section class="dashboard-card">
+                <div class="card-header-row">
+                    <div>
+                        <h2>Catálogo de Servicios y Tarifas</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Administra los servicios de lavado, sus precios y modalidad de cobro.</p>
+                    </div>
+                    <a href="{% url 'servicio_create' %}" class="login-btn" style="width: auto; padding: 0.6rem 1.25rem; font-size: 0.9rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>Nuevo Servicio</span>
+                    </a>
+                </div>
+
+                <!-- Buscador de Servicios -->
+                <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+                    <div style="position: relative; flex: 1; max-width: 400px;">
+                        <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; display: flex;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </span>
+                        <input type="text" id="servicio_search" placeholder="Buscar servicio por nombre..." 
+                               style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.75rem; font-size: 0.9rem; font-family: var(--font); background-color: var(--bg-app); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); transition: var(--transition);"
+                               hx-get="{% url 'servicios_search_api' %}" 
+                               hx-trigger="keyup changed delay:300ms"
+                               hx-target="#servicios-table-container"
+                               hx-indicator=".htmx-indicator"
+                               name="search" autocomplete="off"
+                               onfocus="this.style.backgroundColor='var(--bg-card)'; this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(37,99,235,0.1)';"
+                               onblur="this.style.backgroundColor='var(--bg-app)'; this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+                    </div>
+                    <div class="htmx-indicator" style="display: none; align-items: center; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; gap: 0.5rem;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+                        <span>Buscando...</span>
+                    </div>
+                </div>
+
+                <!-- Tabla de Servicios -->
+                <div class="table-responsive" id="servicios-table-container">
+                    {% include 'partials/servicios_table.html' %}
+                </div>
+
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<script>
+    // Escuchar el evento personalizado de HTMX para mostrar el toast al eliminar un servicio
+    document.body.addEventListener('servicioDeleted', function(evt){
+        if (typeof showToast === 'function') {
+            showToast("El servicio '" + evt.detail.value + "' ha sido eliminado con éxito.", "success");
+        }
+    });
+
+    // Escuchar errores htmx:responseError para ProtectedError
+    document.body.addEventListener('htmx:responseError', function(evt){
+        if (evt.detail.xhr.status === 400 && typeof showToast === 'function') {
+            showToast(evt.detail.xhr.responseText, "error");
+        }
+    });
+</script>
+{% endblock %}

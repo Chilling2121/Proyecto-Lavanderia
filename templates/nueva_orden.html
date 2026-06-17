@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nueva Orden de Servicio - LavaFácil{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    {% include 'includes/sidebar.html' with active_tab='ordenes' %}
+
+    <!-- CUERPO PRINCIPAL (MAIN LAYOUT) -->
+    <main class="main-layout">
+        
+        <!-- CABECERA SUPERIOR (HEADER) -->
+        {% include 'includes/header.html' with page_title='Nueva Orden de Servicio' %}
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content-wrapper" style="padding-bottom: 4rem;">
+            
+            <!-- ENLACE DE RETORNO -->
+            <div>
+                <a href="{% url 'ordenes_list' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); transition: var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    <span>Volver al listado de órdenes</span>
+                </a>
+            </div>
+
+            <!-- CUERPO DE CREACIÓN: GRID DE DOS COLUMNAS -->
+            <form id="order-creation-form" method="post" action="{% url 'orden_create' %}" style="display: grid; grid-template-columns: 1.6fr 0.8fr; gap: 1.5rem; align-items: start;" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="cliente_id" id="selected_cliente_id" required>
+                <input type="hidden" name="prendas_json" id="prendas_json" required>
+
+                <!-- COLUMNA IZQUIERDA: CLIENTE Y DETALLE DE PRENDAS -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    
+                    <!-- PANEL CLIENTE -->
+                    <section class="dashboard-card">
+                        <div class="card-header-row" style="margin-bottom: 1rem; padding-bottom: 0.75rem;">
+                            <h2>1. Seleccionar Cliente *</h2>
+                        </div>
+                        
+                        <!-- Buscador de Clientes en Vivo con HTMX -->
+                        <div id="cliente-search-container" style="position: relative; width: 100%;">
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <span style="position: absolute; left: 1rem; color: var(--text-muted); pointer-events: none; display: flex; align-items: center;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                </span>
+                                <input type="text" id="cliente_search" placeholder="Buscar cliente por nombre o teléfono..." 
+                                       style="width: 100%; padding: 0.85rem 1rem 0.85rem 3rem; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius); color: var(--text); transition: var(--transition);"
+                                       hx-get="{% url 'orden_cliente_search_api' %}" 
+                                       hx-trigger="keyup changed delay:300ms"
+                                       hx-target="#cliente-results-list"
+                                       name="search" autocomplete="off"
+                                       onfocus="this.style.backgroundColor='var(--bg-card)'; this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(37,99,235,0.1)';"
+                                       onblur="this.style.backgroundColor='var(--bg-app)'; this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+                            </div>
+                            
+                            <!-- Lista de resultados flotante -->
+                            <ul id="cliente-results-list" style="position: absolute; width: 100%; top: 100%; left: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); z-index: 100; max-height: 220px; overflow-y: auto; box-shadow: var(--shadow-lg); margin: 0; padding: 0; list-style: none; display: none;">
+                            </ul>
+                            
+                            <!-- Clientes Frecuentes / Recientes -->
+                            <div style="margin-top: 1.15rem;">
+                                <p style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.55rem;">Clientes Frecuentes / Recientes</p>
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                    {% for cliente in clientes_frecuentes %}
+                                    <button type="button" onclick="selectCliente('{{ cliente.id }}', '{{ cliente.nombre|escapejs }}', '{{ cliente.telefono|escapejs }}')"
+                                            style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.85rem; font-size: 0.82rem; font-weight: 600; color: var(--primary); background-color: var(--primary-light); border: 1px solid transparent; border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);"
+                                            onmouseover="this.style.backgroundColor='rgba(37,99,235,0.15)';"
+                                            onmouseout="this.style.backgroundColor='var(--primary-light)';"
+                                            title="Seleccionar a {{ cliente.nombre }}">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                        <span>{{ cliente.nombre }}</span>
+                                    </button>
+                                    {% empty %}
+                                    <span style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">No hay clientes registrados aún.</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tarjeta de Cliente Seleccionado -->
+                        <div id="selected-cliente-card" style="display: none; align-items: center; gap: 1rem; padding: 1rem; border: 1.5px solid var(--primary); background-color: var(--primary-light); border-radius: var(--radius); transition: var(--transition);">
+                            <div style="background-color: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            </div>
+                            <div>
+                                <h4 id="selected-cliente-nombre" style="font-weight: 700; color: var(--text); font-size: 0.95rem;"></h4>
+                                <p id="selected-cliente-telefono" style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.15rem;"></p>
+                            </div>
+                            <button type="button" onclick="clearSelectedCliente()" style="margin-left: auto; background: none; border: none; color: var(--danger); cursor: pointer; font-size: 0.85rem; font-weight: 700; font-family: var(--font); transition: var(--transition);" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                                Cambiar Cliente
+                            </button>
+                        </div>
+                        
+                        <div id="cliente-validation-error" style="color: var(--danger); font-size: 0.85rem; font-weight: 600; margin-top: 0.5rem; display: none;">
+                            Debe seleccionar un cliente para poder registrar la orden.
+                        </div>
+                    </section>
+                    
+                    <!-- PANEL DE PRENDAS Y SERVICIOS -->
+                    <section class="dashboard-card" style="min-height: 250px;">
+                        <div class="card-header-row" style="margin-bottom: 1rem; padding-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+                            <h2>2. Detalle de Prendas y Servicios *</h2>
+                            <button type="button" onclick="addPrendaRow()" class="login-btn" style="width: auto; padding: 0.5rem 1rem; font-size: 0.85rem; background-color: var(--primary-light); color: var(--primary); border: 1.5px solid transparent; box-shadow: none;" onmouseover="this.style.backgroundColor='rgba(37,99,235,0.15)';" onmouseout="this.style.backgroundColor='var(--primary-light)';">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>Agregar Prenda</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Encabezados de columnas para las prendas -->
+                        <div id="prendas-headers" style="display: none; grid-template-columns: 1.4fr 1.6fr 55px 65px 1.1fr 75px 35px; gap: 0.75rem; padding: 0 1rem 0.5rem 1rem; border-bottom: 1.5px solid var(--border); margin-bottom: 0.85rem; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <div>Prenda</div>
+                            <div>Servicio</div>
+                            <div style="text-align: center;">Cant.</div>
+                            <div style="text-align: center;">Peso</div>
+                            <div>Observaciones</div>
+                            <div style="text-align: right; padding-right: 0.5rem;">Subtotal</div>
+                            <div></div>
+                        </div>
+
+                        <!-- Lista de prendas vacía inicialmente -->
+                        <div id="prendas-container" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                            <!-- Las filas se inyectan dinámicamente con JS -->
+                        </div>
+                        
+                        <!-- Placeholder cuando no hay prendas -->
+                        <div id="no-prendas-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; height: 180px; border: 2px dashed var(--border); border-radius: var(--radius); text-align: center; color: var(--text-muted);">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.6;"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                            <p style="font-size: 0.9rem; font-weight: 500; max-width: 250px;">Aún no has agregado prendas. Haz clic en "Agregar Prenda" para iniciar.</p>
+                        </div>
+                        
+                        <div id="prendas-validation-error" style="color: var(--danger); font-size: 0.85rem; font-weight: 600; margin-top: 1rem; display: none; text-align: center;">
+                            Debe agregar al menos una prenda para poder guardar la orden.
+                        </div>
+                    </section>
+
+                </div>
+
+                <!-- COLUMNA DERECHA: LIQUIDACIÓN, TOTALES Y CONFIGURACIÓN -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    
+                    <!-- PANEL GENERALES Y FECHAS -->
+                    <section class="dashboard-card" style="gap: 1.25rem;">
+                        <div class="card-header-row" style="margin-bottom: 0; padding-bottom: 0.75rem;">
+                            <h2>3. Ajustes Generales</h2>
+                        </div>
+                        
+                        <!-- Fecha Estimada de Entrega -->
+                        <div class="login-field" style="margin-bottom: 0;">
+                            <label for="id_fecha_entrega_estimada" style="font-weight: 600;">Fecha Estimada de Entrega *</label>
+                            <div class="login-input-wrapper">
+                                <span class="login-input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                </span>
+                                <input type="datetime-local" name="fecha_entrega_estimada" id="id_fecha_entrega_estimada" required
+                                       style="width: 100%; padding: 0.85rem 1rem 0.85rem 3rem; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid transparent; border-radius: var(--radius); color: var(--text);"
+                                       onfocus="this.style.backgroundColor='var(--bg-card)'; this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(37,99,235,0.1)'; this.style.outline='none';"
+                                       onblur="this.style.backgroundColor='var(--bg-app)'; this.style.borderColor='transparent'; this.style.boxShadow='none';">
+                            </div>
+                            <div id="date-validation-error" style="color: var(--danger); font-size: 0.8rem; font-weight: 600; margin-top: 0.25rem; display: none;">
+                                Por favor seleccione una fecha y hora de entrega válida.
+                            </div>
+                        </div>
+
+                        <!-- Observaciones generales -->
+                        <div class="login-field" style="margin-bottom: 0;">
+                            <label for="id_observaciones" style="font-weight: 600;">Observaciones Generales</label>
+                            <textarea name="observaciones" id="id_observaciones" placeholder="Escribe observaciones generales del pedido..." rows="3" 
+                                      style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid transparent; border-radius: var(--radius); color: var(--text); resize: none; transition: var(--transition);"
+                                      onfocus="this.style.backgroundColor='var(--bg-card)'; this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(37,99,235,0.1)'; this.style.outline='none';"
+                                      onblur="this.style.backgroundColor='var(--bg-app)'; this.style.borderColor='transparent'; this.style.boxShadow='none';"></textarea>
+                        </div>
+                    </section>
+                    
+                    <!-- PANEL LIQUIDACIÓN (TOTALES) -->
+                    <section class="dashboard-card" style="gap: 1.25rem;">
+                        <div class="card-header-row" style="margin-bottom: 0; padding-bottom: 0.75rem;">
+                            <h2>4. Resumen de Liquidación</h2>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 0.85rem; border-bottom: 1.5px solid var(--border); padding-bottom: 1rem;">
+                            
+                            <!-- Subtotal -->
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">Subtotal</span>
+                                <span id="label-subtotal" style="font-weight: 600; color: var(--text); font-size: 1.05rem;">$0.00</span>
+                                <input type="hidden" name="total" id="input-subtotal" value="0.00">
+                            </div>
+                            
+                            <!-- Descuento -->
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">Descuento ($)</span>
+                                <input type="number" name="descuento" id="input-descuento" min="0" step="0.01" value="0.00" oninput="calculateOrderTotals()"
+                                       style="width: 100px; padding: 0.4rem 0.75rem; text-align: right; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600;">
+                            </div>
+                            
+                            <!-- Total a Pagar -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
+                                <span style="font-weight: 700; color: var(--text); font-size: 1rem;">Total a Pagar</span>
+                                <span id="label-total-pagar" style="font-weight: 800; color: var(--primary); font-size: 1.35rem;">$0.00</span>
+                                <input type="hidden" name="total_a_pagar" id="input-total-pagar" value="0.00">
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 0.85rem; border-bottom: 1.5px solid var(--border); padding-bottom: 1rem;">
+                            
+                            <!-- Anticipo (Abono) -->
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">Anticipo / Abono ($)</span>
+                                <input type="number" name="anticipo" id="input-anticipo" min="0" step="0.01" value="0.00" oninput="calculateOrderTotals()"
+                                       style="width: 100px; padding: 0.4rem 0.75rem; text-align: right; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600;">
+                            </div>
+                            
+                            <!-- Método de pago -->
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">Método de Pago</span>
+                                <select name="metodo_pago" id="id_metodo_pago" 
+                                        style="width: 130px; padding: 0.4rem 0.75rem; font-size: 0.9rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600;">
+                                    <option value="Efectivo" selected>Efectivo</option>
+                                    <option value="Transferencia">Transferencia</option>
+                                    <option value="Tarjeta">Tarjeta</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Saldo Pendiente -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
+                                <span style="font-weight: 700; color: var(--text); font-size: 1rem;">Saldo Pendiente</span>
+                                <span id="label-saldo-pendiente" style="font-weight: 800; color: var(--danger); font-size: 1.25rem;">$0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Botón de Envío -->
+                        <button type="submit" class="login-btn" style="box-shadow: var(--shadow-sm); width: 100%; padding: 1rem; font-size: 1rem; font-weight: 700; margin-top: 0.5rem;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                            <span>Guardar Orden de Servicio</span>
+                        </button>
+                    </section>
+                </div>
+            </form>
+
+        </div>
+    </main>
+</div>
+
+<!-- Datalist de sugerencia de prendas -->
+<datalist id="prendas-sugeridas">
+    <option value="Camisa"></option>
+    <option value="Pantalón"></option>
+    <option value="Saco / Chaqueta"></option>
+    <option value="Abrigo"></option>
+    <option value="Vestido"></option>
+    <option value="Terno / Traje"></option>
+    <option value="Jeans"></option>
+    <option value="Edredón / Cobija"></option>
+    <option value="Sábanas"></option>
+    <option value="Toallas"></option>
+    <option value="Zapatos"></option>
+</datalist>
+
+<!-- Datos de los Servicios en formato JSON -->
+<script>
+    const SERVICIOS = {{ servicios_json|safe }};
+</script>
+
+<script src="{% static 'js/ordenes.js' %}"></script>
+
+<style>
+    /* Estilos dinámicos para las filas */
+    @keyframes slideDownRow {
+        from { transform: translateY(-15px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .prenda-row {
+        transition: var(--transition);
+        border: 1px solid transparent;
+    }
+    
+    .prenda-row:hover {
+        border-color: var(--border);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-quick {
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

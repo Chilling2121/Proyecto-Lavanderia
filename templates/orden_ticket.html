@@ -1,0 +1,447 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket #{{ orden.id|stringformat:"06d" }} - LavaFácil</title>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-ticket: #ffffff;
+            --text-dark: #0f172a;
+            --text-gray: #475569;
+            --border-color: #cbd5e1;
+            --primary: #2563eb;
+            --success: #16a34a;
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'Courier Prime', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            font-family: var(--font-main);
+            color: var(--text-dark);
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Contenedor del Ticket */
+        .ticket-wrapper {
+            background-color: var(--bg-ticket);
+            width: 320px;
+            padding: 1.5rem 1rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            position: relative;
+            font-size: 0.82rem;
+            line-height: 1.4;
+        }
+
+        /* Acordeón de corte en ticketera térmica */
+        .ticket-wrapper::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background-image: radial-gradient(circle, #f1f5f9 3px, transparent 4px);
+            background-size: 10px 10px;
+            background-repeat: repeat-x;
+        }
+
+        .ticket-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background-image: radial-gradient(circle, #f1f5f9 3px, transparent 4px);
+            background-size: 10px 10px;
+            background-repeat: repeat-x;
+        }
+
+        /* Botón de Impresión Flotante */
+        .print-btn-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 100;
+        }
+
+        .print-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .print-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+            background-color: #1d4ed8;
+        }
+
+        /* Encabezado del Ticket */
+        .header {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+            margin-bottom: 0.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+        }
+
+        .info-local {
+            font-size: 0.72rem;
+            color: var(--text-gray);
+            margin-bottom: 0.5rem;
+        }
+
+        .divider {
+            border-top: 1px dashed var(--border-color);
+            margin: 0.75rem 0;
+        }
+
+        /* Detalles de la Orden */
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-gray);
+            margin-bottom: 0.4rem;
+        }
+
+        .details-grid {
+            margin-bottom: 0.75rem;
+        }
+
+        .details-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+
+        .details-label {
+            color: var(--text-gray);
+            font-weight: 500;
+        }
+
+        .details-val {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* Tabla de prendas */
+        .items-list {
+            margin: 0.75rem 0;
+        }
+
+        .item-block {
+            margin-bottom: 0.6rem;
+        }
+
+        .item-main {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        .item-sub {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-gray);
+            font-size: 0.72rem;
+            margin-top: 0.1rem;
+            padding-left: 0.5rem;
+            font-style: italic;
+        }
+
+        /* Sección de Totales */
+        .total-block {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            font-size: 0.8rem;
+            margin: 0.75rem 0;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .grand-total {
+            font-size: 1.05rem;
+            font-weight: 800;
+            border-top: 1px dashed var(--border-color);
+            border-bottom: 1px dashed var(--border-color);
+            padding: 0.4rem 0;
+            color: var(--primary);
+        }
+
+        /* Historial de pagos */
+        .pagos-list {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .pago-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.2rem;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        /* Pie de página */
+        .footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.7rem;
+            color: var(--text-gray);
+        }
+
+        .barcode {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        /* Configuración de Impresión */
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+                display: block;
+            }
+            .ticket-wrapper {
+                width: 100%;
+                max-width: 300px;
+                box-shadow: none;
+                border: none;
+                margin: 0 auto;
+                padding: 0;
+            }
+            .ticket-wrapper::before, .ticket-wrapper::after {
+                display: none;
+            }
+            .print-btn-container {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BOTÓN DE IMPRESIÓN -->
+    <div class="print-btn-container">
+        <button class="print-btn" onclick="window.print()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            <span>Imprimir Ticket</span>
+        </button>
+    </div>
+
+    <!-- TICKET -->
+    <div class="ticket-wrapper">
+        
+        <!-- ENCABEZADO -->
+        <div class="header">
+            <h1 class="logo">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align: middle;"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="5"></circle></svg>
+                LavaFácil
+            </h1>
+            <div class="info-local">
+                <p>R.U.C. 1391782345001</p>
+                <p>Av. Universitaria y Calle 12 - Manta</p>
+                <p>Telf: (05) 262-4567 / 0987654321</p>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- DETALLES ORDEN -->
+        <div class="details-grid">
+            <div class="details-row">
+                <span class="details-label">Ticket Nro:</span>
+                <span class="details-val" style="font-family: var(--font-mono); font-size: 0.9rem;">#{{ orden.id|stringformat:"06d" }}</span>
+            </div>
+            <div class="details-row">
+                <span class="details-label">Fecha Recep:</span>
+                <span class="details-val">{{ orden.fecha_recepcion|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="details-row">
+                <span class="details-label">Entrega Est:</span>
+                <span class="details-val">{{ orden.fecha_entrega_estimada|date:"d/m/Y H:i"|default:"—" }}</span>
+            </div>
+            <div class="details-row">
+                <span class="details-label">Estado Pago:</span>
+                <span class="details-val" style="font-weight: 700;">{{ orden.estado_pago }}</span>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- CLIENTE -->
+        <div class="details-grid">
+            <div class="section-title">Cliente</div>
+            <div class="details-row">
+                <span class="details-label">Nombre:</span>
+                <span class="details-val">{{ orden.cliente.nombre }}</span>
+            </div>
+            <div class="details-row">
+                <span class="details-label">Teléfono:</span>
+                <span class="details-val">{{ orden.cliente.telefono }}</span>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- PRENDAS / DETALLES -->
+        <div class="items-list">
+            <div class="section-title" style="margin-bottom: 0.5rem;">Prendas & Servicios</div>
+            
+            {% for item in prendas_detalle %}
+            <div class="item-block">
+                <div class="item-main">
+                    <span>{{ item.prenda.cantidad }}x {{ item.prenda.tipo_prenda }}</span>
+                    <span>${{ item.subtotal|floatformat:2 }}</span>
+                </div>
+                <div class="item-sub">
+                    <span>{{ item.prenda.servicio.nombre }}</span>
+                    <span>{% if item.prenda.peso %}{{ item.prenda.peso|floatformat:2 }} kg{% endif %}</span>
+                </div>
+                {% if item.prenda.observaciones %}
+                <div style="font-size: 0.7rem; color: var(--text-gray); font-style: italic; padding-left: 0.5rem; margin-top: 0.05rem;">
+                    Obs: {{ item.prenda.observaciones }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- TOTALES -->
+        <div class="total-block">
+            <div class="total-row">
+                <span>Subtotal:</span>
+                <span>${{ orden.total|floatformat:2 }}</span>
+            </div>
+            {% if orden.descuento > 0 %}
+            <div class="total-row" style="color: red;">
+                <span>Descuento:</span>
+                <span>-${{ orden.descuento|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+            <div class="total-row grand-total">
+                <span>TOTAL A PAGAR:</span>
+                <span>${{ orden.total_a_pagar|floatformat:2 }}</span>
+            </div>
+            <div class="total-row">
+                <span>Total Abonado:</span>
+                <span>${{ orden.anticipo|floatformat:2 }}</span>
+            </div>
+            <div class="total-row" style="font-weight: 700; color: {% if orden.saldo_pendiente > 0 %}red{% else %}var(--success){% endif %};">
+                <span>SALDO PENDIENTE:</span>
+                <span>${{ orden.saldo_pendiente|floatformat:2 }}</span>
+            </div>
+        </div>
+
+        <!-- HISTORIAL DE ABONOS -->
+        {% if pagos %}
+        <div class="divider"></div>
+        <div class="pagos-list">
+            <div class="section-title">Historial de Transacciones</div>
+            {% for pago in pagos %}
+            <div class="pago-item">
+                <span>{{ pago.fecha_pago|date:"d/m/Y" }} - {{ pago.tipo_pago }} ({{ pago.metodo_pago }})</span>
+                <span>+${{ pago.monto|floatformat:2 }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="divider"></div>
+
+        <!-- CONDICIONES Y CÓDIGO DE BARRAS -->
+        <div class="footer">
+            <p style="font-weight: 600; margin-bottom: 0.3rem;">¡Gracias por preferir LavaFácil!</p>
+            <p style="font-size: 0.65rem; line-height: 1.3;">Conserve este ticket para retirar sus prendas. Plazo máximo de retiro: 30 días. No nos responsabilizamos por prendas delicadas que no hayan sido declaradas como tal.</p>
+            
+            <!-- Código de barras simulado en SVG -->
+            <div class="barcode">
+                <svg width="150" height="40" viewBox="0 0 150 40">
+                    <rect width="150" height="40" fill="white"/>
+                    <g fill="black">
+                        <!-- Líneas del código de barras -->
+                        <rect x="10" y="5" width="2" height="30"/>
+                        <rect x="14" y="5" width="4" height="30"/>
+                        <rect x="20" y="5" width="1" height="30"/>
+                        <rect x="23" y="5" width="2" height="30"/>
+                        <rect x="28" y="5" width="3" height="30"/>
+                        <rect x="33" y="5" width="1" height="30"/>
+                        <rect x="36" y="5" width="4" height="30"/>
+                        <rect x="42" y="5" width="2" height="30"/>
+                        <rect x="46" y="5" width="1" height="30"/>
+                        <rect x="50" y="5" width="3" height="30"/>
+                        <rect x="55" y="5" width="2" height="30"/>
+                        <rect x="60" y="5" width="4" height="30"/>
+                        <rect x="66" y="5" width="1" height="30"/>
+                        <rect x="69" y="5" width="2" height="30"/>
+                        <rect x="74" y="5" width="3" height="30"/>
+                        <rect x="80" y="5" width="1" height="30"/>
+                        <rect x="83" y="5" width="4" height="30"/>
+                        <rect x="89" y="5" width="2" height="30"/>
+                        <rect x="94" y="5" width="1" height="30"/>
+                        <rect x="98" y="5" width="3" height="30"/>
+                        <rect x="104" y="5" width="1" height="30"/>
+                        <rect x="108" y="5" width="4" height="30"/>
+                        <rect x="114" y="5" width="2" height="30"/>
+                        <rect x="118" y="5" width="1" height="30"/>
+                        <rect x="122" y="5" width="3" height="30"/>
+                        <rect x="127" y="5" width="2" height="30"/>
+                        <rect x="131" y="5" width="4" height="30"/>
+                        <rect x="137" y="5" width="2" height="30"/>
+                    </g>
+                </svg>
+                <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dark); letter-spacing: 2px;">*LF-{{ orden.id|stringformat:"06d" }}*</span>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

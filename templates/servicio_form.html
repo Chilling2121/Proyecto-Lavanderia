@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if servicio %}Editar Servicio{% else %}Nuevo Servicio{% endif %} - LavaFácil{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    {% include 'includes/sidebar.html' with active_tab='servicios' %}
+
+    <!-- CUERPO PRINCIPAL (MAIN LAYOUT) -->
+    <main class="main-layout">
+        
+        <!-- CABECERA SUPERIOR (HEADER) -->
+        {% include 'includes/header.html' with page_title='Gestión de Servicios' %}
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content-wrapper">
+            
+            <!-- ENLACE DE RETORNO -->
+            <div style="margin-bottom: 1.5rem;">
+                <a href="{% url 'servicios_list' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); transition: var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    <span>Volver al listado de servicios</span>
+                </a>
+            </div>
+
+            <!-- FORMULARIO DE SERVICIO -->
+            <section class="dashboard-card" style="max-width: 600px; margin: 0 auto;">
+                <div class="card-header-row" style="margin-bottom: 1.5rem;">
+                    <h2>{% if servicio %}Editar Servicio: {{ servicio.nombre }}{% else %}Registrar Nuevo Servicio{% endif %}</h2>
+                </div>
+                
+                <form method="post" action="{% if servicio %}{% url 'servicio_edit' servicio.id %}{% else %}{% url 'servicio_create' %}{% endif %}">
+                    {% csrf_token %}
+                    
+                    <!-- Nombre del Servicio -->
+                    <div class="login-field">
+                        <label for="id_nombre">Nombre del Servicio *</label>
+                        <div class="login-input-wrapper">
+                            <span class="login-input-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                            </span>
+                            <input type="text" name="nombre" id="id_nombre" placeholder="Ej. Lavado de Edredón" value="{{ servicio.nombre|default:'' }}" required>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem;">
+                        <!-- Tarifa -->
+                        <div class="login-field" style="flex: 1;">
+                            <label for="id_tarifa">Tarifa Base ($) *</label>
+                            <div class="login-input-wrapper">
+                                <span class="login-input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                </span>
+                                <input type="number" step="0.01" min="0" name="tarifa" id="id_tarifa" placeholder="0.00" value="{{ servicio.tarifa|default:'' }}" required>
+                            </div>
+                        </div>
+
+                        <!-- Tipo de Cobro -->
+                        <div class="login-field" style="flex: 1;">
+                            <label for="id_tipo_cobro">Tipo de Cobro *</label>
+                            <select name="tipo_cobro" id="id_tipo_cobro" required>
+                                <option value="Por Prenda" {% if servicio.tipo_cobro == 'Por Prenda' %}selected{% endif %}>Por Prenda (Unidad)</option>
+                                <option value="Por Kg" {% if servicio.tipo_cobro == 'Por Kg' %}selected{% endif %}>Por Kg (Peso)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Descripción -->
+                    <div class="login-field">
+                        <label for="id_descripcion">Descripción / Detalles (Opcional)</label>
+                        <textarea name="descripcion" id="id_descripcion" rows="3" placeholder="Detalles de lo que incluye el servicio..." style="width: 100%; padding: 0.85rem 1rem; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid transparent; border-radius: var(--radius); color: var(--text); resize: none; transition: var(--transition);" onfocus="this.style.backgroundColor='var(--bg-card)'; this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(37,99,235,0.1)'; this.style.outline='none';" onblur="this.style.backgroundColor='var(--bg-app)'; this.style.borderColor='transparent'; this.style.boxShadow='none';">{{ servicio.descripcion|default:'' }}</textarea>
+                    </div>
+                    
+                    <!-- Botones de Acción -->
+                    <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                        <a href="{% url 'servicios_list' %}" class="login-btn" style="width: auto; background-color: var(--bg-app); border: 1px solid var(--border); color: var(--text); box-shadow: none;">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="login-btn" style="width: auto; padding: 0.75rem 2rem; font-size: 0.95rem;">
+                            <span>{% if servicio %}Guardar Cambios{% else %}Registrar Servicio{% endif %}</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </button>
+                    </div>
+                </form>
+
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Inicializar Tom Select en el selector de tipo de cobro
+        if (typeof TomSelect !== 'undefined') {
+            const selectCobro = document.getElementById('id_tipo_cobro');
+            if (selectCobro) {
+                new TomSelect(selectCobro, {
+                    create: false,
+                    controlInput: null
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

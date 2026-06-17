@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if usuario %}Editar Empleado{% else %}Registrar Nuevo Empleado{% endif %} - LavaFácil{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    {% include 'includes/sidebar.html' with active_tab='usuarios' %}
+
+    <!-- CUERPO PRINCIPAL (MAIN LAYOUT) -->
+    <main class="main-layout">
+        
+        <!-- CABECERA SUPERIOR (HEADER) -->
+        {% include 'includes/header.html' with page_title='Gestión de Usuarios' %}
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content-wrapper">
+            
+            <!-- ENLACE DE RETORNO -->
+            <div style="margin-bottom: 1.5rem;">
+                <a href="{% url 'usuarios_list' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); transition: var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    <span>Volver al listado de personal</span>
+                </a>
+            </div>
+
+            <!-- FORMULARIO DE USUARIO -->
+            <section class="dashboard-card" style="max-width: 650px; margin: 0 auto; gap: 1.5rem;">
+                <div class="card-header-row" style="margin-bottom: 0.5rem;">
+                    <h2>{% if usuario %}Editar Empleado: {{ usuario.username }}{% else %}Registrar Nuevo Empleado{% endif %}</h2>
+                </div>
+                
+                <form method="post" action="" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    {% csrf_token %}
+                    
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <!-- Nombre de Usuario -->
+                        <div class="login-field" style="flex: 1; min-width: 240px; margin-bottom: 0;">
+                            <label for="id_username" style="font-weight: 600;">Nombre de Usuario *</label>
+                            <div class="login-input-wrapper">
+                                <span class="login-input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                </span>
+                                <input type="text" name="username" id="id_username" placeholder="Nombre de usuario" value="{{ usuario.username|default:'' }}" required>
+                            </div>
+                            <small style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">Identificador único para iniciar sesión.</small>
+                        </div>
+                        
+                        <!-- Correo Electrónico -->
+                        <div class="login-field" style="flex: 1; min-width: 240px; margin-bottom: 0;">
+                            <label for="id_email" style="font-weight: 600;">Correo Electrónico</label>
+                            <div class="login-input-wrapper">
+                                <span class="login-input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                </span>
+                                <input type="email" name="email" id="id_email" placeholder="correo@ejemplo.com" value="{{ usuario.email|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <!-- Nombre -->
+                        <div class="login-field" style="flex: 1; min-width: 240px; margin-bottom: 0;">
+                            <label for="id_first_name" style="font-weight: 600;">Nombre</label>
+                            <div class="login-input-wrapper">
+                                <span class="login-input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8"></path><path d="M8 12h8"></path></svg>
+                                </span>
+                                <input type="text" name="first_name" id="id_first_name" placeholder="Nombre de pila" value="{{ usuario.first_name|default:'' }}">
+                            </div>
+                        </div>
+                        
+                        <!-- Apellidos -->
+                        <div class="login-field" style="flex: 1; min-width: 240px; margin-bottom: 0;">
+                            <label for="id_last_name" style="font-weight: 600;">Apellidos</label>
+                            <div class="login-input-wrapper">
+                                <span class="login-input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8"></path><path d="M8 12h8"></path></svg>
+                                </span>
+                                <input type="text" name="last_name" id="id_last_name" placeholder="Apellidos completos" value="{{ usuario.last_name|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="border-top: 1px solid var(--border); margin: 0.5rem 0;"></div>
+                    
+                    <!-- Roles de Usuario -->
+                    <div class="login-field" style="margin-bottom: 0;">
+                        <label for="id_rol" style="font-weight: 600;">Asignar Rol de Acceso *</label>
+                        <select name="rol" id="id_rol" required>
+                            <option value="">Selecciona un rol de puesto...</option>
+                            {% for grupo in grupos %}
+                                <option value="{{ grupo.id }}" 
+                                    {% if usuario and grupo in usuario.groups.all %}selected{% endif %}>
+                                    {{ grupo.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">
+                            Define los permisos del empleado en el sistema (Administrador, Cajero u Operador).
+                        </small>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); margin: 0.5rem 0;"></div>
+                    
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <!-- Contraseña -->
+                        <div class="login-field" style="flex: 1; min-width: 240px; margin-bottom: 0;">
+                            <label for="id_password" style="font-weight: 600;">Contraseña {% if not usuario %}*{% endif %}</label>
+                            <div class="login-input-wrapper">
+                                <span class="login-input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                </span>
+                                <input type="password" name="password" id="id_password" placeholder="Mínimo 8 caracteres" {% if not usuario %}required{% endif %}>
+                            </div>
+                            {% if usuario %}
+                                <small style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">Déjala en blanco para conservar la actual.</small>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Confirmar Contraseña -->
+                        <div class="login-field" style="flex: 1; min-width: 240px; margin-bottom: 0;">
+                            <label for="id_confirm_password" style="font-weight: 600;">Confirmar Contraseña {% if not usuario %}*{% endif %}</label>
+                            <div class="login-input-wrapper">
+                                <span class="login-input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                </span>
+                                <input type="password" name="confirm_password" id="id_confirm_password" placeholder="Repite la contraseña" {% if not usuario %}required{% endif %}>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Botones de Acción -->
+                    <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.25rem;">
+                        <a href="{% url 'usuarios_list' %}" class="login-btn" style="width: auto; background-color: var(--bg-app); border: 1px solid var(--border); color: var(--text); box-shadow: none;">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="login-btn" style="width: auto; padding: 0.75rem 2rem; font-size: 0.95rem;">
+                            <span>{% if usuario %}Guardar Cambios{% else %}Registrar Empleado{% endif %}</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </button>
+                    </div>
+                </form>
+
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Inicializar Tom Select para selector de rol
+        if (typeof TomSelect !== 'undefined') {
+            const selectRol = document.getElementById('id_rol');
+            if (selectRol) {
+                new TomSelect(selectRol, {
+                    create: false,
+                    controlInput: null
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

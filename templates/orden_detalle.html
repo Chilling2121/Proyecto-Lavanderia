@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Orden #{{ orden.id|stringformat:"06d" }} - LavaFácil{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    {% include 'includes/sidebar.html' with active_tab='ordenes' %}
+
+    <!-- CUERPO PRINCIPAL (MAIN LAYOUT) -->
+    <main class="main-layout">
+        
+        <!-- CABECERA SUPERIOR (HEADER) -->
+        {% include 'includes/header.html' with page_title='Detalle de Orden' %}
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content-wrapper" style="padding-bottom: 4rem;">
+            
+            <!-- ENLACE DE RETORNO Y TÍTULO -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <a href="{% url 'ordenes_list' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); transition: var(--transition); margin-bottom: 0.5rem;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        <span>Volver al listado de órdenes</span>
+                    </a>
+                    <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text);">
+                        Orden <span style="color: var(--primary);">#{{ orden.id|stringformat:"06d" }}</span>
+                    </h2>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                        Registrada el {{ orden.fecha_recepcion|date:"d/m/Y" }} a las {{ orden.fecha_recepcion|date:"H:i" }}
+                    </p>
+                </div>
+                <a href="{% url 'orden_ticket' orden.id %}" target="_blank" class="login-btn" style="width: auto; padding: 0.6rem 1.25rem; font-size: 0.9rem; background-color: var(--bg-card); color: var(--text); border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: var(--shadow-sm);" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)';" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text)';">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    <span>Imprimir Ticket</span>
+                </a>
+            </div>
+
+            <!-- GRID PRINCIPAL: DOS COLUMNAS -->
+            <div style="display: grid; grid-template-columns: 1.4fr 0.95fr; gap: 1.5rem; align-items: start;">
+                
+                <!-- COLUMNA IZQUIERDA: CLIENTE + PRENDAS -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    
+                    <!-- TARJETA DE CLIENTE -->
+                    <section class="dashboard-card">
+                        <div class="card-header-row" style="margin-bottom: 1rem; padding-bottom: 0.75rem;">
+                            <h2>Datos del Cliente</h2>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="background-color: var(--primary); color: white; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            </div>
+                            <div>
+                                <h3 style="font-weight: 700; font-size: 1.05rem; color: var(--text);">{{ orden.cliente.nombre }}</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.2rem;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                    {{ orden.cliente.telefono }}
+                                </p>
+                                {% if orden.cliente.correo %}
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.1rem;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.2rem;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                    {{ orden.cliente.correo }}
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- TABLA DE PRENDAS -->
+                    <section class="dashboard-card">
+                        <div class="card-header-row" style="margin-bottom: 1rem; padding-bottom: 0.75rem;">
+                            <h2>Prendas Registradas ({{ prendas_detalle|length }})</h2>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Prenda</th>
+                                        <th>Servicio</th>
+                                        <th style="text-align: center;">Cant.</th>
+                                        <th style="text-align: center;">Peso</th>
+                                        <th>Observaciones</th>
+                                        <th style="text-align: right;">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in prendas_detalle %}
+                                    <tr>
+                                        <td class="font-medium">{{ item.prenda.tipo_prenda }}</td>
+                                        <td>{{ item.prenda.servicio.nombre }}</td>
+                                        <td style="text-align: center;">{{ item.prenda.cantidad }}</td>
+                                        <td style="text-align: center;">{% if item.prenda.peso %}{{ item.prenda.peso|floatformat:2 }} kg{% else %}—{% endif %}</td>
+                                        <td style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">{{ item.prenda.observaciones|default:"—" }}</td>
+                                        <td class="font-medium" style="text-align: right;">${{ item.subtotal|floatformat:2 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- OBSERVACIONES GENERALES -->
+                    {% if orden.observaciones %}
+                    <section class="dashboard-card">
+                        <div class="card-header-row" style="margin-bottom: 1rem; padding-bottom: 0.75rem;">
+                            <h2>Observaciones Generales</h2>
+                        </div>
+                        <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">{{ orden.observaciones }}</p>
+                    </section>
+                    {% endif %}
+
+                </div>
+
+                <!-- COLUMNA DERECHA: ESTADO + PAGOS -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    
+                    <!-- PANEL DE ESTADO Y SEGUIMIENTO -->
+                    <section class="dashboard-card" style="gap: 0;">
+                        <div class="card-header-row" style="margin-bottom: 1rem; padding-bottom: 0.75rem;">
+                            <h2>Seguimiento de Lavado</h2>
+                        </div>
+                        <div id="status-panel">
+                            {% include 'partials/orden_status_panel.html' %}
+                        </div>
+                    </section>
+
+                    <!-- PANEL FINANCIERO Y PAGOS -->
+                    <section class="dashboard-card" style="gap: 0;">
+                        <div class="card-header-row" style="margin-bottom: 1rem; padding-bottom: 0.75rem;">
+                            <h2>Información Financiera</h2>
+                        </div>
+                        <div id="payment-panel">
+                            {% include 'partials/orden_payment_panel.html' %}
+                        </div>
+                    </section>
+
+                    <!-- FECHAS CLAVE -->
+                    <section class="dashboard-card" style="gap: 0.75rem;">
+                        <div class="card-header-row" style="margin-bottom: 0.5rem; padding-bottom: 0.75rem;">
+                            <h2>Fechas</h2>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 500; color: var(--text-muted); font-size: 0.88rem;">Recepción</span>
+                                <span style="font-weight: 600; color: var(--text); font-size: 0.88rem;">{{ orden.fecha_recepcion|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 500; color: var(--text-muted); font-size: 0.88rem;">Entrega Estimada</span>
+                                <span style="font-weight: 600; color: var(--text); font-size: 0.88rem;">{{ orden.fecha_entrega_estimada|date:"d/m/Y H:i"|default:"—" }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 500; color: var(--text-muted); font-size: 0.88rem;">Entrega Real</span>
+                                <span style="font-weight: 600; color: {% if orden.fecha_entrega_real %}var(--success){% else %}var(--text-muted){% endif %}; font-size: 0.88rem;">{{ orden.fecha_entrega_real|date:"d/m/Y H:i"|default:"Pendiente" }}</span>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- Modal de Confirmación para Avanzar Estado -->
+<div id="advance-status-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center;">
+    <div class="dashboard-card" style="width: 100%; max-width: 420px; margin: 1.5rem; box-shadow: var(--shadow-lg); animation: slideUp 0.3s ease-out; gap: 1.5rem; text-align: center;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; justify-content: center; align-items: center;">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+            <h2 style="font-size: 1.15rem; font-weight: 750; color: var(--text);">Confirmar Avance de Estado</h2>
+            <p id="advance-modal-text" style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.4;">
+                ¿Estás seguro de avanzar esta orden al siguiente estado?
+            </p>
+        </div>
+        
+        <form hx-post="{% url 'orden_advance_status' orden.id %}" hx-target="#status-panel" hx-swap="innerHTML" style="display: flex; flex-direction: column; gap: 0.85rem;">
+            {% csrf_token %}
+            <input type="text" name="observaciones" placeholder="Observaciones (opcional)..." 
+                   style="width: 100%; padding: 0.75rem 1rem; font-size: 0.9rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius); color: var(--text);">
+            <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                <button type="button" onclick="toggleAdvanceModal(false)" style="padding: 0.85rem 1.5rem; border-radius: var(--radius); border: 1.5px solid var(--border); background: white; font-weight: 600; font-family: var(--font); cursor: pointer; color: var(--text-muted); transition: var(--transition);">
+                    Cancelar
+                </button>
+                <button type="submit" onclick="toggleAdvanceModal(false)" class="login-btn" style="width: auto; padding: 0.85rem 1.5rem; font-size: 0.95rem;">
+                    <span>Sí, Avanzar</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{% static 'js/orden_detalle.js' %}"></script>
+
+<style>
+    @keyframes slideUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+</style>
+{% endblock %}
