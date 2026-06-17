@@ -103,3 +103,4 @@ INSERT INTO `promociones` (`nombre`, `tipo`, `valor`, `fecha_inicio`, `fecha_fin
 ('Descuento Verano', 'Porcentaje', 20.00, '2026-06-01', '2026-08-31', 1),
 ('Cliente Frecuente', 'Porcentaje', 10.00, '2026-01-01', '2026-12-31', 1),
 ('Miércoles Feliz', 'Fijo', 5.00, '2026-01-01', '2026-12-31', 1);
+
