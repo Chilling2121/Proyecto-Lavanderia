@@ -110,21 +110,23 @@
                             </button>
                         </div>
                         
-                        <!-- Encabezados de columnas para las prendas -->
-                        <div id="prendas-headers" style="display: none; grid-template-columns: 1.4fr 1.6fr 55px 65px 1.1fr 75px 35px; gap: 0.75rem; padding: 0 1rem 0.5rem 1rem; border-bottom: 1.5px solid var(--border); margin-bottom: 0.85rem; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <!-- Encabezados y filas de prendas -->
+                        <div class="prendas-scroll-container">
+                        <div id="prendas-headers" style="display: none; grid-template-columns: 1.1fr 1.1fr 55px 45px 50px 1.1fr 65px 30px; gap: 0.5rem; padding: 0 0.5rem 0.4rem 0.5rem; border-bottom: 1.5px solid var(--border); margin-bottom: 0.25rem; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
                             <div>Prenda</div>
                             <div>Servicio</div>
+                            <div style="text-align: center;">Tarifa</div>
                             <div style="text-align: center;">Cant.</div>
                             <div style="text-align: center;">Peso</div>
-                            <div>Observaciones</div>
-                            <div style="text-align: right; padding-right: 0.5rem;">Subtotal</div>
+                            <div>Detalles</div>
+                            <div style="text-align: right; padding-right: 0.25rem;">Subtotal</div>
                             <div></div>
                         </div>
 
-                        <!-- Lista de prendas vacía inicialmente -->
                         <div id="prendas-container" style="display: flex; flex-direction: column; gap: 0.85rem;">
                             <!-- Las filas se inyectan dinámicamente con JS -->
                         </div>
+                        </div><!-- fin prendas-scroll-container -->
                         
                         <!-- Placeholder cuando no hay prendas -->
                         <div id="no-prendas-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; height: 180px; border: 2px dashed var(--border); border-radius: var(--radius); text-align: center; color: var(--text-muted);">
@@ -262,7 +264,7 @@
 
 <!-- Datos de los Servicios en formato JSON -->
 <script>
-    const SERVICIOS = {{ servicios_json|safe }};
+    window.SERVICIOS = {{ servicios_json|safe }};
 </script>
 
 <script src="{% static 'js/ordenes.js' %}"></script>

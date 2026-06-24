@@ -91,7 +91,7 @@
             </button>
         </div>
 
-        <form id="new-client-form" method="post" action="{% url 'cliente_create' %}" style="display: flex; flex-direction: column; gap: 1.25rem;" novalidate>
+        <form id="new-client-form" method="post" action="{% url 'cliente_create' %}" style="display: flex; flex-direction: column; gap: 1.25rem;">
             {% csrf_token %}
             
             <!-- Campo Nombre -->
@@ -159,7 +159,7 @@
             </button>
         </div>
 
-        <form id="edit-client-form" method="post" action="" style="display: flex; flex-direction: column; gap: 1.25rem;" novalidate>
+        <form id="edit-client-form" method="post" action="" style="display: flex; flex-direction: column; gap: 1.25rem;">
             {% csrf_token %}
             
             <!-- Campo Nombre -->
@@ -246,6 +246,23 @@
 
 <!-- Lógica JavaScript para control de Modales -->
 <script src="{% static 'js/clientes.js' %}"></script>
+<script src="{% static 'js/ordenes.js' %}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'nueva_orden') {
+            if (typeof showToast === 'function') {
+                setTimeout(() => {
+                    showToast("Para registrar una nueva orden, primero selecciona o busca al cliente en la lista inferior.", "info");
+                }, 300); // Pequeño retraso para la animación
+            }
+            // Limpiar la URL para evitar notificaciones dobles al recargar
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({path: newUrl}, '', newUrl);
+        }
+    });
+</script>
 
 <!-- Estilo para animación de aparición del modal y resaltado de fila -->
 <style>

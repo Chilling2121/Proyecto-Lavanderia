@@ -15,6 +15,7 @@
     align-items: center;
     box-shadow: var(--shadow-sm);
     transition: var(--transition);
+    min-width: 0;
 }
 
 .metric-card:hover {
@@ -27,6 +28,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    min-width: 0;
 }
 
 .metric-title {
@@ -69,6 +71,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .metric-icon-container svg {

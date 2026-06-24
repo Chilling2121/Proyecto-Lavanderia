@@ -1,0 +1,36 @@
+/* ==========================================
+   FORMULARIOS Y CAMPOS DE ENTRADA
+   ========================================== */
+.content-wrapper input[type="text"],
+.content-wrapper input[type="email"],
+.content-wrapper input[type="tel"],
+.content-wrapper input[type="number"],
+.content-wrapper input[type="search"],
+.content-wrapper textarea,
+.content-wrapper select {
+    max-width: 100%;
+}
+
+/* ==========================================
+   SERVICIOS: Tabla
+   ========================================== */
+.table-responsive table.custom-table {
+    min-width: 500px;
+}
+
+/* ==========================================
+   TICKET DE IMPRESIÓN
+   ========================================== */
+@media print {
+    .ticket-print-hide {
+        display: none !important;
+    }
+
+    .ticket-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+}

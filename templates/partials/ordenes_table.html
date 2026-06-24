@@ -1,6 +1,6 @@
 {% for orden in ordenes %}
 <tr style="transition: var(--transition);" onmouseover="this.style.backgroundColor='var(--bg-app)';" onmouseout="this.style.backgroundColor='transparent';">
-    <td class="font-medium" style="padding-left: 2rem; color: var(--primary);">#{{ orden.id|stringformat:"06d" }}</td>
+    <td class="font-medium" style="padding-left: 0.5rem; color: var(--primary);">#{{ orden.id|stringformat:"06d" }}</td>
     <td class="font-medium">{{ orden.cliente.nombre }}</td>
     <td>{{ orden.fecha_recepcion|date:"d/m/Y H:i" }}</td>
     <td>{{ orden.fecha_entrega_estimada|date:"d/m/Y H:i"|default:"—" }}</td>
@@ -38,10 +38,14 @@
         {% endif %}
     </td>
     <td style="text-align: center;">
-        <a href="{% url 'orden_detail' orden.id %}" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.85rem; font-size: 0.82rem; font-weight: 600; color: var(--primary); background-color: var(--primary-light); border-radius: var(--radius-sm); text-decoration: none; transition: var(--transition);" onmouseover="this.style.backgroundColor='rgba(37,99,235,0.15)'" onmouseout="this.style.backgroundColor='var(--primary-light)'">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-            Ver detalle
-        </a>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <a href="{% url 'orden_detail' orden.id %}" style="display: inline-flex; align-items: center; justify-content: center; padding: 0.45rem; color: var(--primary); background-color: var(--primary-light); border-radius: var(--radius-sm); transition: var(--transition);" title="Ver Detalle" onmouseover="this.style.backgroundColor='rgba(37,99,235,0.15)'" onmouseout="this.style.backgroundColor='var(--primary-light)'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </a>
+            <a href="{% url 'orden_ticket' orden.id %}" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; padding: 0.45rem; color: var(--text-muted); background-color: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius-sm); transition: var(--transition);" title="Imprimir Ticket" onmouseover="this.style.color='var(--primary)'; this.style.borderColor='var(--primary)';" onmouseout="this.style.color='var(--text-muted)'; this.style.borderColor='var(--border)';">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            </a>
+        </div>
     </td>
 </tr>
 {% empty %}

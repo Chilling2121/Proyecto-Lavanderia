@@ -108,10 +108,19 @@ function addPrendaRow() {
     
     // Contenido HTML de la fila con Tarifa editable e input de tipo de prenda estándar (con datalist)
     row.innerHTML = `
-        <!-- Tipo de Prenda (Texto libre con datalist de sugerencias) -->
+        <!-- Tipo de Prenda (TomSelect con creación libre) -->
         <div style="min-width: 0;">
-            <input type="text" class="input-tipo" placeholder="Prenda..." list="prendas-sugeridas" required
-                   style="box-sizing: border-box; width: 100%; padding: 0.45rem 0.4rem; font-size: 0.82rem; font-family: var(--font); background-color: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); text-overflow: ellipsis;">
+            <select class="input-tipo" placeholder="Prenda..." required
+                    style="box-sizing: border-box; width: 100%; padding: 0.45rem 0.4rem; font-size: 0.82rem; font-family: var(--font); background-color: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); text-overflow: ellipsis;">
+                <option value=""></option>
+                <option value="Pantalón">Pantalón</option>
+                <option value="Camisa">Camisa</option>
+                <option value="Chaqueta / Saco">Chaqueta / Saco</option>
+                <option value="Vestido">Vestido</option>
+                <option value="Falda">Falda</option>
+                <option value="Edredón / Cobija">Edredón / Cobija</option>
+                <option value="Abrigo">Abrigo</option>
+            </select>
         </div>
         
         <!-- Selector de Servicio -->
@@ -161,12 +170,19 @@ function addPrendaRow() {
     
     container.appendChild(row);
     
-    // Agregar listener para limpiar error de borde al escribir
-    row.querySelector('.input-tipo').addEventListener('input', (e) => {
+    // Agregar listener para limpiar error de borde al seleccionar o escribir
+    const inputTipo = row.querySelector('.input-tipo');
+    inputTipo.addEventListener('change', (e) => {
         e.target.style.borderColor = '';
+        if (e.target.tomselect && e.target.tomselect.control) {
+            e.target.tomselect.control.style.borderColor = '';
+        }
     });
     row.querySelector('.select-servicio').addEventListener('change', (e) => {
         e.target.style.borderColor = '';
+        if (e.target.tomselect && e.target.tomselect.control) {
+            e.target.tomselect.control.style.borderColor = '';
+        }
     });
     row.querySelector('.input-tarifa').addEventListener('input', (e) => {
         e.target.style.borderColor = '';
@@ -183,6 +199,22 @@ function addPrendaRow() {
             onChange: function() {
                 // Forzar trigger de cambio para activar onServiceChange nativo
                 onServiceChange(selectSvc);
+            }
+        });
+    }
+
+    // Inicializar Tom Select para la prenda (con creación libre habilitada)
+    const selectPrenda = row.querySelector('.input-tipo');
+    if (typeof TomSelect !== 'undefined' && selectPrenda) {
+        new TomSelect(selectPrenda, {
+            create: true, // Permite escribir texto libre no predefinido
+            createOnBlur: true,
+            persist: false,
+            placeholder: "Prenda...",
+            render: {
+                option_create: function(data, escape) {
+                    return '<div class="create">Añadir <strong>' + escape(data.input) + '</strong>&hellip;</div>';
+                }
             }
         });
     }
@@ -387,18 +419,29 @@ function runOrderValidationAndSerialization(form) {
             if (!tipoInput.value.trim()) {
                 hasError = true;
                 tipoInput.style.borderColor = 'var(--danger)';
+                if (tipoInput.tomselect && tipoInput.tomselect.control) {
+                    tipoInput.tomselect.control.style.borderColor = 'var(--danger)';
+                }
                 tipoInput.focus();
             } else {
                 tipoInput.style.borderColor = '';
+                if (tipoInput.tomselect && tipoInput.tomselect.control) {
+                    tipoInput.tomselect.control.style.borderColor = '';
+                }
             }
             
             if (!selectServ.value) {
                 hasError = true;
                 selectServ.style.borderColor = 'var(--danger)';
-                // Si usa Tom Select, pintar el control correspondiente
-                const tsControl = row.querySelector('.ts-control');
-                if (tsControl) tsControl.style.borderColor = 'var(--danger)';
+                if (selectServ.tomselect && selectServ.tomselect.control) {
+                    selectServ.tomselect.control.style.borderColor = 'var(--danger)';
+                }
                 selectServ.focus();
+            } else {
+                selectServ.style.borderColor = '';
+                if (selectServ.tomselect && selectServ.tomselect.control) {
+                    selectServ.tomselect.control.style.borderColor = '';
+                }
             }
             
             if (tarifaInput && (tarifaInput.value === '' || parseFloat(tarifaInput.value) < 0)) {

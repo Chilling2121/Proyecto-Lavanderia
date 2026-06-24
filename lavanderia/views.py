@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count, Q, ProtectedError
 from django.utils import timezone
@@ -100,7 +100,7 @@ def clientes_search(request):
 def cliente_historial(request, cliente_id):
     try:
         cliente = Cliente.objects.get(id=cliente_id)
-        ordenes = Orden.objects.filter(cliente=cliente).order_by('-fecha_recepcion')
+        ordenes = Orden.objects.filter(cliente=cliente).order_by('-fecha_recepcion').prefetch_related('prendas__servicio')
     except Cliente.DoesNotExist:
         cliente = None
         ordenes = []
@@ -207,7 +207,12 @@ def servicio_create(request):
 
 @login_required
 def servicio_edit(request, servicio_id):
-    servicio = Servicio.objects.get(id=servicio_id)
+    try:
+        servicio = Servicio.objects.get(id=servicio_id)
+    except Servicio.DoesNotExist:
+        messages.error(request, "El servicio solicitado no existe.")
+        return redirect('servicios_list')
+    
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
         descripcion = request.POST.get('descripcion')
@@ -557,71 +562,6 @@ def orden_detail(request, orden_id):
     return render(request, 'orden_detalle.html', context)
 
 
-@login_required
-def orden_advance_status(request, orden_id):
-    if request.method == 'POST':
-        try:
-            orden = Orden.objects.get(id=orden_id)
-        except Orden.DoesNotExist:
-            return HttpResponse("<p style='color:var(--danger);'>Orden no encontrada.</p>", status=404)
-
-        estado_actual = orden.estado_actual
-        if estado_actual not in ESTADOS_LAVADO:
-            return HttpResponse("<p style='color:var(--danger);'>Estado actual no reconocido.</p>", status=400)
-
-        idx = ESTADOS_LAVADO.index(estado_actual)
-        if idx >= len(ESTADOS_LAVADO) - 1:
-            return HttpResponse("<p style='color:var(--danger);'>La orden ya está en su estado final.</p>", status=400)
-
-        nuevo_estado = ESTADOS_LAVADO[idx + 1]
-        
-        # VALIDACIÓN: No permitir entregar si hay saldo pendiente
-        if nuevo_estado == 'Entregada' and orden.saldo_pendiente > 0:
-            seguimientos = SeguimientoLavado.objects.filter(orden=orden).order_by('fecha_cambio')
-            context = {
-                'orden': orden,
-                'seguimientos': seguimientos,
-                'siguiente_estado': nuevo_estado,
-                'estados_lavado': ESTADOS_LAVADO,
-                'estado_actual_idx': idx,
-                'status_error': f'No se puede entregar la orden porque tiene un saldo pendiente de ${orden.saldo_pendiente:.2f}. El pago total es obligatorio.'
-            }
-            return render(request, 'partials/orden_status_panel.html', context)
-
-        observaciones = request.POST.get('observaciones', '').strip()
-
-        with transaction.atomic():
-            orden.estado_actual = nuevo_estado
-            if nuevo_estado == 'Entregada':
-                orden.fecha_entrega_real = timezone.now()
-            orden.save()
-
-            SeguimientoLavado.objects.create(
-                orden=orden,
-                estado=nuevo_estado,
-                observaciones=observaciones or f'Estado avanzado a {nuevo_estado}.'
-            )
-
-        seguimientos = SeguimientoLavado.objects.filter(orden=orden).order_by('fecha_cambio')
-        siguiente_estado = None
-        new_idx = ESTADOS_LAVADO.index(nuevo_estado)
-        if new_idx < len(ESTADOS_LAVADO) - 1:
-            siguiente_estado = ESTADOS_LAVADO[new_idx + 1]
-
-        context = {
-            'orden': orden,
-            'seguimientos': seguimientos,
-            'siguiente_estado': siguiente_estado,
-            'estados_lavado': ESTADOS_LAVADO,
-            'estado_actual_idx': new_idx,
-        }
-
-        response = render(request, 'partials/orden_status_panel.html', context)
-        response['HX-Trigger'] = 'statusUpdated'
-        return response
-
-    return HttpResponse(status=405)
-
 
 @login_required
 def orden_register_payment(request, orden_id):
@@ -646,21 +586,48 @@ def orden_register_payment(request, orden_id):
             })
 
         saldo_actual = float(orden.saldo_pendiente)
+        
+        # Calcular cambio para pagos en Efectivo
+        efectivo_recibido = monto
+        cambio = 0.0
+        monto_registrado = monto
+        
+        efectivo_entregado_str = request.POST.get('efectivo_entregado', '').strip()
+        
         if monto > saldo_actual:
-            monto = saldo_actual
+            monto_registrado = saldo_actual
+            if metodo_pago == 'Efectivo':
+                cambio = monto - saldo_actual
+        elif efectivo_entregado_str and metodo_pago == 'Efectivo':
+            try:
+                efectivo_entregado_val = float(efectivo_entregado_str)
+                if efectivo_entregado_val > monto:
+                    efectivo_recibido = efectivo_entregado_val
+                    cambio = efectivo_entregado_val - monto
+            except ValueError:
+                pass
+
+        if metodo_pago == 'Efectivo' and cambio > 0:
+            detalles_cambio = f"Recibido: ${efectivo_recibido:.2f} | Cambio: ${cambio:.2f}"
+            if observaciones_pago:
+                observaciones_db = f"{observaciones_pago} ({detalles_cambio})"
+            else:
+                observaciones_db = detalles_cambio
+        else:
+            observaciones_db = observaciones_pago or f"Pago registrado (${monto_registrado:.2f})"
 
         with transaction.atomic():
-            tipo_pago = 'Saldo Final' if monto >= saldo_actual else 'Abono'
+            tipo_pago = 'Saldo Final' if monto_registrado >= saldo_actual else 'Abono'
 
             Pago.objects.create(
                 orden=orden,
-                monto=monto,
+                monto=monto_registrado,
                 metodo_pago=metodo_pago,
                 tipo_pago=tipo_pago,
-                observaciones=observaciones_pago or f'Pago registrado (${monto:.2f})'
+                observaciones=observaciones_db
             )
 
-            nuevo_anticipo = float(orden.anticipo) + monto
+            nuevo_anticipo = float(orden.anticipo) + monto_registrado
             nuevo_saldo = float(orden.total_a_pagar) - nuevo_anticipo
 
             orden.anticipo = nuevo_anticipo
@@ -678,6 +645,11 @@ def orden_register_payment(request, orden_id):
         context = {
             'orden': orden,
             'pagos': pagos,
+            'cambio_info': {
+                'monto_cobrado': monto_registrado,
+                'efectivo_recibido': efectivo_recibido,
+                'cambio': cambio
+            } if cambio > 0 else None
         }
 
         response = render(request, 'partials/orden_payment_panel.html', context)
@@ -861,7 +833,12 @@ def usuario_create(request):
 
 @login_required
 def usuario_update(request, id):
-    usuario = User.objects.get(id=id)
+    try:
+        usuario = User.objects.get(id=id)
+    except User.DoesNotExist:
+        messages.error(request, 'El usuario solicitado no existe.')
+        return redirect('usuarios_list')
+    
     grupos = Group.objects.all()
     if request.method == 'POST':
         new_username = request.POST.get('username')
@@ -903,7 +880,12 @@ def usuario_update(request, id):
 @login_required
 def usuario_toggle_status(request, id):
     if request.method == 'POST':
-        usuario = User.objects.get(id=id)
+        try:
+            usuario = User.objects.get(id=id)
+        except User.DoesNotExist:
+            messages.error(request, 'El usuario solicitado no existe.')
+            return redirect('usuarios_list')
+        
         if usuario == request.user:
             messages.error(request, 'No puedes desactivar tu propia cuenta.')
             return redirect('usuarios_list')
@@ -913,3 +895,77 @@ def usuario_toggle_status(request, id):
         estado = "activado" if usuario.is_active else "desactivado"
         messages.success(request, f'Usuario {estado} exitosamente.')
     return redirect('usuarios_list')
+
+# ==========================================
+# SEGUIMIENTO (KANBAN)
+# ==========================================
+@login_required
+def seguimiento_list(request):
+    ordenes_activas = Orden.objects.exclude(estado_actual='Entregada').select_related('cliente').prefetch_related('prendas').order_by('fecha_recepcion')
+    
+    # Parámetro para seguimiento individual o tomar la primera activa por defecto
+    orden_id = request.GET.get('orden_id')
+    orden_seleccionada = None
+    seguimientos_orden = []
+    
+    if orden_id:
+        try:
+            orden_seleccionada = Orden.objects.select_related('cliente').prefetch_related('prendas').get(id=orden_id)
+        except Orden.DoesNotExist:
+            pass
+            
+    # Si no se seleccionó ninguna en particular pero hay activas, precargar la primera
+    if not orden_seleccionada and ordenes_activas.exists():
+        orden_seleccionada = ordenes_activas.first()
+        
+    if orden_seleccionada:
+        seguimientos_orden = SeguimientoLavado.objects.filter(orden=orden_seleccionada).order_by('fecha_cambio')
+        
+    context = {
+        'ordenes_activas': ordenes_activas,
+        'orden_seleccionada': orden_seleccionada,
+        'seguimientos_orden': seguimientos_orden,
+    }
+    return render(request, 'seguimiento.html', context)
+
+@login_required
+def seguimiento_advance_status(request, orden_id):
+    if request.method == 'POST':
+        from django.db import transaction
+        from django.contrib import messages
+        from django.shortcuts import redirect
+        
+        orden = get_object_or_404(Orden, id=orden_id)
+        estados = ['Recibida', 'Clasificada', 'En lavado', 'En secado', 'En planchado', 'Empaquetada', 'Lista para entrega', 'Entregada']
+        try:
+            idx = estados.index(orden.estado_actual)
+            if idx < len(estados) - 1:
+                nuevo_estado = estados[idx + 1]
+                
+                # Validación contable: No entregar si tiene saldo pendiente
+                if nuevo_estado == 'Entregada' and orden.saldo_pendiente > 0:
+                    messages.error(request, f"No se puede entregar la orden #{orden.id:06d} porque tiene un saldo pendiente de ${orden.saldo_pendiente:.2f}. El pago total es obligatorio.")
+                else:
+                    with transaction.atomic():
+                        orden.estado_actual = nuevo_estado
+                        if nuevo_estado == 'Entregada':
+                            from django.utils import timezone
+                            orden.fecha_entrega_real = timezone.now()
+                        orden.save()
+                        
+                        # Registrar en el historial de seguimiento
+                        SeguimientoLavado.objects.create(
+                            orden=orden,
+                            estado=nuevo_estado,
+                            observaciones=f"Estado avanzado a {nuevo_estado} desde la vista de seguimiento."
+                        )
+                        messages.success(request, f"Orden #{orden.id:06d} avanzada a {nuevo_estado} con éxito.")
+        except ValueError:
+            pass
+            
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            return redirect(referer)
+        return redirect('seguimiento_list')
+    
+    return HttpResponse(status=405)

@@ -1,32 +1,50 @@
 <!-- Panel Financiero y Pagos (HTMX Partial) -->
-<div id="payment-panel-inner" hx-get="{% url 'orden_detail' orden.id %}" hx-trigger="statusUpdated from:body" hx-select="#payment-panel-inner" hx-swap="outerHTML">
+<div id="payment-panel-inner" hx-get="{% url 'orden_detail' orden.id %}" hx-trigger="statusUpdated from:body" hx-select="#payment-panel-inner" hx-swap="outerHTML" class="payment-panel-wrapper">
     
+    <!-- Alerta de vuelto / cambio a entregar al cliente -->
+    {% if cambio_info %}
+    <div class="payment-change-alert">
+        <div class="payment-change-row">
+            <span>Monto Cobrado (Deuda):</span>
+            <span>${{ cambio_info.monto_cobrado|floatformat:2 }}</span>
+        </div>
+        <div class="payment-change-row">
+            <span>Efectivo Recibido:</span>
+            <span>${{ cambio_info.efectivo_recibido|floatformat:2 }}</span>
+        </div>
+        <div class="payment-change-total">
+            <span>Cambio a Devolver:</span>
+            <span>${{ cambio_info.cambio|floatformat:2 }}</span>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Resumen Financiero -->
-    <div style="display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1.25rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 500; color: var(--text-muted); font-size: 0.9rem;">Subtotal</span>
-            <span style="font-weight: 600; color: var(--text); font-size: 0.95rem;">${{ orden.total|floatformat:2 }}</span>
+    <div class="payment-summary">
+        <div class="payment-row">
+            <label>Subtotal</label>
+            <span>${{ orden.total|floatformat:2 }}</span>
         </div>
         {% if orden.descuento > 0 %}
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 500; color: var(--text-muted); font-size: 0.9rem;">Descuento</span>
-            <span style="font-weight: 600; color: var(--danger); font-size: 0.95rem;">-${{ orden.descuento|floatformat:2 }}</span>
+        <div class="payment-row">
+            <label>Descuento</label>
+            <span style="color: var(--danger); font-weight: 600;">-${{ orden.descuento|floatformat:2 }}</span>
         </div>
         {% endif %}
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 0.65rem;">
-            <span style="font-weight: 700; color: var(--text); font-size: 1rem;">Total a Pagar</span>
-            <span style="font-weight: 800; color: var(--primary); font-size: 1.15rem;">${{ orden.total_a_pagar|floatformat:2 }}</span>
+        <div class="payment-row-border">
+            <label style="font-weight: 700; color: var(--text);">Total a Pagar</label>
+            <span class="payment-value-price">${{ orden.total_a_pagar|floatformat:2 }}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 500; color: var(--text-muted); font-size: 0.9rem;">Total Abonado</span>
-            <span style="font-weight: 600; color: var(--success); font-size: 0.95rem;">${{ orden.anticipo|floatformat:2 }}</span>
+        <div class="payment-row">
+            <label>Total Abonado</label>
+            <span style="color: var(--success); font-weight: 600;">${{ orden.anticipo|floatformat:2 }}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1.5px solid var(--border); padding-top: 0.65rem;">
-            <span style="font-weight: 700; color: var(--text); font-size: 1rem;">Saldo Pendiente</span>
-            <span style="font-weight: 800; color: {% if orden.saldo_pendiente > 0 %}var(--danger){% else %}var(--success){% endif %}; font-size: 1.15rem;">${{ orden.saldo_pendiente|floatformat:2 }}</span>
+        <div class="payment-row-border">
+            <label style="font-weight: 700; color: var(--text);">Saldo Pendiente</label>
+            <span class="{% if orden.saldo_pendiente > 0 %}payment-value-danger{% else %}payment-value-success{% endif %}">${{ orden.saldo_pendiente|floatformat:2 }}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 500; color: var(--text-muted); font-size: 0.9rem;">Estado de Pago</span>
+        <div class="payment-row">
+            <label>Estado de Pago</label>
             {% if orden.estado_pago == 'Liquidado' %}
                 <span class="badge" style="background-color: hsl(142, 72%, 93%); color: var(--success);">Liquidado</span>
             {% elif orden.estado_pago == 'Parcial' %}
@@ -39,33 +57,55 @@
 
     <!-- Error de pago si existe -->
     {% if payment_error %}
-    <div style="background-color: hsl(350, 80%, 96%); border: 1px solid hsl(350, 80%, 90%); color: var(--danger); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem;">
+    <div class="payment-error-alert">
         {{ payment_error }}
     </div>
     {% endif %}
 
     <!-- Formulario de Nuevo Pago -->
     {% if orden.saldo_pendiente > 0 %}
-    <div style="border-top: 1.5px solid var(--border); padding-top: 1.25rem;">
-        <p style="font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;">Registrar Pago</p>
+    <div class="payment-form-section">
+        <p class="payment-form-title">Registrar Pago</p>
         
         <form hx-post="{% url 'orden_register_payment' orden.id %}" hx-target="#payment-panel" hx-swap="innerHTML" style="display: flex; flex-direction: column; gap: 0.85rem;">
             {% csrf_token %}
             
-            <div style="display: flex; gap: 0.75rem;">
-                <div style="flex: 1;">
-                    <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Monto ($)</label>
-                    <input type="number" name="monto" step="0.01" min="0.01" max="{{ orden.saldo_pendiente|floatformat:2 }}" placeholder="0.00" required
-                           style="width: 100%; padding: 0.6rem 0.75rem; font-size: 0.9rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600; text-align: right;">
+            <div class="payment-form-grid">
+                <div class="payment-form-field">
+                    <label class="payment-form-label">Monto ($)</label>
+                    <input type="number" name="monto" id="pago-monto-input" step="0.01" min="0.01" placeholder="0.00" required class="payment-form-input">
                 </div>
-                <div style="flex: 1;">
-                    <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Método</label>
-                    <select name="metodo_pago" style="width: 100%; padding: 0.6rem 0.75rem; font-size: 0.9rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 500;">
+                <div class="payment-form-field">
+                    <label class="payment-form-label">Método</label>
+                    <select name="metodo_pago" id="pago-metodo-select" class="payment-form-select">
                         <option value="Efectivo">Efectivo</option>
                         <option value="Transferencia">Transferencia</option>
                         <option value="Tarjeta">Tarjeta</option>
                     </select>
                 </div>
+            </div>
+            
+            <!-- Entrada de Efectivo Entregado (Solo visible para Efectivo) -->
+            <div id="efectivo-entregado-group" style="display: flex; flex-direction: column; gap: 0.3rem;">
+                <label class="payment-form-label">Efectivo Entregado ($)</label>
+                <input type="number" name="efectivo_entregado" id="pago-efectivo-recibido" step="0.01" min="0.01" placeholder="0.00" class="payment-form-input">
+                <div id="cambio-dinamico-msg" style="display: none; font-size: 0.82rem; font-weight: 750; color: var(--success); margin-top: 0.15rem; text-align: right;">
+                    Cambio estimado: $<span id="cambio-dinamico-val">0.00</span>
+                </div>
+            </div>
+
+            <!-- Notas / Observaciones del Pago -->
+            <div style="display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.3rem;">
+                <label class="payment-form-label">Notas / Observaciones</label>
+                <input type="text" name="observaciones_pago" placeholder="Ej. Pago parcial, billete de $50, etc." class="payment-form-input">
+            </div>
+
+            <!-- Checkbox de confirmación obligatorio de entrega de cambio -->
+            <div id="confirmacion-cambio-group" style="display: none; align-items: flex-start; gap: 0.65rem; padding: 0.75rem; background-color: hsl(45, 90%, 96%); border: 1.5px solid hsl(45, 90%, 85%); border-radius: var(--radius-sm); margin-bottom: 0.35rem; animation: slideDownRow 0.3s ease-out;">
+                <input type="checkbox" id="confirmar-cambio-entregado" style="width: 16px; height: 16px; margin-top: 0.15rem; cursor: pointer; accent-color: var(--warning);">
+                <label for="confirmar-cambio-entregado" style="font-size: 0.82rem; font-weight: 750; color: hsl(45, 90%, 20%); cursor: pointer; line-height: 1.4; user-select: none;">
+                    ⚠️ Confirmar que he entregado el cambio de $<span id="cambio-checkbox-val">0.00</span> en efectivo al cliente (Obligatorio para registrar el pago)
+                </label>
             </div>
             
             <button type="submit" class="login-btn" style="width: 100%; padding: 0.75rem; font-size: 0.9rem;">
@@ -75,10 +115,10 @@
         </form>
     </div>
     {% else %}
-    <div style="border-top: 1.5px solid var(--border); padding-top: 1.25rem;">
-        <div style="background-color: hsl(142, 72%, 94%); border: 1.5px solid hsl(142, 72%, 80%); border-radius: var(--radius); padding: 1rem; text-align: center;">
-            <p style="font-weight: 700; color: var(--success); font-size: 0.9rem;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 0.25rem;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div class="payment-form-section">
+        <div class="payment-liquidated-alert">
+            <p class="payment-liquidated-text">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 Orden completamente liquidada
             </p>
         </div>
@@ -87,20 +127,101 @@
 
     <!-- Historial de Pagos -->
     {% if pagos %}
-    <div style="border-top: 1.5px solid var(--border); padding-top: 1.25rem; margin-top: 1.25rem;">
-        <p style="font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Historial de Pagos</p>
+    <div class="payment-history-section">
+        <p class="payment-history-title">Historial de Pagos</p>
         
-        <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+        <div class="payment-history-list">
             {% for pago in pagos %}
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; background-color: var(--bg-app); border-radius: var(--radius-sm);">
-                <div>
-                    <p style="font-weight: 600; font-size: 0.88rem; color: var(--text);">{{ pago.tipo_pago }} — {{ pago.metodo_pago }}</p>
-                    <p style="font-size: 0.75rem; color: var(--text-muted);">{{ pago.fecha_pago|date:"d/m/Y H:i" }}</p>
+            <div class="payment-history-item" style="flex-direction: column; align-items: stretch; gap: 0.35rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div class="payment-history-meta">
+                        <p class="meta-title">{{ pago.tipo_pago }} — {{ pago.metodo_pago }}</p>
+                        <p class="meta-date" style="margin-top: 0.15rem;">{{ pago.fecha_pago|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    <span class="payment-history-monto">+${{ pago.monto|floatformat:2 }}</span>
                 </div>
-                <span style="font-weight: 700; color: var(--success); font-size: 0.95rem;">+${{ pago.monto|floatformat:2 }}</span>
+                {% if pago.observaciones %}
+                <div style="font-size: 0.76rem; color: var(--text-muted); padding-top: 0.35rem; border-top: 1px dashed var(--border); display: flex; align-items: center; gap: 0.25rem;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--primary);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span style="line-height: 1.3;">{{ pago.observaciones }}</span>
+                </div>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
     </div>
     {% endif %}
+
+    <!-- Script de cálculo de cambio / vuelto y toggle de campos -->
+    <script>
+        (function() {
+            const metodoSelect = document.getElementById("pago-metodo-select");
+            const efectivoGroup = document.getElementById("efectivo-entregado-group");
+            const montoInput = document.getElementById("pago-monto-input");
+            const efectivoInput = document.getElementById("pago-efectivo-recibido");
+            const cambioMsg = document.getElementById("cambio-dinamico-msg");
+            const cambioVal = document.getElementById("cambio-dinamico-val");
+            const cambioGroup = document.getElementById("confirmacion-cambio-group");
+            const cambioCheckbox = document.getElementById("confirmar-cambio-entregado");
+            const cambioCheckboxVal = document.getElementById("cambio-checkbox-val");
+            const maxDeuda = parseFloat("{{ orden.saldo_pendiente }}") || 0;
+
+            function updateCambio() {
+                const monto = parseFloat(montoInput.value) || 0;
+                const entregado = parseFloat(efectivoInput.value) || 0;
+                
+                // Si el usuario ingresa un monto que supera la deuda pendiente, el cobro real se limita a maxDeuda
+                let cobroEfectivo = Math.min(monto, maxDeuda);
+                let cambio = 0;
+                
+                // Caso 1: Ingresó efectivo entregado en el campo específico
+                if (entregado > cobroEfectivo) {
+                    cambio = entregado - cobroEfectivo;
+                    cambioVal.textContent = cambio.toFixed(2);
+                    cambioMsg.style.display = "block";
+                }
+                // Caso 2: Ingresó directamente el billete más grande en el campo "Monto"
+                else if (monto > maxDeuda) {
+                    cambio = monto - maxDeuda;
+                    cambioVal.textContent = cambio.toFixed(2);
+                    cambioMsg.style.display = "block";
+                } else {
+                    cambioMsg.style.display = "none";
+                }
+
+                // Mostrar y hacer obligatorio el checkbox si hay cambio y es en Efectivo
+                if (cambio > 0 && metodoSelect.value === "Efectivo") {
+                    cambioCheckboxVal.textContent = cambio.toFixed(2);
+                    cambioGroup.style.display = "flex";
+                    cambioCheckbox.required = true;
+                } else {
+                    cambioGroup.style.display = "none";
+                    cambioCheckbox.required = false;
+                    cambioCheckbox.checked = false;
+                }
+            }
+
+            if (metodoSelect && efectivoGroup) {
+                metodoSelect.addEventListener("change", function() {
+                    if (metodoSelect.value === "Efectivo") {
+                        efectivoGroup.style.display = "flex";
+                    } else {
+                        efectivoGroup.style.display = "none";
+                        efectivoInput.value = "";
+                        cambioMsg.style.display = "none";
+                    }
+                    updateCambio();
+                });
+                // Ejecutar al inicio para asegurar estado correcto
+                if (metodoSelect.value !== "Efectivo") {
+                    efectivoGroup.style.display = "none";
+                }
+            }
+
+            if (montoInput && efectivoInput) {
+                montoInput.addEventListener("input", updateCambio);
+                efectivoInput.addEventListener("input", updateCambio);
+            }
+        })();
+    </script>
 </div>

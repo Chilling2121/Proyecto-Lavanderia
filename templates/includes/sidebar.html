@@ -1,5 +1,5 @@
 <!-- BARRA LATERAL (SIDEBAR) -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
         <svg viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
@@ -29,7 +29,7 @@
             </a>
         </li>
         <li class="sidebar-item {% if active_tab == 'seguimiento' %}active{% endif %}">
-            <a href="#">
+            <a href="{% url 'seguimiento_list' %}">
                 <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></svg>
                 <span>Seguimiento</span>
             </a>
@@ -72,7 +72,7 @@
         </li>
     </ul>
     
-    <div style="padding: 1.5rem; border-top: 1px solid rgba(255,255,255,0.06);">
+    <div class="sidebar-footer-wrap" style="padding: 1.5rem; border-top: 1px solid rgba(255,255,255,0.06);">
         <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}
             <button type="submit" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem; background-color: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: var(--transition);">

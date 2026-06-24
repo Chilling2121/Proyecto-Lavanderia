@@ -373,21 +373,3 @@
     40%, 80% { transform: translateX(6px); }
 }
 
-/* ==========================================
-   RESPONSIVO Y CIERRE DE MEDIA QUERY ANTERIOR
-   ========================================== */
-@media (max-width: 900px) {
-    .login-brand-side {
-        display: none;
-    }
-    
-    .login-form-side {
-        flex: 1;
-        padding: 2rem;
-    }
-    
-    .login-title-mobile {
-        display: block;
-    }
-}
-

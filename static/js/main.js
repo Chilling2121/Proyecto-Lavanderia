@@ -1,3 +1,6 @@
+// ==========================================
+// SISTEMA DE NOTIFICACIONES TOAST
+// ==========================================
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -5,6 +8,7 @@ function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast-item ${type}`;
     toast.style.minWidth = '320px';
+    toast.style.maxWidth = '450px';
     toast.style.padding = '1rem 1.25rem';
     toast.style.borderRadius = 'var(--radius)';
     toast.style.backgroundColor = 'var(--bg-card)';
@@ -35,7 +39,7 @@ function showToast(message, type = 'success') {
             ${iconSvg}
             <span style="font-size: 0.9rem; font-weight: 600; color: var(--text);">${message}</span>
         </div>
-        <button onclick="this.parentElement.remove()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; display: flex; align-items: center; justify-content: center; opacity: 0.7; transition: var(--transition);" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+        <button onclick="this.parentElement.remove()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; display: flex; align-items: center; justify-content: center; opacity: 0.7; transition: var(--transition); flex-shrink: 0;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
     `;
@@ -74,6 +78,7 @@ document.addEventListener('htmx:afterSwap', (e) => {
 });
 
 // ==========================================
+// ==========================================
 // MODAL DE CONFIRMACIÓN PERSONALIZADO
 // ==========================================
 window.customConfirm = function(message, onConfirm) {
@@ -106,7 +111,7 @@ window.customConfirm = function(message, onConfirm) {
 
     modal.innerHTML = `
         <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem;">
-            <div style="background-color: hsl(350, 80%, 95%); color: var(--danger); padding: 0.5rem; border-radius: 50%; display: flex;">
+            <div style="background-color: hsl(350, 80%, 95%); color: var(--danger); padding: 0.5rem; border-radius: 50%; display: flex; flex-shrink: 0;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             </div>
             <div>
@@ -115,8 +120,8 @@ window.customConfirm = function(message, onConfirm) {
             </div>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-            <button id="btn-cancelar" style="padding: 0.6rem 1.25rem; background: var(--bg-app); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='var(--bg-card)'" onmouseout="this.style.backgroundColor='var(--bg-app)'">Cancelar</button>
-            <button id="btn-confirmar" style="padding: 0.6rem 1.25rem; background: var(--danger); border: none; border-radius: var(--radius-sm); color: white; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.2);" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">Confirmar</button>
+            <button id="btn-cancelar" style="padding: 0.6rem 1.25rem; background: var(--bg-app); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: var(--font);" onmouseover="this.style.backgroundColor='var(--bg-card)'" onmouseout="this.style.backgroundColor='var(--bg-app)'">Cancelar</button>
+            <button id="btn-confirmar" style="padding: 0.6rem 1.25rem; background: var(--danger); border: none; border-radius: var(--radius-sm); color: white; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.2); font-family: var(--font);" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">Confirmar</button>
         </div>
     `;
 
@@ -149,4 +154,24 @@ document.body.addEventListener('htmx:confirm', function(e) {
     window.customConfirm(e.detail.question, function() {
         e.detail.issueRequest(true); // Omitir el confirm estándar
     });
+});
+
+// Interceptar errores de validación nativos/HTMX para mostrar toast de advertencia
+document.body.addEventListener('htmx:validation:failed', function(e) {
+    // Para identificar qué campo falló
+    const elt = e.detail.elt;
+    if (elt && elt.validationMessage) {
+        if (typeof showToast === 'function') {
+            showToast("Campo requerido: " + elt.validationMessage, "error");
+        }
+        // Enfocar el elemento y ponerle borde rojo temporal
+        elt.focus();
+        const oldBorder = elt.style.borderColor;
+        elt.style.borderColor = 'var(--danger)';
+        setTimeout(() => { elt.style.borderColor = oldBorder; }, 3000);
+    } else {
+        if (typeof showToast === 'function') {
+            showToast("Por favor, complete todos los campos obligatorios.", "error");
+        }
+    }
 });

@@ -39,7 +39,7 @@
             </div>
 
             <!-- GRID PRINCIPAL: DOS COLUMNAS -->
-            <div style="display: grid; grid-template-columns: 1.4fr 0.95fr; gap: 1.5rem; align-items: start;">
+            <div class="orden-detail-grid" style="display: grid; grid-template-columns: 1.4fr 0.95fr; gap: 1.5rem; align-items: start;">
                 
                 <!-- COLUMNA IZQUIERDA: CLIENTE + PRENDAS -->
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -117,13 +117,26 @@
                 <!-- COLUMNA DERECHA: ESTADO + PAGOS -->
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                     
-                    <!-- PANEL DE ESTADO Y SEGUIMIENTO -->
-                    <section class="dashboard-card" style="gap: 0;">
-                        <div class="card-header-row" style="margin-bottom: 1rem; padding-bottom: 0.75rem;">
-                            <h2>Seguimiento de Lavado</h2>
+                    <!-- ESTADO ACTUAL DE LAVADO (SOLO LECTURA) -->
+                    <section class="dashboard-card">
+                        <div class="card-header-row" style="margin-bottom: 1rem;">
+                            <h2>Estado de Lavado</h2>
+                            <a href="{% url 'seguimiento_list' %}" class="card-header-link">Ir al Tablero &rarr;</a>
                         </div>
-                        <div id="status-panel">
-                            {% include 'partials/orden_status_panel.html' %}
+                        
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 1.5rem; background-color: var(--bg-app); border: 1px dashed var(--border); border-radius: var(--radius);">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="width: 45px; height: 45px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center;">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></svg>
+                                </div>
+                                <div>
+                                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Estado Actual</p>
+                                    <p style="margin: 0; font-weight: 750; font-size: 1.1rem; color: var(--text);">{{ orden.estado_actual }}</p>
+                                </div>
+                            </div>
+                            <span class="status-badge" style="font-size: 0.75rem; padding: 0.4rem 0.8rem; background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; font-weight: 600;">
+                                Solo lectura
+                            </span>
                         </div>
                     </section>
 
@@ -165,33 +178,6 @@
 </div>
 
 <!-- Modal de Confirmación para Avanzar Estado -->
-<div id="advance-status-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center;">
-    <div class="dashboard-card" style="width: 100%; max-width: 420px; margin: 1.5rem; box-shadow: var(--shadow-lg); animation: slideUp 0.3s ease-out; gap: 1.5rem; text-align: center;">
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-            <div style="width: 56px; height: 56px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; justify-content: center; align-items: center;">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-            </div>
-            <h2 style="font-size: 1.15rem; font-weight: 750; color: var(--text);">Confirmar Avance de Estado</h2>
-            <p id="advance-modal-text" style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.4;">
-                ¿Estás seguro de avanzar esta orden al siguiente estado?
-            </p>
-        </div>
-        
-        <form hx-post="{% url 'orden_advance_status' orden.id %}" hx-target="#status-panel" hx-swap="innerHTML" style="display: flex; flex-direction: column; gap: 0.85rem;">
-            {% csrf_token %}
-            <input type="text" name="observaciones" placeholder="Observaciones (opcional)..." 
-                   style="width: 100%; padding: 0.75rem 1rem; font-size: 0.9rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius); color: var(--text);">
-            <div style="display: flex; gap: 0.75rem; justify-content: center;">
-                <button type="button" onclick="toggleAdvanceModal(false)" style="padding: 0.85rem 1.5rem; border-radius: var(--radius); border: 1.5px solid var(--border); background: white; font-weight: 600; font-family: var(--font); cursor: pointer; color: var(--text-muted); transition: var(--transition);">
-                    Cancelar
-                </button>
-                <button type="submit" onclick="toggleAdvanceModal(false)" class="login-btn" style="width: auto; padding: 0.85rem 1.5rem; font-size: 0.95rem;">
-                    <span>Sí, Avanzar</span>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
 
 <script src="{% static 'js/orden_detalle.js' %}"></script>
 

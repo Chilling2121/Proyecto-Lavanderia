@@ -7,7 +7,7 @@
     <title>{% block title %}LavaFácil - Sistema de Gestión{% endblock %}</title>
     
     <!-- Estilos de la Aplicación -->
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v={% now 'U' %}">
     
     <!-- HTMX CDN -->
     <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2" crossorigin="anonymous"></script>

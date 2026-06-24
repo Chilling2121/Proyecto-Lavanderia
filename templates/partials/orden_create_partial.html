@@ -29,7 +29,8 @@
             </button>
         </div>
 
-        <!-- Encabezados de columnas -->
+        <!-- Encabezados y filas de prendas -->
+        <div class="prendas-scroll-container">
         <div id="prendas-headers" style="display: none; grid-template-columns: 1.1fr 1.1fr 55px 45px 50px 1.1fr 65px 30px; gap: 0.5rem; padding: 0 0.5rem 0.4rem 0.5rem; border-bottom: 1.5px solid var(--border); margin-bottom: 0.25rem; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
             <div>Prenda</div>
             <div>Servicio</div>
@@ -45,6 +46,7 @@
         <div id="prendas-container" style="display: flex; flex-direction: column; gap: 0.65rem;">
             <!-- Dinámico -->
         </div>
+        </div><!-- fin prendas-scroll-container -->
 
         <!-- Placeholder vacío -->
         <div id="no-prendas-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; height: 130px; border: 2px dashed var(--border); border-radius: var(--radius); text-align: center; color: var(--text-muted);">
@@ -171,11 +173,7 @@
 
 <!-- Cargar los servicios en JSON -->
 <script>
-    if (typeof SERVICIOS === 'undefined') {
-        const SERVICIOS = {{ servicios_json|safe }};
-    } else {
-        window.SERVICIOS = {{ servicios_json|safe }};
-    }
+    window.SERVICIOS = {{ servicios_json|safe }};
 </script>
 
 <script>

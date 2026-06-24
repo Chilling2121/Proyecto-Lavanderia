@@ -36,6 +36,9 @@
                 {% else %}
                     <span class="badge" style="background-color: hsl(142, 72%, 93%); color: var(--success); font-weight: 600;">Saldo / Liquidación</span>
                 {% endif %}
+                {% if pago.observaciones %}
+                    <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 0.25rem; font-style: italic;">{{ pago.observaciones }}</span>
+                {% endif %}
             </td>
             <td>
                 <span class="badge" style="background-color: var(--bg-app); border: 1px solid var(--border); color: var(--text); font-weight: 550;">
