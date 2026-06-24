@@ -77,6 +77,7 @@ class PrendaOrden(models.Model):
     cantidad = models.IntegerField(default=1)
     peso = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, help_text='Peso en Kg')
     servicio = models.ForeignKey(Servicio, on_delete=models.PROTECT)
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text='Precio unitario o tarifa por kg aplicada')
     es_delicada = models.BooleanField(default=False)
     observaciones = models.CharField(max_length=255, blank=True, null=True)
 

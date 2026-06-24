@@ -340,12 +340,15 @@ def orden_create(request):
                 
                 for p in prendas_data:
                     servicio = Servicio.objects.get(id=p['servicio_id'])
+                    # Leer el precio unitario si se envía tarifa personalizada
+                    precio_unitario = float(p['precio_unitario']) if p.get('precio_unitario') is not None else None
                     PrendaOrden.objects.create(
                         orden=orden,
                         tipo_prenda=p['tipo_prenda'],
                         cantidad=int(p.get('cantidad', 1)),
                         peso=float(p['peso']) if p.get('peso') else None,
                         servicio=servicio,
+                        precio_unitario=precio_unitario,
                         es_delicada=bool(p.get('es_delicada', False)),
                         observaciones=p.get('observaciones', '') or None
                     )
@@ -379,16 +382,129 @@ def orden_create(request):
         }
         for s in servicios
     ]
-    servicios_json = json.dumps(servicios_data, cls=DjangoJSONEncoder)
     
-    # Obtener clientes recomendados/frecuentes
-    clientes_frecuentes = Cliente.objects.annotate(num_ordenes=Count('ordenes')).order_by('-num_ordenes', '-id')[:5]
+    context = {
+        'clientes_frecuentes': Cliente.objects.annotate(num_ordenes=Count('ordenes')).order_by('-num_ordenes')[:5],
+        'servicios_json': json.dumps(servicios_data),
+        'active_tab': 'ordenes'
+    }
+    return render(request, 'nueva_orden.html', context)
+
+
+@login_required
+def orden_create_partial(request, cliente_id):
+    try:
+        cliente = Cliente.objects.get(id=cliente_id)
+    except Cliente.DoesNotExist:
+        return HttpResponse("<script>showToast('El cliente seleccionado no existe.', 'error')</script>", status=404)
+
+    if request.method == 'POST':
+        observaciones = request.POST.get('observaciones', '')
+        try:
+            total = float(request.POST.get('total', 0.0))
+            descuento = float(request.POST.get('descuento', 0.0))
+            total_a_pagar = float(request.POST.get('total_a_pagar', 0.0))
+            anticipo = float(request.POST.get('anticipo', 0.0))
+        except (ValueError, TypeError):
+            return HttpResponse("<script>showToast('Error al procesar los montos de la orden.', 'error')</script>", status=400)
+            
+        metodo_pago = request.POST.get('metodo_pago', 'Efectivo')
+        prendas_json = request.POST.get('prendas_json', '[]')
+        fecha_entrega_estimada_str = request.POST.get('fecha_entrega_estimada')
+        
+        try:
+            prendas_data = json.loads(prendas_json)
+        except json.JSONDecodeError:
+            return HttpResponse("<script>showToast('Error en el formato de los detalles de las prendas.', 'error')</script>", status=400)
+            
+        if not prendas_data:
+            return HttpResponse("<script>showToast('Debe agregar al menos una prenda a la orden.', 'error')</script>", status=400)
+        
+        fecha_entrega_estimada = None
+        if fecha_entrega_estimada_str:
+            fecha_entrega_estimada = parse_datetime(fecha_entrega_estimada_str)
+            if fecha_entrega_estimada and timezone.is_naive(fecha_entrega_estimada):
+                fecha_entrega_estimada = timezone.make_aware(fecha_entrega_estimada)
+        
+        try:
+            with transaction.atomic():
+                orden = Orden.objects.create(
+                    cliente=cliente,
+                    fecha_entrega_estimada=fecha_entrega_estimada,
+                    total=total,
+                    descuento=descuento,
+                    total_a_pagar=total_a_pagar,
+                    anticipo=anticipo,
+                    saldo_pendiente=total_a_pagar - anticipo,
+                    estado_pago='Liquidado' if anticipo >= total_a_pagar else ('Parcial' if anticipo > 0 else 'Pendiente'),
+                    estado_actual='Recibida',
+                    observaciones=observaciones or None
+                )
+                
+                SeguimientoLavado.objects.create(
+                    orden=orden,
+                    estado='Recibida',
+                    observaciones='Ingreso inicial de la orden de servicio al sistema.'
+                )
+                
+                for p in prendas_data:
+                    servicio = Servicio.objects.get(id=p['servicio_id'])
+                    precio_unitario = float(p['precio_unitario']) if p.get('precio_unitario') is not None else None
+                    PrendaOrden.objects.create(
+                        orden=orden,
+                        tipo_prenda=p['tipo_prenda'],
+                        cantidad=int(p.get('cantidad', 1)),
+                        peso=float(p['peso']) if p.get('peso') else None,
+                        servicio=servicio,
+                        precio_unitario=precio_unitario,
+                        es_delicada=bool(p.get('es_delicada', False)),
+                        observaciones=p.get('observaciones', '') or None
+                    )
+                
+                if anticipo > 0:
+                    Pago.objects.create(
+                        orden=orden,
+                        monto=anticipo,
+                        metodo_pago=metodo_pago,
+                        tipo_pago='Anticipo',
+                        observaciones='Abono inicial al registrar la orden'
+                    )
+            
+            # Recuperar historial actualizado del cliente
+            ordenes = Orden.objects.filter(cliente=cliente).order_by('-fecha_recepcion').prefetch_related('prendas__servicio')
+            
+            context = {
+                'cliente': cliente,
+                'ordenes': ordenes,
+                'success_message': "Orden de servicio registrada con éxito."
+            }
+            # Retornar el fragmento del historial para que se renderice en el panel derecho
+            response = render(request, 'partials/cliente_historial.html', context)
+            # Agregar el script para disparar la notificación Toast
+            # Nota: El HTML retornado incluirá al final un script para activar el toast
+            return response
+            
+        except Exception as e:
+            return HttpResponse(f"<script>showToast('Error al procesar la orden: {str(e)}', 'error')</script>", status=500)
+
+    # GET: Cargar formulario parcial
+    servicios = Servicio.objects.all()
+    servicios_data = [
+        {
+            'id': s.id,
+            'nombre': s.nombre,
+            'tarifa': float(s.tarifa),
+            'tipo_cobro': s.tipo_cobro
+        }
+        for s in servicios
+    ]
     
-    return render(request, 'nueva_orden.html', {
-        'servicios': servicios,
-        'servicios_json': servicios_json,
-        'clientes_frecuentes': clientes_frecuentes,
-    })
+    context = {
+        'cliente': cliente,
+        'servicios_json': json.dumps(servicios_data),
+        'servicios': servicios
+    }
+    return render(request, 'partials/orden_create_partial.html', context)
 
 
 # ==========================================
@@ -418,7 +534,7 @@ def orden_detail(request, orden_id):
     # Calcular subtotal por prenda
     prendas_detalle = []
     for p in prendas:
-        tarifa = float(p.servicio.tarifa)
+        tarifa = float(p.precio_unitario if p.precio_unitario is not None else p.servicio.tarifa)
         if 'kg' in p.servicio.tipo_cobro.lower():
             subtotal = tarifa * float(p.peso or 0)
         else:
@@ -655,7 +771,7 @@ def orden_ticket(request, orden_id):
 
     prendas_detalle = []
     for p in prendas:
-        tarifa = float(p.servicio.tarifa)
+        tarifa = float(p.precio_unitario if p.precio_unitario is not None else p.servicio.tarifa)
         if 'kg' in p.servicio.tipo_cobro.lower():
             subtotal = tarifa * float(p.peso or 0)
         else:

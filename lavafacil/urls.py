@@ -36,6 +36,7 @@ urlpatterns = [
     path('ordenes/', views.ordenes_list, name='ordenes_list'),
     path('ordenes/buscar/', views.ordenes_search, name='ordenes_search'),
     path('ordenes/nueva/', views.orden_create, name='orden_create'),
+    path('ordenes/nueva-parcial/<int:cliente_id>/', views.orden_create_partial, name='orden_create_partial'),
     path('ordenes/api/buscar-cliente/', views.orden_cliente_search_api, name='orden_cliente_search_api'),
     path('ordenes/<int:orden_id>/', views.orden_detail, name='orden_detail'),
     path('ordenes/<int:orden_id>/avanzar-estado/', views.orden_advance_status, name='orden_advance_status'),
