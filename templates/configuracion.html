@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configuración del Sistema - LavaFácil{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    {% include 'includes/sidebar.html' with active_tab='configuracion' %}
+
+    <!-- CUERPO PRINCIPAL -->
+    <main class="main-layout">
+        
+        <!-- CABECERA SUPERIOR -->
+        {% include 'includes/header.html' with page_title='Configuración del Sistema' %}
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content-wrapper" style="padding-bottom: 4rem;">
+            
+            <section class="dashboard-card" style="max-width: 850px; margin: 0 auto;">
+                <div class="card-header-row" style="margin-bottom: 0.5rem; flex-direction: column; align-items: flex-start; gap: 0.5rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text);">Ajustes Globales</h2>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">Estos ajustes afectan cómo se visualiza el sistema y la información que se imprime en los tickets de sus clientes.</p>
+                </div>
+
+                <form method="post" action="{% url 'configuracion' %}" style="margin-top: 1.5rem;">
+                    {% csrf_token %}
+
+                    <!-- SECCIÓN: GENERAL -->
+                    <div style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                        General de la Empresa
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="login-field">
+                            <label for="id_nombre_negocio">Nombre del Negocio *</label>
+                            <div class="login-input-wrapper">
+                                <span class="login-input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg></span>
+                                <input type="text" name="nombre_negocio" id="id_nombre_negocio" value="{{ form.nombre_negocio.value|default:'' }}" required>
+                            </div>
+                        </div>
+                        <div class="login-field">
+                            <label for="id_telefono_contacto">Teléfono de Contacto</label>
+                            <div class="login-input-wrapper">
+                                <span class="login-input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></span>
+                                <input type="text" name="telefono_contacto" id="id_telefono_contacto" value="{{ form.telefono_contacto.value|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="login-field" style="grid-column: 1 / -1;">
+                            <label for="id_correo">Correo Electrónico (Opcional)</label>
+                            <div class="login-input-wrapper">
+                                <span class="login-input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></span>
+                                <input type="email" name="correo" id="id_correo" value="{{ form.correo.value|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="login-field" style="grid-column: 1 / -1;">
+                            <label for="id_direccion">Dirección Física</label>
+                            <textarea name="direccion" id="id_direccion" rows="2" style="width: 100%; padding: 0.85rem 1rem; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid transparent; border-radius: var(--radius); color: var(--text); resize: none; transition: var(--transition);" onfocus="this.style.backgroundColor='var(--bg-card)'; this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(37,99,235,0.1)'; this.style.outline='none';" onblur="this.style.backgroundColor='var(--bg-app)'; this.style.borderColor='transparent'; this.style.boxShadow='none';">{{ form.direccion.value|default:'' }}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN: REGIONAL -->
+                    <div style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-top: 3rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                        Preferencias Regionales y Financieras
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="login-field">
+                            <label for="id_simbolo_moneda" style="display: flex; justify-content: space-between;">Símbolo de Moneda * <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Aparece en tickets y paneles)</span></label>
+                            <div class="login-input-wrapper">
+                                <span class="login-input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></span>
+                                <input type="text" name="simbolo_moneda" id="id_simbolo_moneda" value="{{ form.simbolo_moneda.value|default:'$' }}" required>
+                            </div>
+                        </div>
+                        <div class="login-field">
+                            <label for="id_impuesto_porcentaje" style="display: flex; justify-content: space-between;">Porcentaje IVA/IGV (%) <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(0 si no aplica)</span></label>
+                            <div class="login-input-wrapper">
+                                <span class="login-input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg></span>
+                                <input type="number" step="0.01" name="impuesto_porcentaje" id="id_impuesto_porcentaje" value="{{ form.impuesto_porcentaje.value|default:'0.00' }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN: TICKET -->
+                    <div style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-top: 3rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Personalización del Ticket
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <div class="login-field">
+                            <label for="id_mensaje_ticket_cabecera">Mensaje de Cabecera <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">(RUC, RUT, Mensaje de Bienvenida)</span></label>
+                            <textarea name="mensaje_ticket_cabecera" id="id_mensaje_ticket_cabecera" rows="2" style="width: 100%; padding: 0.85rem 1rem; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid transparent; border-radius: var(--radius); color: var(--text); resize: none; transition: var(--transition);" onfocus="this.style.backgroundColor='var(--bg-card)'; this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(37,99,235,0.1)'; this.style.outline='none';" onblur="this.style.backgroundColor='var(--bg-app)'; this.style.borderColor='transparent'; this.style.boxShadow='none';">{{ form.mensaje_ticket_cabecera.value|default:'' }}</textarea>
+                        </div>
+                        <div class="login-field">
+                            <label for="id_mensaje_ticket_pie">Términos y Condiciones (Pie de Página) <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">(Políticas de prendas abandonadas, reclamos, etc)</span></label>
+                            <textarea name="mensaje_ticket_pie" id="id_mensaje_ticket_pie" rows="4" style="width: 100%; padding: 0.85rem 1rem; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid transparent; border-radius: var(--radius); color: var(--text); resize: none; transition: var(--transition);" onfocus="this.style.backgroundColor='var(--bg-card)'; this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(37,99,235,0.1)'; this.style.outline='none';" onblur="this.style.backgroundColor='var(--bg-app)'; this.style.borderColor='transparent'; this.style.boxShadow='none';">{{ form.mensaje_ticket_pie.value|default:'' }}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                        <a href="{% url 'dashboard' %}" class="login-btn" style="width: auto; background-color: var(--bg-app); border: 1px solid var(--border); color: var(--text); box-shadow: none;">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="login-btn" style="width: auto; padding: 0.75rem 2rem; font-size: 0.95rem;">
+                            <span>Guardar Configuración</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        </button>
+                    </div>
+
+                </form>
+            </section>
+
+        </div>
+    </main>
+</div>
+{% endblock %}

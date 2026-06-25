@@ -9,6 +9,7 @@ from django.utils.dateparse import parse_datetime
 from django.core.serializers.json import DjangoJSONEncoder
 import re
 import json
+from decimal import Decimal, InvalidOperation
 from django.contrib.auth.models import User, Group
 from .models import Orden, Pago, PrendaOrden, Cliente, Servicio, SeguimientoLavado
 
@@ -254,20 +255,27 @@ def servicio_delete(request, servicio_id):
 @login_required
 def ordenes_list(request):
     ordenes = Orden.objects.select_related('cliente').order_by('-id')
-    return render(request, 'ordenes.html', {'ordenes': ordenes})
+    return render(request, 'ordenes.html', {
+        'ordenes': ordenes,
+        'estados': ESTADOS_LAVADO,
+    })
 
 @login_required
 def ordenes_search(request):
     query = request.GET.get('search', '').strip()
+    estado = request.GET.get('estado', '').strip()
+    
+    ordenes = Orden.objects.select_related('cliente').order_by('-id')
+    
     if query:
         id_filter = Q()
         if query.isdigit():
             id_filter = Q(id=int(query))
-        ordenes = Orden.objects.filter(
-            id_filter | Q(cliente__nombre__icontains=query)
-        ).select_related('cliente').order_by('-id')
-    else:
-        ordenes = Orden.objects.select_related('cliente').order_by('-id')
+        ordenes = ordenes.filter(id_filter | Q(cliente__nombre__icontains=query))
+        
+    if estado:
+        ordenes = ordenes.filter(estado_actual=estado)
+        
     return render(request, 'partials/ordenes_table.html', {'ordenes': ordenes})
 
 @login_required
@@ -289,11 +297,11 @@ def orden_create(request):
         observaciones = request.POST.get('observaciones', '')
         
         try:
-            total = float(request.POST.get('total', 0.0))
-            descuento = float(request.POST.get('descuento', 0.0))
-            total_a_pagar = float(request.POST.get('total_a_pagar', 0.0))
-            anticipo = float(request.POST.get('anticipo', 0.0))
-        except (ValueError, TypeError):
+            total = Decimal(request.POST.get('total', '0.00') or '0.00')
+            descuento = Decimal(request.POST.get('descuento', '0.00') or '0.00')
+            total_a_pagar = Decimal(request.POST.get('total_a_pagar', '0.00') or '0.00')
+            anticipo = Decimal(request.POST.get('anticipo', '0.00') or '0.00')
+        except (InvalidOperation, TypeError, ValueError):
             messages.error(request, "Error al procesar los montos de la orden.")
             return redirect('ordenes_list')
             
@@ -406,11 +414,11 @@ def orden_create_partial(request, cliente_id):
     if request.method == 'POST':
         observaciones = request.POST.get('observaciones', '')
         try:
-            total = float(request.POST.get('total', 0.0))
-            descuento = float(request.POST.get('descuento', 0.0))
-            total_a_pagar = float(request.POST.get('total_a_pagar', 0.0))
-            anticipo = float(request.POST.get('anticipo', 0.0))
-        except (ValueError, TypeError):
+            total = Decimal(request.POST.get('total', '0.00') or '0.00')
+            descuento = Decimal(request.POST.get('descuento', '0.00') or '0.00')
+            total_a_pagar = Decimal(request.POST.get('total_a_pagar', '0.00') or '0.00')
+            anticipo = Decimal(request.POST.get('anticipo', '0.00') or '0.00')
+        except (InvalidOperation, TypeError, ValueError):
             return HttpResponse("<script>showToast('Error al procesar los montos de la orden.', 'error')</script>", status=400)
             
         metodo_pago = request.POST.get('metodo_pago', 'Efectivo')
@@ -572,24 +580,33 @@ def orden_register_payment(request, orden_id):
             return HttpResponse("<p style='color:var(--danger);'>Orden no encontrada.</p>", status=404)
 
         try:
-            monto = float(request.POST.get('monto', 0))
-        except (ValueError, TypeError):
-            monto = 0
+            monto_str = request.POST.get('monto', '0.00').strip()
+            monto = Decimal(monto_str or '0.00')
+        except InvalidOperation:
+            monto = Decimal('0.00')
 
         metodo_pago = request.POST.get('metodo_pago', 'Efectivo')
         observaciones_pago = request.POST.get('observaciones_pago', '').strip()
+        confirmacion_cambio = request.POST.get('confirmar_cambio')
+
+        pagos = Pago.objects.filter(orden=orden).order_by('fecha_pago')
 
         if monto <= 0:
-            pagos = Pago.objects.filter(orden=orden).order_by('fecha_pago')
             return render(request, 'partials/orden_payment_panel.html', {
                 'orden': orden, 'pagos': pagos, 'payment_error': 'El monto debe ser mayor a $0.00.'
             })
 
-        saldo_actual = float(orden.saldo_pendiente)
+        saldo_actual = Decimal(str(orden.saldo_pendiente))
+        
+        # Validaciones de Sobrepago para Transferencia/Tarjeta
+        if metodo_pago in ['Transferencia', 'Tarjeta'] and monto > saldo_actual:
+            return render(request, 'partials/orden_payment_panel.html', {
+                'orden': orden, 'pagos': pagos, 'payment_error': f'No se puede cobrar un monto superior al saldo pendiente (${saldo_actual:.2f}) mediante {metodo_pago}.'
+            })
         
         # Calcular cambio para pagos en Efectivo
         efectivo_recibido = monto
-        cambio = 0.0
+        cambio = Decimal('0.00')
         monto_registrado = monto
         
         efectivo_entregado_str = request.POST.get('efectivo_entregado', '').strip()
@@ -600,15 +617,19 @@ def orden_register_payment(request, orden_id):
                 cambio = monto - saldo_actual
         elif efectivo_entregado_str and metodo_pago == 'Efectivo':
             try:
-                efectivo_entregado_val = float(efectivo_entregado_str)
+                efectivo_entregado_val = Decimal(efectivo_entregado_str)
                 if efectivo_entregado_val > monto:
                     efectivo_recibido = efectivo_entregado_val
                     cambio = efectivo_entregado_val - monto
-            except ValueError:
+            except InvalidOperation:
                 pass
 
-        if metodo_pago == 'Efectivo' and cambio > 0:
-            detalles_cambio = f"Recibido: ${efectivo_recibido:.2f} | Cambio: ${cambio:.2f}"
+        if metodo_pago == 'Efectivo' and cambio > Decimal('0.00'):
+            if not confirmacion_cambio:
+                return render(request, 'partials/orden_payment_panel.html', {
+                    'orden': orden, 'pagos': pagos, 'payment_error': 'Debe confirmar que ha entregado el cambio exacto al cliente.'
+                })
+            detalles_cambio = f"Recibido: ${efectivo_recibido:.2f} | Cambio entregado: ${cambio:.2f}"
             if observaciones_pago:
                 observaciones_db = f"{observaciones_pago} ({detalles_cambio})"
             else:
@@ -627,15 +648,15 @@ def orden_register_payment(request, orden_id):
                 observaciones=observaciones_db
             )
 
-            nuevo_anticipo = float(orden.anticipo) + monto_registrado
-            nuevo_saldo = float(orden.total_a_pagar) - nuevo_anticipo
+            nuevo_anticipo = Decimal(str(orden.anticipo)) + monto_registrado
+            nuevo_saldo = Decimal(str(orden.total_a_pagar)) - nuevo_anticipo
 
             orden.anticipo = nuevo_anticipo
-            orden.saldo_pendiente = max(nuevo_saldo, 0)
+            orden.saldo_pendiente = max(nuevo_saldo, Decimal('0.00'))
 
-            if orden.saldo_pendiente <= 0:
+            if orden.saldo_pendiente <= Decimal('0.00'):
                 orden.estado_pago = 'Liquidado'
-            elif nuevo_anticipo > 0:
+            elif nuevo_anticipo > Decimal('0.00'):
                 orden.estado_pago = 'Parcial'
 
             orden.save()
@@ -669,10 +690,24 @@ def pagos_list(request):
 
     pagos_hoy = Pago.objects.filter(fecha_pago__range=(start_of_today, end_of_today))
     
-    total_recaudado = pagos_hoy.aggregate(Sum('monto'))['monto__sum'] or 0.00
-    total_efectivo = pagos_hoy.filter(metodo_pago='Efectivo').aggregate(Sum('monto'))['monto__sum'] or 0.00
-    total_transferencia = pagos_hoy.filter(metodo_pago='Transferencia').aggregate(Sum('monto'))['monto__sum'] or 0.00
-    total_tarjeta = pagos_hoy.filter(metodo_pago='Tarjeta').aggregate(Sum('monto'))['monto__sum'] or 0.00
+    total_recaudado = pagos_hoy.aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+    
+    pagos_hoy_efectivo = pagos_hoy.filter(metodo_pago='Efectivo')
+    total_efectivo = pagos_hoy_efectivo.aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+    
+    total_transferencia = pagos_hoy.filter(metodo_pago='Transferencia').aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+    total_tarjeta = pagos_hoy.filter(metodo_pago='Tarjeta').aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+
+    # Calcular cuánto efectivo salió de la caja como "cambio" hoy
+    total_cambio_entregado = Decimal('0.00')
+    for p in pagos_hoy_efectivo:
+        if p.observaciones and 'Cambio entregado: $' in p.observaciones:
+            try:
+                m = re.search(r'Cambio entregado: \$([\d\.]+)', p.observaciones)
+                if m:
+                    total_cambio_entregado += Decimal(m.group(1))
+            except (InvalidOperation, ValueError):
+                pass
 
     context = {
         'pagos': pagos,
@@ -680,6 +715,7 @@ def pagos_list(request):
         'total_efectivo': total_efectivo,
         'total_transferencia': total_transferencia,
         'total_tarjeta': total_tarjeta,
+        'total_cambio_entregado': total_cambio_entregado,
     }
     return render(request, 'pagos.html', context)
 
@@ -969,3 +1005,115 @@ def seguimiento_advance_status(request, orden_id):
         return redirect('seguimiento_list')
     
     return HttpResponse(status=405)
+
+
+# ==========================================
+#  MÓDULO DE REPORTES
+# ==========================================
+
+@login_required
+def reportes_dashboard(request):
+    periodo = request.GET.get('periodo', 'mes')
+    local_now = timezone.localtime(timezone.now())
+    
+    if periodo == 'hoy':
+        fecha_inicio = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        fecha_fin = local_now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        titulo_periodo = "Hoy"
+    elif periodo == 'semana':
+        dias_restar = local_now.weekday()
+        fecha_inicio = (local_now - timezone.timedelta(days=dias_restar)).replace(hour=0, minute=0, second=0, microsecond=0)
+        fecha_fin = local_now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        titulo_periodo = "Esta Semana"
+    elif periodo == 'historico':
+        fecha_inicio = None
+        fecha_fin = None
+        titulo_periodo = "Histórico (Todo)"
+    else: # mes (default)
+        fecha_inicio = local_now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        fecha_fin = local_now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        titulo_periodo = "Este Mes"
+        
+    pagos_filter = Q()
+    ordenes_filter = Q()
+    if fecha_inicio and fecha_fin:
+        pagos_filter = Q(fecha_pago__range=(fecha_inicio, fecha_fin))
+        ordenes_filter = Q(fecha_recepcion__range=(fecha_inicio, fecha_fin))
+
+    # --- 1. Reportes Financieros ---
+    pagos = Pago.objects.filter(pagos_filter)
+    ingresos_totales = pagos.aggregate(Sum('monto'))['monto__sum'] or 0.00
+    
+    ingresos_efectivo = pagos.filter(metodo_pago='Efectivo').aggregate(Sum('monto'))['monto__sum'] or 0.00
+    ingresos_transferencia = pagos.filter(metodo_pago='Transferencia').aggregate(Sum('monto'))['monto__sum'] or 0.00
+    ingresos_tarjeta = pagos.filter(metodo_pago='Tarjeta').aggregate(Sum('monto'))['monto__sum'] or 0.00
+
+    # Cuentas por Cobrar
+    ordenes_por_cobrar = Orden.objects.filter(saldo_pendiente__gt=0).exclude(estado_actual='Entregada')
+    total_por_cobrar = ordenes_por_cobrar.aggregate(Sum('saldo_pendiente'))['saldo_pendiente__sum'] or 0.00
+    top_deudores = ordenes_por_cobrar.order_by('-saldo_pendiente')[:5]
+
+    # --- 2. Reportes de Órdenes ---
+    ordenes = Orden.objects.filter(ordenes_filter)
+    total_ordenes = ordenes.count()
+    
+    ordenes_por_estado = ordenes.values('estado_actual').annotate(total=Count('id')).order_by('-total')
+
+    # --- 3. Reportes de Clientes ---
+    # Para clientes siempre analizamos sus órdenes en el periodo
+    top_clientes = Cliente.objects.annotate(
+        total_gastado=Sum('ordenes__total_a_pagar', filter=Q(ordenes__fecha_recepcion__range=(fecha_inicio, fecha_fin)) if fecha_inicio else None),
+        total_ordenes=Count('ordenes', filter=Q(ordenes__fecha_recepcion__range=(fecha_inicio, fecha_fin)) if fecha_inicio else None)
+    ).exclude(total_gastado=None).order_by('-total_gastado')[:5]
+
+    # --- 4. Reportes de Servicios ---
+    servicios_stats = PrendaOrden.objects.filter(
+        orden__fecha_recepcion__range=(fecha_inicio, fecha_fin) if fecha_inicio else Q()
+    ).values('servicio__nombre').annotate(
+        cantidad_solicitada=Sum('cantidad')
+    ).order_by('-cantidad_solicitada')[:5]
+
+    context = {
+        'periodo': periodo,
+        'titulo_periodo': titulo_periodo,
+        'ingresos_totales': ingresos_totales,
+        'ingresos_efectivo': ingresos_efectivo,
+        'ingresos_transferencia': ingresos_transferencia,
+        'ingresos_tarjeta': ingresos_tarjeta,
+        'total_por_cobrar': total_por_cobrar,
+        'top_deudores': top_deudores,
+        'total_ordenes': total_ordenes,
+        'ordenes_por_estado': ordenes_por_estado,
+        'top_clientes': top_clientes,
+        'servicios_stats': servicios_stats,
+    }
+    
+    return render(request, 'reportes.html', context)
+
+
+# ==========================================
+# CONFIGURACIÓN DEL SISTEMA
+# ==========================================
+from .models import Configuracion
+from .forms import ConfiguracionForm
+
+@login_required
+def configuracion_update(request):
+    config = Configuracion.load()
+    
+    if request.method == 'POST':
+        form = ConfiguracionForm(request.POST, request.FILES, instance=config)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Configuración del sistema actualizada correctamente.")
+            return redirect('configuracion')
+        else:
+            messages.error(request, "Por favor, corrija los errores en el formulario.")
+    else:
+        form = ConfiguracionForm(instance=config)
+        
+    context = {
+        'form': form,
+        'active_tab': 'configuracion'
+    }
+    return render(request, 'configuracion.html', context)

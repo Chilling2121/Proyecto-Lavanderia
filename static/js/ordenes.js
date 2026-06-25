@@ -416,13 +416,21 @@ function runOrderValidationAndSerialization(form) {
             const tarifaInput = row.querySelector('.input-tarifa');
             const pesoInput = row.querySelector('.input-peso');
             
+            // Forzar guardado de lo escrito en TomSelect si el usuario no dio Enter/Blur
+            if (tipoInput && tipoInput.tomselect && tipoInput.tomselect.control_input) {
+                const typedText = tipoInput.tomselect.control_input.value.trim();
+                if (!tipoInput.value.trim() && typedText) {
+                    tipoInput.tomselect.createItem(typedText);
+                }
+            }
+            
             if (!tipoInput.value.trim()) {
                 hasError = true;
                 tipoInput.style.borderColor = 'var(--danger)';
                 if (tipoInput.tomselect && tipoInput.tomselect.control) {
                     tipoInput.tomselect.control.style.borderColor = 'var(--danger)';
                 }
-                tipoInput.focus();
+                // Evitamos robar el foco (focus()) para no interrumpir el clic del usuario
             } else {
                 tipoInput.style.borderColor = '';
                 if (tipoInput.tomselect && tipoInput.tomselect.control) {
@@ -436,7 +444,6 @@ function runOrderValidationAndSerialization(form) {
                 if (selectServ.tomselect && selectServ.tomselect.control) {
                     selectServ.tomselect.control.style.borderColor = 'var(--danger)';
                 }
-                selectServ.focus();
             } else {
                 selectServ.style.borderColor = '';
                 if (selectServ.tomselect && selectServ.tomselect.control) {
@@ -447,7 +454,6 @@ function runOrderValidationAndSerialization(form) {
             if (tarifaInput && (tarifaInput.value === '' || parseFloat(tarifaInput.value) < 0)) {
                 hasError = true;
                 tarifaInput.style.borderColor = 'var(--danger)';
-                tarifaInput.focus();
             } else if (tarifaInput) {
                 tarifaInput.style.borderColor = '';
             }
@@ -455,7 +461,6 @@ function runOrderValidationAndSerialization(form) {
             if (!pesoInput.disabled && (!pesoInput.value || parseFloat(pesoInput.value) <= 0)) {
                 hasError = true;
                 pesoInput.style.borderColor = 'var(--danger)';
-                pesoInput.focus();
             } else {
                 pesoInput.style.borderColor = '';
             }
@@ -532,6 +537,13 @@ document.addEventListener('htmx:configRequest', (event) => {
         const isValid = runOrderValidationAndSerialization(event.detail.elt);
         if (!isValid) {
             event.preventDefault(); // Cancela la petición de HTMX
+        } else {
+            // HTMX ya serializó el formulario antes de llamar a nuestra validación, 
+            // así que debemos inyectar el JSON generado directamente en los parámetros
+            const prendasJsonInput = event.detail.elt.querySelector('#prendas_json');
+            if (prendasJsonInput) {
+                event.detail.parameters['prendas_json'] = prendasJsonInput.value;
+            }
         }
     }
 });

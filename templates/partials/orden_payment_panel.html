@@ -66,7 +66,6 @@
     {% if orden.saldo_pendiente > 0 %}
     <div class="payment-form-section">
         <p class="payment-form-title">Registrar Pago</p>
-        
         <form hx-post="{% url 'orden_register_payment' orden.id %}" hx-target="#payment-panel" hx-swap="innerHTML" style="display: flex; flex-direction: column; gap: 0.85rem;">
             {% csrf_token %}
             
@@ -102,7 +101,7 @@
 
             <!-- Checkbox de confirmación obligatorio de entrega de cambio -->
             <div id="confirmacion-cambio-group" style="display: none; align-items: flex-start; gap: 0.65rem; padding: 0.75rem; background-color: hsl(45, 90%, 96%); border: 1.5px solid hsl(45, 90%, 85%); border-radius: var(--radius-sm); margin-bottom: 0.35rem; animation: slideDownRow 0.3s ease-out;">
-                <input type="checkbox" id="confirmar-cambio-entregado" style="width: 16px; height: 16px; margin-top: 0.15rem; cursor: pointer; accent-color: var(--warning);">
+                <input type="checkbox" id="confirmar-cambio-entregado" name="confirmar_cambio" value="True" style="width: 16px; height: 16px; margin-top: 0.15rem; cursor: pointer; accent-color: var(--warning);">
                 <label for="confirmar-cambio-entregado" style="font-size: 0.82rem; font-weight: 750; color: hsl(45, 90%, 20%); cursor: pointer; line-height: 1.4; user-select: none;">
                     ⚠️ Confirmar que he entregado el cambio de $<span id="cambio-checkbox-val">0.00</span> en efectivo al cliente (Obligatorio para registrar el pago)
                 </label>

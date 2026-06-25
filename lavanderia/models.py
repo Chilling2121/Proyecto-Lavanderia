@@ -120,3 +120,35 @@ class Pago(models.Model):
 
     def __str__(self):
         return f"Pago de ${self.monto} ({self.tipo_pago}) - Orden #{self.orden_id:06d}"
+
+
+class Configuracion(models.Model):
+    nombre_negocio = models.CharField(max_length=150, default="LavaFácil")
+    telefono_contacto = models.CharField(max_length=50, blank=True, null=True, default="+1 234 567 8900")
+    direccion = models.TextField(blank=True, null=True, default="Av. Principal 123, Ciudad")
+    correo = models.EmailField(max_length=100, blank=True, null=True, default="contacto@lavafacil.com")
+    
+    simbolo_moneda = models.CharField(max_length=10, default="$", help_text="Símbolo a mostrar en la interfaz (ej. $, S/, €)")
+    impuesto_porcentaje = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Porcentaje de IVA/IGV (ej. 16.00)")
+    
+    mensaje_ticket_cabecera = models.TextField(blank=True, null=True, default="RFC: XXXXXX000000\n¡Bienvenido!")
+    mensaje_ticket_pie = models.TextField(blank=True, null=True, default="¡Gracias por su preferencia!\nLas prendas no reclamadas después de 30 días causarán recargo de almacenaje o serán donadas.")
+    
+    class Meta:
+        db_table = 'configuracion'
+        verbose_name = 'Configuración'
+        verbose_name_plural = 'Configuraciones'
+
+    def save(self, *args, **kwargs):
+        # Asegura que siempre se guarde en la misma fila (Singleton)
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        # Método auxiliar para obtener o crear la configuración única
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return "Configuración Global"

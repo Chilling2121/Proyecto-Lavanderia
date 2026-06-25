@@ -120,6 +120,39 @@
     color: var(--text);
 }
 
+/* Contenedor de lista de órdenes filtrable */
+#ordenes-list-container {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+#ordenes-list-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+#ordenes-list-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#ordenes-list-container::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 3px;
+}
+
+.orden-search-item {
+    cursor: pointer;
+}
+
+.orden-search-item:last-of-type {
+    border-bottom: none;
+}
+
+/* Orden seleccionada (display readonly) */
+#orden-selected-display {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
 .selector-form {
     display: flex;
     gap: 0.5rem;

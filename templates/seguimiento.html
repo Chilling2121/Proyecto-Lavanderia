@@ -37,28 +37,72 @@
                 <!-- Detalle de Seguimiento Individual (Prototipo v0.2 Pág 9) -->
                 <div class="detail-tracking-view">
                     
-                    <!-- BARRA SUPERIOR DE FILTRO/CAMBIO DE ORDEN -->
-                    <div class="tracking-selector-bar">
-                        <div class="selector-info-group">
-                            <div class="selector-icon-box">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <!-- BARRA SUPERIOR DE BÚSQUEDA Y SELECCIÓN DE ORDEN -->
+                    <div class="tracking-selector-bar" style="flex-direction: column; align-items: stretch; gap: 1rem;">
+                        <!-- Fila 1: Buscador rápido -->
+                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                            <div class="selector-info-group" style="flex-shrink: 0;">
+                                <div class="selector-icon-box">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="selector-label">Buscar y seleccionar orden activa</h4>
+                                    <p style="margin: 0; font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">{{ ordenes_activas|length }} órdenes activas en planta</p>
+                                </div>
+                            </div>
+                            <div style="flex: 1; min-width: 250px; position: relative;">
+                                <input type="text" id="orden-search-input" placeholder="Buscar por # de orden o nombre del cliente..." autocomplete="off" style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.5rem; font-size: 0.88rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background-color: var(--bg-app); color: var(--text); font-family: var(--font); font-weight: 550; outline: none; transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px rgba(37,99,235,0.12)'; this.style.backgroundColor='var(--bg-card)';" onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'; this.style.backgroundColor='var(--bg-app)';">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); pointer-events: none;">
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                                 </svg>
                             </div>
-                            <div>
-                                <h4 class="selector-label">Consultar otra orden activa:</h4>
+                        </div>
+
+                        <!-- Fila 2: Lista de órdenes filtrable -->
+                        <div id="ordenes-list-container" style="display: none; max-height: 280px; overflow-y: auto; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background-color: var(--bg-app);">
+                            {% for o in ordenes_activas %}
+                            <a href="?orden_id={{ o.id }}" class="orden-search-item" data-search-text="orden #{{ o.id|stringformat:'06d' }} {{ o.cliente.nombre }} {{ o.estado_actual }}" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; text-decoration: none; color: var(--text); border-bottom: 1px solid var(--border); transition: var(--transition); gap: 0.75rem; {% if o.id == orden_seleccionada.id %}background-color: var(--primary-light); border-left: 3px solid var(--primary);{% endif %}" onmouseover="this.style.backgroundColor='var(--primary-light)';" onmouseout="this.style.backgroundColor='{% if o.id == orden_seleccionada.id %}var(--primary-light){% else %}transparent{% endif %}';">
+                                <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+                                    <span style="font-weight: 700; font-size: 0.88rem; color: {% if o.id == orden_seleccionada.id %}var(--primary){% else %}var(--text){% endif %};">
+                                        #{{ o.id|stringformat:"06d" }} — {{ o.cliente.nombre }}
+                                    </span>
+                                    <span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 500;">
+                                        {{ o.fecha_recepcion|date:"d/m/Y H:i" }}
+                                    </span>
+                                </div>
+                                <span class="status-badge-large state-{{ o.estado_actual|slugify }}" style="font-size: 0.72rem; padding: 0.3rem 0.65rem; flex-shrink: 0;">
+                                    {{ o.estado_actual }}
+                                </span>
+                            </a>
+                            {% endfor %}
+                            <div id="no-results-msg" style="display: none; padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.88rem; font-weight: 600;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.35rem; opacity: 0.6;">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                No se encontraron órdenes con ese criterio.
                             </div>
                         </div>
-                        <form method="GET" action="" class="selector-form">
-                            <select name="orden_id" id="orden-selector-input" required class="selector-select" onchange="this.form.submit()">
-                                {% for o in ordenes_activas %}
-                                    <option value="{{ o.id }}" {% if o.id == orden_seleccionada.id %}selected{% endif %}>
-                                        Orden #{{ o.id|stringformat:"06d" }} - {{ o.cliente.nombre }} ({{ o.estado_actual }})
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </form>
+
+                        <!-- Fila 3: Orden actualmente seleccionada (readonly) -->
+                        <div id="orden-selected-display" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 1rem; background-color: var(--bg-app); border: 1.5px solid var(--primary-light); border-radius: var(--radius-sm); cursor: default;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" style="flex-shrink: 0;">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span style="font-size: 0.9rem; font-weight: 700; color: var(--primary);">
+                                Orden #{{ orden_seleccionada.id|stringformat:"06d" }}
+                            </span>
+                            <span style="font-size: 0.88rem; font-weight: 600; color: var(--text);">
+                                — {{ orden_seleccionada.cliente.nombre }}
+                            </span>
+                            <span class="status-badge-large state-{{ orden_seleccionada.estado_actual|slugify }}" style="font-size: 0.72rem; padding: 0.3rem 0.65rem; margin-left: auto;">
+                                {{ orden_seleccionada.estado_actual }}
+                            </span>
+                        </div>
                     </div>
 
                     <!-- CABECERA DE LA ORDEN SELECCIONADA -->
@@ -73,7 +117,7 @@
                         </div>
                         <div class="tracking-badge-block">
                             {% if orden_seleccionada.saldo_pendiente > 0 %}
-                                <a href="{% url 'orden_detail' orden_seleccionada.id %}" class="btn-pay-shortcut">
+                                <a href="{% url 'orden_detail' orden_seleccionada.id %}?source=seguimiento" class="btn-pay-shortcut">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                                     <span>Pagar Saldo (${{ orden_seleccionada.saldo_pendiente|floatformat:2 }})</span>
                                 </a>
@@ -276,7 +320,7 @@
                                 
                                 {% if orden_seleccionada.saldo_pendiente > 0 %}
                                     <div class="pay-cta-container">
-                                        <a href="{% url 'orden_detail' orden_seleccionada.id %}" class="btn-pay-cta">
+                                        <a href="{% url 'orden_detail' orden_seleccionada.id %}?source=seguimiento" class="btn-pay-cta">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                                             <span>Registrar Pago / Abonar Saldo</span>
                                         </a>
@@ -365,7 +409,7 @@
 
                 </div>
 
-                <!-- JS para rellenar la línea de progreso e inicializar TomSelect -->
+                <!-- JS para la línea de progreso y el buscador de órdenes -->
                 <script>
                     document.addEventListener("DOMContentLoaded", function() {
                         // 1. Línea de progreso de la etapa actual
@@ -382,18 +426,45 @@
                             document.getElementById("timeline-progress-width").style.width = progressPercent + "%";
                         }
 
-                        // 2. Inicializar TomSelect en el selector de órdenes
-                        const selectEl = document.getElementById("orden-selector-input");
-                        if (selectEl && typeof TomSelect !== 'undefined') {
-                            new TomSelect(selectEl, {
-                                create: false,
-                                maxOptions: null,
-                                placeholder: "Seleccionar orden activa...",
-                                sortField: { field: "text", direction: "asc" },
-                                onChange: function(value) {
-                                    if (value) {
-                                        selectEl.form.submit();
+                        // 2. Buscador/filtro de órdenes
+                        const searchInput = document.getElementById("orden-search-input");
+                        const listContainer = document.getElementById("ordenes-list-container");
+                        const items = document.querySelectorAll(".orden-search-item");
+                        const noResultsMsg = document.getElementById("no-results-msg");
+
+                        if (searchInput && listContainer) {
+                            // Mostrar lista al enfocar el buscador
+                            searchInput.addEventListener("focus", function() {
+                                listContainer.style.display = "block";
+                            });
+
+                            // Filtrar órdenes mientras se escribe
+                            searchInput.addEventListener("input", function() {
+                                const query = this.value.toLowerCase().trim();
+                                let visibleCount = 0;
+
+                                items.forEach(function(item) {
+                                    const text = (item.getAttribute("data-search-text") || "").toLowerCase();
+                                    if (!query || text.includes(query)) {
+                                        item.style.display = "flex";
+                                        visibleCount++;
+                                    } else {
+                                        item.style.display = "none";
                                     }
+                                });
+
+                                noResultsMsg.style.display = visibleCount === 0 ? "block" : "none";
+
+                                // Asegurar que la lista esté visible al escribir
+                                if (listContainer.style.display === "none") {
+                                    listContainer.style.display = "block";
+                                }
+                            });
+
+                            // Cerrar lista al hacer clic fuera
+                            document.addEventListener("click", function(e) {
+                                if (!searchInput.contains(e.target) && !listContainer.contains(e.target)) {
+                                    listContainer.style.display = "none";
                                 }
                             });
                         }

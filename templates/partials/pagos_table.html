@@ -37,7 +37,11 @@
                     <span class="badge" style="background-color: hsl(142, 72%, 93%); color: var(--success); font-weight: 600;">Saldo / Liquidación</span>
                 {% endif %}
                 {% if pago.observaciones %}
+                    {% if 'Cambio entregado' in pago.observaciones %}
+                    <span style="font-size: 0.78rem; color: var(--danger); display: block; margin-top: 0.35rem; font-weight: 600; background-color: hsl(350, 80%, 95%); padding: 0.2rem 0.4rem; border-radius: var(--radius-sm); border: 1px dashed var(--danger);">⚠️ {{ pago.observaciones }}</span>
+                    {% else %}
                     <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 0.25rem; font-style: italic;">{{ pago.observaciones }}</span>
+                    {% endif %}
                 {% endif %}
             </td>
             <td>

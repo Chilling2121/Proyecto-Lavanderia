@@ -281,12 +281,18 @@
         <div class="header">
             <h1 class="logo">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align: middle;"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="5"></circle></svg>
-                LavaFácil
+                {{ config.nombre_negocio }}
             </h1>
             <div class="info-local">
-                <p>R.U.C. 1391782345001</p>
-                <p>Av. Universitaria y Calle 12 - Manta</p>
-                <p>Telf: (05) 262-4567 / 0987654321</p>
+                {% if config.mensaje_ticket_cabecera %}
+                    <p style="white-space: pre-line;">{{ config.mensaje_ticket_cabecera }}</p>
+                {% endif %}
+                {% if config.direccion %}
+                    <p>{{ config.direccion }}</p>
+                {% endif %}
+                {% if config.telefono_contacto %}
+                    <p>Telf: {{ config.telefono_contacto }}</p>
+                {% endif %}
             </div>
         </div>
 
@@ -398,8 +404,11 @@
 
         <!-- CONDICIONES Y CÓDIGO DE BARRAS -->
         <div class="footer">
-            <p style="font-weight: 600; margin-bottom: 0.3rem;">¡Gracias por preferir LavaFácil!</p>
-            <p style="font-size: 0.65rem; line-height: 1.3;">Conserve este ticket para retirar sus prendas. Plazo máximo de retiro: 30 días. No nos responsabilizamos por prendas delicadas que no hayan sido declaradas como tal.</p>
+            {% if config.mensaje_ticket_pie %}
+                <p style="white-space: pre-line; line-height: 1.3; margin-bottom: 0.5rem;">{{ config.mensaje_ticket_pie }}</p>
+            {% else %}
+                <p style="font-weight: 600; margin-bottom: 0.3rem;">¡Gracias por preferir {{ config.nombre_negocio }}!</p>
+            {% endif %}
             
             <!-- Código de barras simulado en SVG -->
             <div class="barcode">

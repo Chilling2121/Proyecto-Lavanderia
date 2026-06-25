@@ -50,5 +50,7 @@ urlpatterns = [
     path('usuarios/nuevo/', views.usuario_create, name='usuario_create'),
     path('usuarios/<int:id>/editar/', views.usuario_update, name='usuario_update'),
     path('usuarios/<int:id>/toggle/', views.usuario_toggle_status, name='usuario_toggle_status'),
+    path('reportes/', views.reportes_dashboard, name='reportes_dashboard'),
+    path('configuracion/', views.configuracion_update, name='configuracion'),
     path('', views.home_redirect, name='home_redirect'),
 ]

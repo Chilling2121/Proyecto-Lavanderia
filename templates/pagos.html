@@ -64,6 +64,17 @@
                     </div>
                 </div>
 
+                <!-- CAMBIO ENTREGADO (SALIDA DE EFECTIVO) -->
+                <div class="dashboard-card" style="border-left: 5px solid var(--warning); display: flex; flex-direction: row; align-items: center; gap: 1rem; padding: 1.25rem; background-color: hsl(45, 90%, 98%); transition: var(--transition);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)';">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background-color: hsl(45, 90%, 85%); color: hsl(45, 90%, 35%); display: flex; align-items: center; justify-content: center;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem;">Cambio Físico</p>
+                        <h3 style="font-size: 1.35rem; font-weight: 800; color: hsl(45, 90%, 40%);">-${{ total_cambio_entregado|floatformat:2 }}</h3>
+                    </div>
+                </div>
+
             </div>
 
             <!-- FILTROS Y HISTORIAL DE PAGOS -->
