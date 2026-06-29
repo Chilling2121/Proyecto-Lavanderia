@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from .decorators import group_required
 from django.db.models import Sum, Count, Q, ProtectedError
 from django.utils import timezone
 from django.http import HttpResponse
@@ -11,7 +12,7 @@ import re
 import json
 from decimal import Decimal, InvalidOperation
 from django.contrib.auth.models import User, Group
-from .models import Orden, Pago, PrendaOrden, Cliente, Servicio, SeguimientoLavado
+from .models import Orden, Pago, PrendaOrden, Cliente, Servicio, SeguimientoLavado, TurnoCaja, MovimientoCaja, Promocion
 
 
 # Flujo secuencial de estados de lavado
@@ -29,14 +30,18 @@ ESTADOS_LAVADO = [
 
 def home_redirect(request):
     if request.user.is_authenticated:
+        if request.user.groups.filter(name='Operador').exists() and not request.user.groups.filter(name__in=['Administrador', 'Cajero']).exists():
+            return redirect('seguimiento_list')
         return redirect('dashboard')
     return redirect('login')
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def dashboard(request):
     local_now = timezone.localtime(timezone.now())
     start_of_today = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
     end_of_today = local_now.replace(hour=23, minute=59, second=59, microsecond=999999)
+    from datetime import timedelta
     
     pedidos_hoy = Orden.objects.filter(fecha_recepcion__range=(start_of_today, end_of_today)).count()
     pedidos_pendientes = Orden.objects.exclude(estado_actual='Entregada').count()
@@ -65,6 +70,24 @@ def dashboard(request):
             {'nombre': 'Otros', 'percentage': 5},
         ]
         
+    # Datos para gráfico de barras (Últimos 7 días)
+    dias_semana = []
+    ingresos_semana = []
+    for i in range(6, -1, -1):
+        dia = start_of_today - timedelta(days=i)
+        dia_end = end_of_today - timedelta(days=i)
+        dias_semana.append(dia.strftime('%d/%m'))
+        ingreso_dia = Pago.objects.filter(fecha_pago__range=(dia, dia_end)).aggregate(Sum('monto'))['monto__sum'] or 0.00
+        ingresos_semana.append(float(ingreso_dia))
+
+    # Datos para gráfico circular (Estados de las Órdenes activas)
+    estado_labels = []
+    estado_data = []
+    estados_agrupados = Orden.objects.exclude(estado_actual='Entregada').values('estado_actual').annotate(total=Count('id'))
+    for item in estados_agrupados:
+        estado_labels.append(item['estado_actual'])
+        estado_data.append(item['total'])
+        
     context = {
         'pedidos_hoy': pedidos_hoy,
         'pedidos_pendientes': pedidos_pendientes,
@@ -72,6 +95,10 @@ def dashboard(request):
         'ingresos_hoy': ingresos_hoy,
         'ordenes_recientes': ordenes_recientes,
         'servicios_stats': servicios_stats,
+        'ingresos_chart_labels': json.dumps(dias_semana),
+        'ingresos_chart_data': json.dumps(ingresos_semana),
+        'estado_chart_labels': json.dumps(estado_labels),
+        'estado_chart_data': json.dumps(estado_data),
     }
     
     return render(request, 'dashboard.html', context)
@@ -82,11 +109,13 @@ def dashboard(request):
 # ==========================================
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def clientes_list(request):
     clientes = Cliente.objects.all().order_by('-id')
     return render(request, 'clientes.html', {'clientes': clientes})
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def clientes_search(request):
     query = request.GET.get('search', '').strip()
     if query:
@@ -98,6 +127,7 @@ def clientes_search(request):
     return render(request, 'partials/clientes_table.html', {'clientes': clientes})
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def cliente_historial(request, cliente_id):
     try:
         cliente = Cliente.objects.get(id=cliente_id)
@@ -108,6 +138,7 @@ def cliente_historial(request, cliente_id):
     return render(request, 'partials/cliente_historial.html', {'cliente': cliente, 'ordenes': ordenes})
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def cliente_create(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
@@ -129,6 +160,7 @@ def cliente_create(request):
     return redirect('clientes_list')
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def cliente_edit(request, cliente_id):
     if request.method == 'POST':
         try:
@@ -153,6 +185,7 @@ def cliente_edit(request, cliente_id):
     return redirect('clientes_list')
 
 @login_required
+@group_required('Administrador')
 def cliente_delete(request, cliente_id):
     if request.method == 'DELETE':
         try:
@@ -172,11 +205,13 @@ def cliente_delete(request, cliente_id):
 # ==========================================
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def servicios_list(request):
     servicios = Servicio.objects.all().order_by('nombre')
     return render(request, 'servicios.html', {'servicios': servicios})
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def servicios_search_api(request):
     query = request.GET.get('search', '').strip()
     if query:
@@ -188,6 +223,7 @@ def servicios_search_api(request):
     return render(request, 'partials/servicios_table.html', {'servicios': servicios})
 
 @login_required
+@group_required('Administrador')
 def servicio_create(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
@@ -207,6 +243,7 @@ def servicio_create(request):
     return render(request, 'servicio_form.html')
 
 @login_required
+@group_required('Administrador')
 def servicio_edit(request, servicio_id):
     try:
         servicio = Servicio.objects.get(id=servicio_id)
@@ -232,6 +269,7 @@ def servicio_edit(request, servicio_id):
     return render(request, 'servicio_form.html', {'servicio': servicio})
 
 @login_required
+@group_required('Administrador')
 def servicio_delete(request, servicio_id):
     if request.method == 'DELETE':
         try:
@@ -253,6 +291,7 @@ def servicio_delete(request, servicio_id):
 # ==========================================
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def ordenes_list(request):
     ordenes = Orden.objects.select_related('cliente').order_by('-id')
     return render(request, 'ordenes.html', {
@@ -261,6 +300,7 @@ def ordenes_list(request):
     })
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def ordenes_search(request):
     query = request.GET.get('search', '').strip()
     estado = request.GET.get('estado', '').strip()
@@ -279,6 +319,7 @@ def ordenes_search(request):
     return render(request, 'partials/ordenes_table.html', {'ordenes': ordenes})
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def orden_cliente_search_api(request):
     query = request.GET.get('search', '').strip()
     if query:
@@ -290,6 +331,7 @@ def orden_cliente_search_api(request):
     return render(request, 'partials/orden_cliente_results.html', {'clientes': clientes})
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def orden_create(request):
     if request.method == 'POST':
         cliente_id = request.POST.get('cliente_id')
@@ -307,6 +349,12 @@ def orden_create(request):
             
         metodo_pago = request.POST.get('metodo_pago', 'Efectivo')
         prendas_json = request.POST.get('prendas_json', '[]')
+        
+        # Validar turno de caja antes de hacer cualquier cambio
+        turno_activo = TurnoCaja.objects.filter(estado='Abierta').first()
+        if not turno_activo:
+            messages.error(request, "No puedes registrar órdenes nuevas sin abrir un turno de caja primero.")
+            return redirect('orden_create')
         
         if not cliente_id:
             messages.error(request, "Debe seleccionar un cliente para la orden de servicio.")
@@ -372,7 +420,8 @@ def orden_create(request):
                         monto=anticipo,
                         metodo_pago=metodo_pago,
                         tipo_pago='Anticipo',
-                        observaciones='Abono inicial al registrar la orden'
+                        observaciones='Abono inicial al registrar la orden',
+                        turno=turno_activo
                     )
                 
                 messages.success(request, f"Orden de servicio #{orden.id:06d} registrada con éxito.")
@@ -405,6 +454,7 @@ def orden_create(request):
 
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def orden_create_partial(request, cliente_id):
     try:
         cliente = Cliente.objects.get(id=cliente_id)
@@ -424,6 +474,11 @@ def orden_create_partial(request, cliente_id):
         metodo_pago = request.POST.get('metodo_pago', 'Efectivo')
         prendas_json = request.POST.get('prendas_json', '[]')
         fecha_entrega_estimada_str = request.POST.get('fecha_entrega_estimada')
+        
+        # Validar turno de caja antes de hacer cualquier cambio
+        turno_activo = TurnoCaja.objects.filter(estado='Abierta').first()
+        if not turno_activo:
+            return HttpResponse("<script>showToast('No puedes registrar órdenes nuevas sin abrir un turno de caja primero.', 'error')</script>", status=400)
         
         try:
             prendas_data = json.loads(prendas_json)
@@ -480,7 +535,8 @@ def orden_create_partial(request, cliente_id):
                         monto=anticipo,
                         metodo_pago=metodo_pago,
                         tipo_pago='Anticipo',
-                        observaciones='Abono inicial al registrar la orden'
+                        observaciones='Abono inicial al registrar la orden',
+                        turno=turno_activo
                     )
             
             # Recuperar historial actualizado del cliente
@@ -525,6 +581,7 @@ def orden_create_partial(request, cliente_id):
 # ==========================================
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def orden_detail(request, orden_id):
     try:
         orden = Orden.objects.select_related('cliente').get(id=orden_id)
@@ -572,6 +629,7 @@ def orden_detail(request, orden_id):
 
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def orden_register_payment(request, orden_id):
     if request.method == 'POST':
         try:
@@ -639,13 +697,15 @@ def orden_register_payment(request, orden_id):
 
         with transaction.atomic():
             tipo_pago = 'Saldo Final' if monto_registrado >= saldo_actual else 'Abono'
+            turno_activo = TurnoCaja.objects.filter(estado='Abierta').first()
 
             Pago.objects.create(
                 orden=orden,
                 monto=monto_registrado,
                 metodo_pago=metodo_pago,
                 tipo_pago=tipo_pago,
-                observaciones=observaciones_db
+                observaciones=observaciones_db,
+                turno=turno_activo
             )
 
             nuevo_anticipo = Decimal(str(orden.anticipo)) + monto_registrado
@@ -681,6 +741,7 @@ def orden_register_payment(request, orden_id):
 
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def pagos_list(request):
     local_now = timezone.localtime(timezone.now())
     start_of_today = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -721,6 +782,7 @@ def pagos_list(request):
 
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def pagos_search(request):
     query = request.GET.get('search', '').strip()
     metodo = request.GET.get('metodo_pago', '').strip()
@@ -767,6 +829,7 @@ def pagos_search(request):
 
 
 @login_required
+@group_required('Administrador', 'Cajero')
 def orden_ticket(request, orden_id):
     try:
         orden = Orden.objects.select_related('cliente').get(id=orden_id)
@@ -801,6 +864,7 @@ def orden_ticket(request, orden_id):
 # ==========================================
 
 @login_required
+@group_required('Administrador')
 def usuarios_list(request):
     usuarios = User.objects.all().order_by('-is_active', 'first_name', 'username').prefetch_related('groups')
     total_usuarios = usuarios.count()
@@ -816,6 +880,7 @@ def usuarios_list(request):
     return render(request, 'usuarios.html', context)
 
 @login_required
+@group_required('Administrador')
 def usuarios_search(request):
     q = request.GET.get('q', '').strip()
     estado = request.GET.get('estado', '')
@@ -832,6 +897,7 @@ def usuarios_search(request):
     return render(request, 'partials/usuarios_table.html', {'usuarios': usuarios})
 
 @login_required
+@group_required('Administrador')
 def usuario_create(request):
     grupos = Group.objects.all()
     if request.method == 'POST':
@@ -868,6 +934,7 @@ def usuario_create(request):
     return render(request, 'usuario_form.html', context)
 
 @login_required
+@group_required('Administrador')
 def usuario_update(request, id):
     try:
         usuario = User.objects.get(id=id)
@@ -914,6 +981,7 @@ def usuario_update(request, id):
     return render(request, 'usuario_form.html', context)
 
 @login_required
+@group_required('Administrador')
 def usuario_toggle_status(request, id):
     if request.method == 'POST':
         try:
@@ -936,6 +1004,7 @@ def usuario_toggle_status(request, id):
 # SEGUIMIENTO (KANBAN)
 # ==========================================
 @login_required
+@group_required('Administrador', 'Cajero', 'Operador')
 def seguimiento_list(request):
     ordenes_activas = Orden.objects.exclude(estado_actual='Entregada').select_related('cliente').prefetch_related('prendas').order_by('fecha_recepcion')
     
@@ -965,6 +1034,7 @@ def seguimiento_list(request):
     return render(request, 'seguimiento.html', context)
 
 @login_required
+@group_required('Administrador', 'Cajero', 'Operador')
 def seguimiento_advance_status(request, orden_id):
     if request.method == 'POST':
         from django.db import transaction
@@ -1011,9 +1081,7 @@ def seguimiento_advance_status(request, orden_id):
 #  MÓDULO DE REPORTES
 # ==========================================
 
-@login_required
-def reportes_dashboard(request):
-    periodo = request.GET.get('periodo', 'mes')
+def get_report_data(periodo):
     local_now = timezone.localtime(timezone.now())
     
     if periodo == 'hoy':
@@ -1040,7 +1108,6 @@ def reportes_dashboard(request):
         pagos_filter = Q(fecha_pago__range=(fecha_inicio, fecha_fin))
         ordenes_filter = Q(fecha_recepcion__range=(fecha_inicio, fecha_fin))
 
-    # --- 1. Reportes Financieros ---
     pagos = Pago.objects.filter(pagos_filter)
     ingresos_totales = pagos.aggregate(Sum('monto'))['monto__sum'] or 0.00
     
@@ -1048,32 +1115,27 @@ def reportes_dashboard(request):
     ingresos_transferencia = pagos.filter(metodo_pago='Transferencia').aggregate(Sum('monto'))['monto__sum'] or 0.00
     ingresos_tarjeta = pagos.filter(metodo_pago='Tarjeta').aggregate(Sum('monto'))['monto__sum'] or 0.00
 
-    # Cuentas por Cobrar
     ordenes_por_cobrar = Orden.objects.filter(saldo_pendiente__gt=0).exclude(estado_actual='Entregada')
     total_por_cobrar = ordenes_por_cobrar.aggregate(Sum('saldo_pendiente'))['saldo_pendiente__sum'] or 0.00
     top_deudores = ordenes_por_cobrar.order_by('-saldo_pendiente')[:5]
 
-    # --- 2. Reportes de Órdenes ---
     ordenes = Orden.objects.filter(ordenes_filter)
     total_ordenes = ordenes.count()
     
     ordenes_por_estado = ordenes.values('estado_actual').annotate(total=Count('id')).order_by('-total')
 
-    # --- 3. Reportes de Clientes ---
-    # Para clientes siempre analizamos sus órdenes en el periodo
     top_clientes = Cliente.objects.annotate(
         total_gastado=Sum('ordenes__total_a_pagar', filter=Q(ordenes__fecha_recepcion__range=(fecha_inicio, fecha_fin)) if fecha_inicio else None),
         total_ordenes=Count('ordenes', filter=Q(ordenes__fecha_recepcion__range=(fecha_inicio, fecha_fin)) if fecha_inicio else None)
     ).exclude(total_gastado=None).order_by('-total_gastado')[:5]
 
-    # --- 4. Reportes de Servicios ---
     servicios_stats = PrendaOrden.objects.filter(
         orden__fecha_recepcion__range=(fecha_inicio, fecha_fin) if fecha_inicio else Q()
     ).values('servicio__nombre').annotate(
         cantidad_solicitada=Sum('cantidad')
     ).order_by('-cantidad_solicitada')[:5]
 
-    context = {
+    return {
         'periodo': periodo,
         'titulo_periodo': titulo_periodo,
         'ingresos_totales': ingresos_totales,
@@ -1087,8 +1149,107 @@ def reportes_dashboard(request):
         'top_clientes': top_clientes,
         'servicios_stats': servicios_stats,
     }
-    
+
+@login_required
+@group_required('Administrador')
+def reportes_dashboard(request):
+    periodo = request.GET.get('periodo', 'mes')
+    context = get_report_data(periodo)
     return render(request, 'reportes.html', context)
+
+import openpyxl
+from openpyxl.styles import Font, Alignment, PatternFill
+import io
+try:
+    from xhtml2pdf import pisa
+except ImportError:
+    pisa = None
+from django.template.loader import get_template
+
+@login_required
+@group_required('Administrador')
+def reportes_export_excel(request):
+    periodo = request.GET.get('periodo', 'mes')
+    data = get_report_data(periodo)
+    
+    wb = openpyxl.Workbook()
+    
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="2563EB")
+    header_align = Alignment(horizontal="center", vertical="center")
+    
+    ws = wb.active
+    ws.title = "Resumen Financiero"
+    
+    ws.append([f"Reporte Financiero - {data['titulo_periodo']}"])
+    ws.append([])
+    ws.append(["Métrica", "Valor"])
+    
+    for row in ws.iter_rows(min_row=3, max_row=3):
+        for cell in row:
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_align
+            
+    ws.append(["Ingresos Totales", f"${data['ingresos_totales']:.2f}"])
+    ws.append(["Efectivo", f"${data['ingresos_efectivo']:.2f}"])
+    ws.append(["Transferencia", f"${data['ingresos_transferencia']:.2f}"])
+    ws.append(["Tarjeta", f"${data['ingresos_tarjeta']:.2f}"])
+    ws.append(["Cuentas por Cobrar", f"${data['total_por_cobrar']:.2f}"])
+    ws.append(["Total de Órdenes", data['total_ordenes']])
+    
+    ws.column_dimensions['A'].width = 25
+    ws.column_dimensions['B'].width = 15
+
+    ws2 = wb.create_sheet(title="Top Clientes")
+    ws2.append(["Cliente", "Órdenes", "Total Gastado"])
+    for row in ws2.iter_rows(min_row=1, max_row=1):
+        for cell in row:
+            cell.font = header_font
+            cell.fill = header_fill
+    for c in data['top_clientes']:
+        ws2.append([c.nombre, c.total_ordenes, f"${c.total_gastado:.2f}"])
+    ws2.column_dimensions['A'].width = 30
+    ws2.column_dimensions['C'].width = 15
+
+    ws3 = wb.create_sheet(title="Cuentas por Cobrar")
+    ws3.append(["Orden", "Cliente", "Teléfono", "Saldo Pendiente"])
+    for row in ws3.iter_rows(min_row=1, max_row=1):
+        for cell in row:
+            cell.font = header_font
+            cell.fill = header_fill
+    for d in data['top_deudores']:
+        ws3.append([f"#{d.id:06d}", d.cliente.nombre, d.cliente.telefono, f"${d.saldo_pendiente:.2f}"])
+    ws3.column_dimensions['A'].width = 15
+    ws3.column_dimensions['B'].width = 30
+    ws3.column_dimensions['C'].width = 15
+    ws3.column_dimensions['D'].width = 20
+    
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="reporte_lavafacil_{periodo}.xlsx"'
+    wb.save(response)
+    return response
+
+@login_required
+@group_required('Administrador')
+def reportes_export_pdf(request):
+    periodo = request.GET.get('periodo', 'mes')
+    data = get_report_data(periodo)
+    
+    from .models import Configuracion
+    data['config'] = Configuracion.load()
+    
+    template = get_template('reporte_pdf.html')
+    html = template.render(data)
+    
+    result = io.BytesIO()
+    if pisa:
+        pdf = pisa.pisaDocument(io.BytesIO(html.encode("UTF-8")), result)
+        if not pdf.err:
+            response = HttpResponse(result.getvalue(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="reporte_lavafacil_{periodo}.pdf"'
+            return response
+    return HttpResponse('Error generando PDF. Verifique que xhtml2pdf esté instalado.', status=400)
 
 
 # ==========================================
@@ -1098,6 +1259,7 @@ from .models import Configuracion
 from .forms import ConfiguracionForm
 
 @login_required
+@group_required('Administrador')
 def configuracion_update(request):
     config = Configuracion.load()
     
@@ -1117,3 +1279,332 @@ def configuracion_update(request):
         'active_tab': 'configuracion'
     }
     return render(request, 'configuracion.html', context)
+
+# ==========================================
+# MÓDULO DE CAJA (CORTE DE CAJA)
+# ==========================================
+from .models import TurnoCaja, MovimientoCaja
+
+@login_required
+@group_required('Administrador', 'Cajero')
+def caja_dashboard(request):
+    # Buscar si hay un turno abierto para el usuario actual o en general
+    # Si queremos que la caja sea por sucursal (general), buscamos la última abierta
+    turno_abierto = TurnoCaja.objects.filter(estado='Abierta').first()
+    
+    movimientos = []
+    pagos = []
+    
+    if turno_abierto:
+        movimientos = MovimientoCaja.objects.filter(turno=turno_abierto).order_by('-fecha')
+        pagos = Pago.objects.filter(turno=turno_abierto).order_by('-fecha_pago')
+        
+        ingresos_ordenes = pagos.aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+        ingresos_extra = movimientos.filter(tipo='Ingreso').aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+        egresos = movimientos.filter(tipo='Egreso').aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+        
+        saldo_calculado = turno_abierto.saldo_inicial + ingresos_ordenes + ingresos_extra - egresos
+    else:
+        saldo_calculado = Decimal('0.00')
+        ingresos_ordenes = Decimal('0.00')
+        ingresos_extra = Decimal('0.00')
+        egresos = Decimal('0.00')
+
+    context = {
+        'turno_abierto': turno_abierto,
+        'movimientos': movimientos,
+        'pagos': pagos,
+        'ingresos_ordenes': ingresos_ordenes,
+        'ingresos_extra': ingresos_extra,
+        'egresos': egresos,
+        'saldo_calculado': saldo_calculado,
+        'active_tab': 'caja'
+    }
+    return render(request, 'caja.html', context)
+
+@login_required
+@group_required('Administrador', 'Cajero')
+def caja_abrir(request):
+    if request.method == 'POST':
+        if TurnoCaja.objects.filter(estado='Abierta').exists():
+            messages.error(request, 'Ya existe un turno de caja abierto.')
+            return redirect('caja_dashboard')
+            
+        try:
+            saldo_inicial = Decimal(request.POST.get('saldo_inicial', '0.00'))
+        except InvalidOperation:
+            saldo_inicial = Decimal('0.00')
+            
+        TurnoCaja.objects.create(
+            usuario=request.user,
+            saldo_inicial=saldo_inicial,
+            estado='Abierta'
+        )
+        messages.success(request, f'Turno de caja abierto exitosamente con ${saldo_inicial}.')
+        
+    return redirect('caja_dashboard')
+
+@login_required
+@group_required('Administrador', 'Cajero')
+def caja_cerrar(request):
+    turno = TurnoCaja.objects.filter(estado='Abierta').first()
+    if not turno:
+        messages.error(request, 'No hay turno abierto para cerrar.')
+        return redirect('caja_dashboard')
+        
+    if request.method == 'POST':
+        try:
+            saldo_real = Decimal(request.POST.get('saldo_final_real', '0.00'))
+        except InvalidOperation:
+            saldo_real = Decimal('0.00')
+            
+        observaciones = request.POST.get('observaciones', '')
+        
+        # Calcular saldo esperado
+        pagos = Pago.objects.filter(turno=turno)
+        ingresos_ordenes = pagos.aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+        
+        movimientos = MovimientoCaja.objects.filter(turno=turno)
+        ingresos_extra = movimientos.filter(tipo='Ingreso').aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+        egresos = movimientos.filter(tipo='Egreso').aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+        
+        saldo_esperado = turno.saldo_inicial + ingresos_ordenes + ingresos_extra - egresos
+        
+        turno.saldo_final_esperado = saldo_esperado
+        turno.saldo_final_real = saldo_real
+        turno.fecha_cierre = timezone.now()
+        turno.estado = 'Cerrada'
+        turno.observaciones = observaciones
+        turno.save()
+        
+        messages.success(request, 'Turno de caja cerrado exitosamente.')
+        
+    return redirect('caja_dashboard')
+
+@login_required
+@group_required('Administrador', 'Cajero')
+def caja_movimiento_crear(request):
+    turno = TurnoCaja.objects.filter(estado='Abierta').first()
+    if not turno:
+        messages.error(request, 'Debe abrir un turno de caja antes de registrar movimientos.')
+        return redirect('caja_dashboard')
+        
+    if request.method == 'POST':
+        tipo = request.POST.get('tipo', 'Egreso')
+        concepto = request.POST.get('concepto', '')
+        try:
+            monto = Decimal(request.POST.get('monto', '0.00'))
+        except InvalidOperation:
+            monto = Decimal('0.00')
+            
+        if monto > 0 and concepto:
+            MovimientoCaja.objects.create(
+                turno=turno,
+                tipo=tipo,
+                concepto=concepto,
+                monto=monto
+            )
+            messages.success(request, f'{tipo} registrado correctamente.')
+        else:
+            messages.error(request, 'Por favor, ingrese un monto válido y un concepto.')
+            
+    return redirect('caja_dashboard')
+
+# ==========================================
+#  EXPORTACIONES A CSV
+# ==========================================
+import csv
+
+@login_required
+@group_required('Administrador', 'Cajero')
+def export_clientes_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="clientes.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['ID', 'Nombre', 'Teléfono', 'Correo', 'Dirección'])
+    
+    clientes = Cliente.objects.all().order_by('id')
+    for c in clientes:
+        writer.writerow([c.id, c.nombre, c.telefono, c.correo or '', c.direccion or ''])
+        
+    return response
+
+@login_required
+@group_required('Administrador', 'Cajero')
+def export_ordenes_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="ordenes.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['ID', 'Cliente', 'Fecha Recepcion', 'Estado Actual', 'Estado Pago', 'Total', 'Anticipo', 'Saldo Pendiente'])
+    
+    ordenes = Orden.objects.select_related('cliente').all().order_by('-fecha_recepcion')
+    for o in ordenes:
+        writer.writerow([
+            o.id, 
+            o.cliente.nombre, 
+            timezone.localtime(o.fecha_recepcion).strftime("%Y-%m-%d %H:%M"), 
+            o.estado_actual, 
+            o.estado_pago, 
+            o.total_a_pagar, 
+            o.anticipo, 
+            o.saldo_pendiente
+        ])
+        
+    return response
+
+@login_required
+@group_required('Administrador', 'Cajero')
+def export_pagos_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="pagos.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['ID Pago', 'Orden ID', 'Fecha', 'Metodo', 'Tipo', 'Monto', 'Cajero/Turno'])
+    
+    pagos = Pago.objects.select_related('orden', 'turno__usuario').all().order_by('-fecha_pago')
+    for p in pagos:
+        cajero = p.turno.usuario.username if p.turno and p.turno.usuario else ''
+        writer.writerow([
+            p.id, 
+            p.orden.id, 
+            timezone.localtime(p.fecha_pago).strftime("%Y-%m-%d %H:%M"), 
+            p.metodo_pago, 
+            p.tipo_pago, 
+            p.monto, 
+            cajero
+        ])
+        
+    return response
+
+# ==========================================
+#  PERFIL DE USUARIO
+# ==========================================
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+
+@login_required
+def mi_perfil(request):
+    user = request.user
+    if request.method == 'POST':
+        if 'update_profile' in request.POST:
+            user.first_name = request.POST.get('first_name', user.first_name)
+            user.last_name = request.POST.get('last_name', user.last_name)
+            user.email = request.POST.get('email', user.email)
+            user.save()
+            messages.success(request, 'Perfil actualizado correctamente.')
+            return redirect('mi_perfil')
+            
+        elif 'update_password' in request.POST:
+            form = PasswordChangeForm(user, request.POST)
+            if form.is_valid():
+                user = form.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, 'Contraseña actualizada correctamente.')
+                return redirect('mi_perfil')
+            else:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, error)
+    else:
+        form = PasswordChangeForm(user)
+        
+    context = {
+        'password_form': form
+    }
+    return render(request, 'mi_perfil.html', context)
+
+# ==========================================
+#  PROMOCIONES
+# ==========================================
+from datetime import datetime
+
+@login_required
+@group_required('Administrador', 'Cajero')
+def promociones_list(request):
+    promociones = Promocion.objects.all().order_by('-fecha_inicio')
+    context = {'promociones': promociones}
+    return render(request, 'promociones.html', context)
+
+@login_required
+@group_required('Administrador', 'Cajero')
+def promociones_search(request):
+    query = request.GET.get('search', '')
+    if query:
+        promociones = Promocion.objects.filter(nombre__icontains=query).order_by('-fecha_inicio')
+    else:
+        promociones = Promocion.objects.all().order_by('-fecha_inicio')
+    return render(request, 'partials/promociones_table.html', {'promociones': promociones})
+
+@login_required
+@group_required('Administrador', 'Cajero')
+def promocion_create(request):
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        tipo = request.POST.get('tipo')
+        valor = request.POST.get('valor')
+        fecha_inicio_str = request.POST.get('fecha_inicio')
+        fecha_fin_str = request.POST.get('fecha_fin')
+        
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()
+            fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d').date()
+            
+            Promocion.objects.create(
+                nombre=nombre,
+                tipo=tipo,
+                valor=valor,
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin,
+                esta_activa=True
+            )
+            messages.success(request, 'Promoción creada exitosamente.')
+        except Exception as e:
+            messages.error(request, f'Error al crear la promoción: {str(e)}')
+            
+    return redirect('promociones_list')
+
+@login_required
+@group_required('Administrador', 'Cajero')
+def promocion_edit(request, id):
+    promocion = get_object_or_404(Promocion, id=id)
+    if request.method == 'POST':
+        promocion.nombre = request.POST.get('nombre')
+        promocion.tipo = request.POST.get('tipo')
+        promocion.valor = request.POST.get('valor')
+        
+        try:
+            promocion.fecha_inicio = datetime.strptime(request.POST.get('fecha_inicio'), '%Y-%m-%d').date()
+            promocion.fecha_fin = datetime.strptime(request.POST.get('fecha_fin'), '%Y-%m-%d').date()
+            promocion.save()
+            messages.success(request, 'Promoción actualizada exitosamente.')
+        except Exception as e:
+            messages.error(request, f'Error al actualizar la promoción: {str(e)}')
+            
+    return redirect('promociones_list')
+
+@login_required
+@group_required('Administrador', 'Cajero')
+def promocion_delete(request, id):
+    promocion = get_object_or_404(Promocion, id=id)
+    promocion.delete()
+    messages.success(request, 'Promoción eliminada exitosamente.')
+    return redirect('promociones_list')
+
+@login_required
+@group_required('Administrador', 'Cajero')
+def promocion_toggle(request, id):
+    promocion = get_object_or_404(Promocion, id=id)
+    promocion.esta_activa = not promocion.esta_activa
+    promocion.save()
+    
+    promociones = Promocion.objects.all().order_by('-fecha_inicio')
+    response = render(request, 'partials/promociones_table.html', {'promociones': promociones})
+    
+    estado = "activada" if promocion.esta_activa else "desactivada"
+    mensaje = f"Promoción '{promocion.nombre}' {estado} correctamente."
+    response['HX-Trigger'] = json.dumps({'showToast': {'message': mensaje, 'type': 'success'}})
+    
+    return response
+

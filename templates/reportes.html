@@ -3,6 +3,11 @@
 
 {% block title %}Reportes Financieros - LavaFácil{% endblock %}
 
+{% block extra_head %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="dashboard-container">
     
@@ -16,19 +21,34 @@
 
         <div class="content-wrapper" style="padding-bottom: 4rem;">
             
-            <!-- Barra de Filtros de Período -->
-            <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-card); padding: 1rem 1.5rem; border-radius: var(--radius); border: 1.5px solid var(--border);">
+            <!-- Barra de Filtros de Período y Exportación -->
+            <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-card); padding: 1rem 1.5rem; border-radius: var(--radius); border: 1.5px solid var(--border); flex-wrap: wrap; gap: 1rem;">
                 <div>
                     <h2 style="font-size: 1.15rem; color: var(--text);">Periodo analizado: <span style="color: var(--primary); font-weight: 800;">{{ titulo_periodo }}</span></h2>
                 </div>
-                <div style="display: flex; gap: 0.75rem;">
-                    <a href="?periodo=hoy" class="btn-primary" style="background-color: {% if periodo == 'hoy' %}var(--primary){% else %}var(--bg-app){% endif %}; color: {% if periodo == 'hoy' %}#fff{% else %}var(--text-muted){% endif %}; border: 1px solid {% if periodo == 'hoy' %}var(--primary){% else %}var(--border){% endif %}; padding: 0.6rem 1rem; border-radius: var(--radius-sm); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);">Hoy</a>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <!-- Botones de Filtro -->
+                    <div style="display: flex; gap: 0.5rem; border-right: 2px solid var(--border); padding-right: 1rem;">
+                        <a href="?periodo=hoy" class="btn-primary" style="background-color: {% if periodo == 'hoy' %}var(--primary){% else %}var(--bg-app){% endif %}; color: {% if periodo == 'hoy' %}#fff{% else %}var(--text-muted){% endif %}; border: 1px solid {% if periodo == 'hoy' %}var(--primary){% else %}var(--border){% endif %}; padding: 0.6rem 1rem; border-radius: var(--radius-sm); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);">Hoy</a>
+                        
+                        <a href="?periodo=semana" class="btn-primary" style="background-color: {% if periodo == 'semana' %}var(--primary){% else %}var(--bg-app){% endif %}; color: {% if periodo == 'semana' %}#fff{% else %}var(--text-muted){% endif %}; border: 1px solid {% if periodo == 'semana' %}var(--primary){% else %}var(--border){% endif %}; padding: 0.6rem 1rem; border-radius: var(--radius-sm); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);">Esta Semana</a>
+                        
+                        <a href="?periodo=mes" class="btn-primary" style="background-color: {% if periodo == 'mes' %}var(--primary){% else %}var(--bg-app){% endif %}; color: {% if periodo == 'mes' %}#fff{% else %}var(--text-muted){% endif %}; border: 1px solid {% if periodo == 'mes' %}var(--primary){% else %}var(--border){% endif %}; padding: 0.6rem 1rem; border-radius: var(--radius-sm); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);">Este Mes</a>
+                        
+                        <a href="?periodo=historico" class="btn-primary" style="background-color: {% if periodo == 'historico' %}var(--primary){% else %}var(--bg-app){% endif %}; color: {% if periodo == 'historico' %}#fff{% else %}var(--text-muted){% endif %}; border: 1px solid {% if periodo == 'historico' %}var(--primary){% else %}var(--border){% endif %}; padding: 0.6rem 1rem; border-radius: var(--radius-sm); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);">Histórico</a>
+                    </div>
                     
-                    <a href="?periodo=semana" class="btn-primary" style="background-color: {% if periodo == 'semana' %}var(--primary){% else %}var(--bg-app){% endif %}; color: {% if periodo == 'semana' %}#fff{% else %}var(--text-muted){% endif %}; border: 1px solid {% if periodo == 'semana' %}var(--primary){% else %}var(--border){% endif %}; padding: 0.6rem 1rem; border-radius: var(--radius-sm); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);">Esta Semana</a>
-                    
-                    <a href="?periodo=mes" class="btn-primary" style="background-color: {% if periodo == 'mes' %}var(--primary){% else %}var(--bg-app){% endif %}; color: {% if periodo == 'mes' %}#fff{% else %}var(--text-muted){% endif %}; border: 1px solid {% if periodo == 'mes' %}var(--primary){% else %}var(--border){% endif %}; padding: 0.6rem 1rem; border-radius: var(--radius-sm); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);">Este Mes</a>
-                    
-                    <a href="?periodo=historico" class="btn-primary" style="background-color: {% if periodo == 'historico' %}var(--primary){% else %}var(--bg-app){% endif %}; color: {% if periodo == 'historico' %}#fff{% else %}var(--text-muted){% endif %}; border: 1px solid {% if periodo == 'historico' %}var(--primary){% else %}var(--border){% endif %}; padding: 0.6rem 1rem; border-radius: var(--radius-sm); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);">Histórico</a>
+                    <!-- Botones de Exportación -->
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="{% url 'reportes_export_excel' %}?periodo={{ periodo }}" class="login-btn" style="width: auto; padding: 0.6rem 1rem; font-size: 0.85rem; background-color: #10B981; border: none; display: flex; align-items: center; gap: 0.4rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            <span>Excel</span>
+                        </a>
+                        <a href="{% url 'reportes_export_pdf' %}?periodo={{ periodo }}" target="_blank" class="login-btn" style="width: auto; padding: 0.6rem 1rem; font-size: 0.85rem; background-color: #EF4444; border: none; display: flex; align-items: center; gap: 0.4rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            <span>PDF</span>
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -108,9 +128,9 @@
                     </section>
 
                     <!-- Cuentas por Cobrar -->
-                    <section id="deudores" class="dashboard-card" style="border-left: 4px solid var(--danger);">
+                    <section id="deudores" class="dashboard-card">
                         <div class="card-header-row">
-                            <h2>Cuentas por Cobrar (Deudores Activos)</h2>
+                            <h2 style="color: var(--danger);">Cuentas por Cobrar (Deudores Activos)</h2>
                         </div>
                         <div class="table-responsive">
                             <table class="custom-table">
@@ -149,48 +169,26 @@
                         <div class="card-header-row">
                             <h2>Top 5 Servicios</h2>
                         </div>
-                        <div class="services-stats-list">
-                            {% for s in servicios_stats %}
-                            <div class="service-stat-item" style="margin-bottom: 1.2rem;">
-                                <div class="service-stat-header">
-                                    <span style="font-weight: 600;">{{ s.servicio__nombre }}</span>
-                                    <span style="color: var(--text-muted); font-size: 0.85rem;">{{ s.cantidad_solicitada|default:"0" }} solicitados</span>
-                                </div>
-                                <div class="service-stat-progress-bg">
-                                    <!-- Utilizamos counter para iterar un color y el width es aproximado basandonos en un tope de 50 si no sabemos el max -->
-                                    <div class="service-stat-progress-fill bar-{{ forloop.counter0 }}" style="width: {% if s.cantidad_solicitada > 50 %}100{% else %}{% widthratio s.cantidad_solicitada 50 100 %}{% endif %}%;"></div>
-                                </div>
-                            </div>
-                            {% empty %}
-                            <div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No hay información disponible.</div>
-                            {% endfor %}
+                        <div style="position: relative; height: 220px; width: 100%; display: flex; justify-content: center; align-items: center;">
+                            {% if servicios_stats %}
+                                <canvas id="serviciosChart"></canvas>
+                            {% else %}
+                                <span style="color: var(--text-muted);">No hay información disponible.</span>
+                            {% endif %}
                         </div>
                     </section>
 
-                    <!-- Estado de las Órdenes -->
+                    <!-- Estado de las Órdenes (GRÁFICO) -->
                     <section class="dashboard-card">
                         <div class="card-header-row">
                             <h2>Estado de Órdenes</h2>
                         </div>
-                        <div class="table-responsive">
-                            <table class="custom-table">
-                                <thead>
-                                    <tr>
-                                        <th>Estado</th>
-                                        <th style="text-align: right;">Cantidad</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for o in ordenes_por_estado %}
-                                    <tr>
-                                        <td><span class="status-badge-large state-{{ o.estado_actual|slugify }}">{{ o.estado_actual }}</span></td>
-                                        <td class="font-medium" style="text-align: right;">{{ o.total }}</td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No hay información disponible.</td></tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <div style="position: relative; height: 250px; display: flex; justify-content: center; align-items: center;">
+                            {% if ordenes_por_estado %}
+                                <canvas id="estadoOrdenesChart"></canvas>
+                            {% else %}
+                                <span style="color: var(--text-muted);">No hay información disponible.</span>
+                            {% endif %}
                         </div>
                     </section>
 
@@ -200,4 +198,91 @@
         </div>
     </main>
 </div>
+
+<!-- Script para inicializar gráficos -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('estadoOrdenesChart');
+        if (ctx) {
+            const labels = [{% for o in ordenes_por_estado %}'{{ o.estado_actual }}',{% endfor %}];
+            const data = [{% for o in ordenes_por_estado %}{{ o.total }},{% endfor %}];
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            'hsl(210, 100%, 65%)', // Recibida
+                            'hsl(142, 72%, 45%)',  // Entregada
+                            'hsl(35, 100%, 55%)',  // En lavado
+                            'hsl(190, 85%, 50%)',  // Planchado
+                            'hsl(270, 80%, 65%)',  // Clasificada
+                            'hsl(300, 70%, 65%)'   // Empaquetada
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    family: "'Outfit', sans-serif",
+                                    size: 11
+                                },
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        const ctxServ = document.getElementById('serviciosChart');
+        if (ctxServ) {
+            const lblServ = [{% for s in servicios_stats %}'{{ s.servicio__nombre }}',{% endfor %}];
+            const datServ = [{% for s in servicios_stats %}{{ s.cantidad_solicitada|default:0 }},{% endfor %}];
+            
+            new Chart(ctxServ, {
+                type: 'bar',
+                data: {
+                    labels: lblServ,
+                    datasets: [{
+                        label: 'Veces Solicitado',
+                        data: datServ,
+                        backgroundColor: 'hsl(215, 90%, 55%)',
+                        borderRadius: 6,
+                        barThickness: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0, font: { family: "'Outfit', sans-serif" } },
+                            grid: { color: 'rgba(0,0,0,0.04)' }
+                        },
+                        x: {
+                            ticks: { font: { family: "'Outfit', sans-serif" } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

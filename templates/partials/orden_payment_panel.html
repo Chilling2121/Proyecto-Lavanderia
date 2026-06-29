@@ -1,5 +1,5 @@
 <!-- Panel Financiero y Pagos (HTMX Partial) -->
-<div id="payment-panel-inner" hx-get="{% url 'orden_detail' orden.id %}" hx-trigger="statusUpdated from:body" hx-select="#payment-panel-inner" hx-swap="outerHTML" class="payment-panel-wrapper">
+<div id="payment-panel-inner" data-saldo-pendiente="{{ orden.saldo_pendiente }}" hx-get="{% url 'orden_detail' orden.id %}" hx-trigger="statusUpdated from:body" hx-select="#payment-panel-inner" hx-swap="outerHTML" class="payment-panel-wrapper">
     
     <!-- Alerta de vuelto / cambio a entregar al cliente -->
     {% if cambio_info %}
@@ -64,7 +64,16 @@
 
     <!-- Formulario de Nuevo Pago -->
     {% if orden.saldo_pendiente > 0 %}
-    <div class="payment-form-section">
+    <div class="payment-form-section" style="position: relative;">
+        {% if not caja_abierta %}
+        <div style="position: absolute; inset: 0; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(2px); z-index: 10; display: flex; align-items: center; justify-content: center; border-radius: inherit;">
+            <div style="background: white; padding: 1.5rem; text-align: center; border-radius: var(--radius-sm); border: 1px solid var(--border); box-shadow: var(--shadow-sm); width: 85%;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--danger); margin-bottom: 0.5rem;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <h4 style="font-weight: 700; color: var(--text); font-size: 1rem; margin-bottom: 0.25rem;">La Caja está Cerrada</h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.3;">Abre un turno en el módulo de <a href="{% url 'caja_dashboard' %}" style="text-decoration: underline; font-weight: 600;">Caja</a> para poder registrar cobros.</p>
+            </div>
+        </div>
+        {% endif %}
         <p class="payment-form-title">Registrar Pago</p>
         <form hx-post="{% url 'orden_register_payment' orden.id %}" hx-target="#payment-panel" hx-swap="innerHTML" style="display: flex; flex-direction: column; gap: 0.85rem;">
             {% csrf_token %}
@@ -151,76 +160,7 @@
     </div>
     {% endif %}
 
+    {% load static %}
     <!-- Script de cálculo de cambio / vuelto y toggle de campos -->
-    <script>
-        (function() {
-            const metodoSelect = document.getElementById("pago-metodo-select");
-            const efectivoGroup = document.getElementById("efectivo-entregado-group");
-            const montoInput = document.getElementById("pago-monto-input");
-            const efectivoInput = document.getElementById("pago-efectivo-recibido");
-            const cambioMsg = document.getElementById("cambio-dinamico-msg");
-            const cambioVal = document.getElementById("cambio-dinamico-val");
-            const cambioGroup = document.getElementById("confirmacion-cambio-group");
-            const cambioCheckbox = document.getElementById("confirmar-cambio-entregado");
-            const cambioCheckboxVal = document.getElementById("cambio-checkbox-val");
-            const maxDeuda = parseFloat("{{ orden.saldo_pendiente }}") || 0;
-
-            function updateCambio() {
-                const monto = parseFloat(montoInput.value) || 0;
-                const entregado = parseFloat(efectivoInput.value) || 0;
-                
-                // Si el usuario ingresa un monto que supera la deuda pendiente, el cobro real se limita a maxDeuda
-                let cobroEfectivo = Math.min(monto, maxDeuda);
-                let cambio = 0;
-                
-                // Caso 1: Ingresó efectivo entregado en el campo específico
-                if (entregado > cobroEfectivo) {
-                    cambio = entregado - cobroEfectivo;
-                    cambioVal.textContent = cambio.toFixed(2);
-                    cambioMsg.style.display = "block";
-                }
-                // Caso 2: Ingresó directamente el billete más grande en el campo "Monto"
-                else if (monto > maxDeuda) {
-                    cambio = monto - maxDeuda;
-                    cambioVal.textContent = cambio.toFixed(2);
-                    cambioMsg.style.display = "block";
-                } else {
-                    cambioMsg.style.display = "none";
-                }
-
-                // Mostrar y hacer obligatorio el checkbox si hay cambio y es en Efectivo
-                if (cambio > 0 && metodoSelect.value === "Efectivo") {
-                    cambioCheckboxVal.textContent = cambio.toFixed(2);
-                    cambioGroup.style.display = "flex";
-                    cambioCheckbox.required = true;
-                } else {
-                    cambioGroup.style.display = "none";
-                    cambioCheckbox.required = false;
-                    cambioCheckbox.checked = false;
-                }
-            }
-
-            if (metodoSelect && efectivoGroup) {
-                metodoSelect.addEventListener("change", function() {
-                    if (metodoSelect.value === "Efectivo") {
-                        efectivoGroup.style.display = "flex";
-                    } else {
-                        efectivoGroup.style.display = "none";
-                        efectivoInput.value = "";
-                        cambioMsg.style.display = "none";
-                    }
-                    updateCambio();
-                });
-                // Ejecutar al inicio para asegurar estado correcto
-                if (metodoSelect.value !== "Efectivo") {
-                    efectivoGroup.style.display = "none";
-                }
-            }
-
-            if (montoInput && efectivoInput) {
-                montoInput.addEventListener("input", updateCambio);
-                efectivoInput.addEventListener("input", updateCambio);
-            }
-        })();
-    </script>
+    <script src="{% static 'js/payment_panel.js' %}"></script>
 </div>

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Pagos - LavaFácil{% endblock %}
 
@@ -79,10 +80,17 @@
 
             <!-- FILTROS Y HISTORIAL DE PAGOS -->
             <section class="dashboard-card">
-                <div class="card-header-row" style="margin-bottom: 1.5rem;">
+                <div class="card-header-row" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
                     <div>
                         <h2>Historial General de Transacciones</h2>
                         <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Consulta y concilia los cobros de la lavandería usando los filtros de búsqueda.</p>
+                    </div>
+                    <!-- Botón Exportar CSV -->
+                    <div style="flex-shrink: 0;">
+                        <a href="{% url 'export_pagos_csv' %}" class="login-btn" style="width: auto; padding: 0.75rem 1.5rem; font-size: 0.95rem; background-color: var(--success); box-shadow: var(--shadow-sm); display: inline-flex; align-items: center; justify-content: center; text-decoration: none; gap: 0.5rem;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            <span>CSV</span>
+                        </a>
                     </div>
                 </div>
 
@@ -164,32 +172,5 @@
     </main>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Inicializar Flatpickr con idioma español en rango
-        flatpickr("#fecha_rango", {
-            mode: "range",
-            dateFormat: "Y-m-d",
-            locale: "es",
-            maxDate: "today",
-            onChange: function(selectedDates, dateStr, instance) {
-                // Forzar trigger de cambio para que HTMX capture el valor
-                const input = document.getElementById('fecha_rango');
-                if (selectedDates.length === 2 || dateStr === "") {
-                    input.dispatchEvent(new Event('change'));
-                }
-            }
-        });
-
-        // Inicializar Tom Select para selects
-        new TomSelect("#metodo_pago", {
-            create: false,
-            controlInput: null
-        });
-        new TomSelect("#tipo_pago", {
-            create: false,
-            controlInput: null
-        });
-    });
-</script>
+<script src="{% static 'js/pagos.js' %}"></script>
 {% endblock %}

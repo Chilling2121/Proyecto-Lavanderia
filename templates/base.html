@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}LavaFácil - Sistema de Gestión{% endblock %}</title>
     
+    {% block extra_head %}{% endblock %}
+    
     <!-- Estilos de la Aplicación -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}?v={% now 'U' %}">
     
@@ -55,17 +57,7 @@
     <!-- Script principal -->
     <script src="{% static 'js/main.js' %}"></script>
 
-    <!-- Animaciones CSS para toasts -->
-    <style>
-        @keyframes slideIn {
-            from { transform: translateX(120%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes fadeOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(120%); opacity: 0; }
-        }
-    </style>
+
 
     {% block content %}
     {% endblock %}

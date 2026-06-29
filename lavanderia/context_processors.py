@@ -1,11 +1,14 @@
-from .models import Configuracion
+from .models import Configuracion, TurnoCaja
 
 def configuracion_global(request):
     """
-    Inyecta la configuración global de la lavandería en el contexto de todas las plantillas.
-    Esto permite usar {{ config.nombre_negocio }} en cualquier HTML.
+    Inyecta la configuración global y el estado de la caja en el contexto de todas las plantillas.
     """
     config = Configuracion.load()
+    # Verificamos si existe alguna caja abierta actualmente
+    caja_abierta = TurnoCaja.objects.filter(estado='Abierta').exists()
+    
     return {
-        'config': config
+        'config': config,
+        'caja_abierta': caja_abierta,
     }

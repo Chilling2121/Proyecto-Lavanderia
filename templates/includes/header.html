@@ -14,14 +14,16 @@
         </button>
         
         <!-- Perfil de Usuario -->
-        <div class="header-user">
-            <div class="user-avatar">
-                {{ request.user.username|slice:":2"|upper }}
+        <a href="{% url 'mi_perfil' %}" style="text-decoration: none; color: inherit; display: block;">
+            <div class="header-user" style="cursor: pointer; transition: transform 0.2s ease, opacity 0.2s;" onmouseover="this.style.transform='scale(1.02)'; this.style.opacity='0.9';" onmouseout="this.style.transform='scale(1)'; this.style.opacity='1';">
+                <div class="user-avatar">
+                    {{ request.user.username|slice:":2"|upper }}
+                </div>
+                <div class="user-info">
+                    <span class="user-name">{{ request.user.get_full_name|default:request.user.username|capfirst }}</span>
+                    <span class="user-role">{{ request.user.groups.first.name|default:"Sin Rol" }}</span>
+                </div>
             </div>
-            <div class="user-info">
-                <span class="user-name">{{ request.user.get_full_name|default:request.user.username|capfirst }}</span>
-                <span class="user-role">{{ request.user.groups.first.name|default:"Sin Rol" }}</span>
-            </div>
-        </div>
+        </a>
     </div>
 </header>

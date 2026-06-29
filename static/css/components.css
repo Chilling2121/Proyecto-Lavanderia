@@ -8,10 +8,10 @@
 
 .dashboard-card {
     background-color: var(--bg-card);
-    border: 1px solid var(--border);
+    border: none;
     border-radius: var(--radius);
     padding: 1.5rem;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
     display: flex;
     flex-direction: column;
 }
@@ -20,9 +20,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 1rem;
-    margin-bottom: 1.25rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
@@ -666,3 +665,57 @@ textarea:focus-visible {
     color: var(--success);
     font-size: 0.95rem;
 }
+
+/* ==========================================
+   ANIMACIONES GLOBALES Y EFECTOS EXTRAÍDOS
+   ========================================== */
+
+/* Toast System Animations */
+@keyframes slideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+@keyframes fadeOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(120%); opacity: 0; }
+}
+
+/* Modal slideUp animation */
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Row slideDown animation */
+@keyframes slideDownRow {
+    from { transform: translateY(-15px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Selected row highlighted styles */
+.custom-table tr.selected-row td {
+    background-color: var(--primary-light) !important;
+    color: var(--primary) !important;
+    font-weight: 550;
+}
+
+.custom-table tr.selected-row .font-medium {
+    color: var(--primary) !important;
+    font-weight: 700;
+}
+
+/* Prenda dynamic rows styling */
+.prenda-row {
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+
+.prenda-row:hover {
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-quick {
+    cursor: pointer;
+}
+

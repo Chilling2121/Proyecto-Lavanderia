@@ -63,19 +63,4 @@
     </main>
 </div>
 
-<script>
-    // Escuchar el evento personalizado de HTMX para mostrar el toast al eliminar un servicio
-    document.body.addEventListener('servicioDeleted', function(evt){
-        if (typeof showToast === 'function') {
-            showToast("El servicio '" + evt.detail.value + "' ha sido eliminado con éxito.", "success");
-        }
-    });
-
-    // Escuchar errores htmx:responseError para ProtectedError
-    document.body.addEventListener('htmx:responseError', function(evt){
-        if (evt.detail.xhr.status === 400 && typeof showToast === 'function') {
-            showToast(evt.detail.xhr.responseText, "error");
-        }
-    });
-</script>
 {% endblock %}

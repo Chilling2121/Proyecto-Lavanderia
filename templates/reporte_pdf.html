@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte Financiero - LavaFácil</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 1.5cm;
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                bottom: 1cm;
+                height: 1cm;
+                margin-left: 1.5cm;
+                margin-right: 1.5cm;
+            }
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 11px;
+            color: #334155;
+            line-height: 1.5;
+        }
+        
+        /* Cabecera */
+        .header-table {
+            width: 100%;
+            background-color: #0f172a;
+            color: #ffffff;
+            margin-bottom: 25px;
+        }
+        .header-table td {
+            padding: 20px;
+            border: none;
+        }
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+            margin: 0;
+        }
+        .header-subtitle {
+            font-size: 14px;
+            color: #38bdf8;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+        .header-meta {
+            text-align: right;
+            font-size: 10px;
+            color: #94a3b8;
+        }
+        .header-meta b {
+            color: #e2e8f0;
+        }
+
+        /* Títulos de sección */
+        h2 {
+            font-size: 14px;
+            color: #0f172a;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #38bdf8;
+            padding-bottom: 4px;
+        }
+
+        /* Cajas de Resumen */
+        table.summary-wrapper {
+            width: 100%;
+            margin-bottom: 25px;
+        }
+        table.summary-wrapper td {
+            padding: 5px;
+            border: none;
+            vertical-align: top;
+        }
+        .summary-box {
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .box-primary {
+            background-color: #0f172a;
+            color: #ffffff;
+        }
+        .box-secondary {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        .box-danger {
+            background-color: #fff1f2;
+            border: 1px solid #fecdd3;
+        }
+
+        .box-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .box-primary .box-title { color: #94a3b8; }
+        .box-secondary .box-title { color: #64748b; }
+        .box-danger .box-title { color: #e11d48; }
+
+        .box-value {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .box-primary .box-value { color: #38bdf8; }
+        .box-secondary .box-value { color: #0f172a; }
+        .box-danger .box-value { color: #be123c; }
+
+        .box-detail { font-size: 9px; line-height: 1.4; }
+        .box-primary .box-detail { color: #cbd5e1; }
+        .box-secondary .box-detail { color: #64748b; }
+        .box-danger .box-detail { color: #be123c; }
+
+        /* Tablas */
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        table.data-table th {
+            background-color: #f8fafc;
+            color: #475569;
+            text-align: left;
+            padding: 8px;
+            font-size: 10px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #cbd5e1;
+        }
+        table.data-table td {
+            padding: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        table.data-table tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+        
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .text-danger { color: #e11d48; font-weight: bold; }
+        .text-success { color: #059669; font-weight: bold; }
+
+        /* Pie de página */
+        #footer_content {
+            text-align: right;
+            font-size: 9px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CABECERA -->
+    <table class="header-table">
+        <tr>
+            <td style="width: 60%;">
+                <div class="header-title">{{ config.nombre_negocio|default:"LavaFácil" }}</div>
+                <div class="header-subtitle">Reporte Financiero y Operativo</div>
+            </td>
+            <td style="width: 40%;" class="header-meta">
+                <b>Período Analizado:</b><br>{{ titulo_periodo }}<br><br>
+                <b>Fecha de Emisión:</b><br>{% now "d/m/Y H:i" %}
+            </td>
+        </tr>
+    </table>
+
+    <!-- Cajas de Resumen -->
+    <table class="summary-wrapper">
+        <tr>
+            <td style="width: 33%;">
+                <div class="summary-box box-primary">
+                    <div class="box-title">Ingresos Totales</div>
+                    <div class="box-value">${{ ingresos_totales|floatformat:2 }}</div>
+                    <div class="box-detail">
+                        Efectivo: ${{ ingresos_efectivo|floatformat:2 }}<br>
+                        Transf: ${{ ingresos_transferencia|floatformat:2 }}<br>
+                        Tarjeta: ${{ ingresos_tarjeta|floatformat:2 }}
+                    </div>
+                </div>
+            </td>
+            <td style="width: 33%;">
+                <div class="summary-box box-secondary">
+                    <div class="box-title">Órdenes Procesadas</div>
+                    <div class="box-value">{{ total_ordenes }}</div>
+                    <div class="box-detail"><br>Total de órdenes registradas en el período.</div>
+                </div>
+            </td>
+            <td style="width: 34%;">
+                <div class="summary-box box-danger">
+                    <div class="box-title">Cuentas por Cobrar</div>
+                    <div class="box-value">${{ total_por_cobrar|floatformat:2 }}</div>
+                    <div class="box-detail"><br>Saldo pendiente de pago de los clientes.</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- CLIENTES -->
+    <h2>Análisis de Clientes (Top 5)</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th class="text-center">Órdenes Realizadas</th>
+                <th class="text-right">Total Gastado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in top_clientes %}
+            <tr>
+                <td><b>{{ c.nombre }}</b></td>
+                <td class="text-center">{{ c.total_ordenes }}</td>
+                <td class="text-right text-success">${{ c.total_gastado|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center">No hay datos suficientes.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- DEUDORES -->
+    <h2>Detalle de Deudores (Activos)</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Orden #</th>
+                <th>Cliente</th>
+                <th class="text-right">Saldo Pendiente</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for o in top_deudores %}
+            <tr>
+                <td>{{ o.id|stringformat:"06d" }}</td>
+                <td>{{ o.cliente.nombre }}</td>
+                <td class="text-right text-danger">${{ o.saldo_pendiente|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center" style="color: #059669;">No hay cuentas pendientes de cobro. ¡Excelente!</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- SERVICIOS -->
+    <h2>Servicios Más Solicitados</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Servicio</th>
+                <th class="text-right">Cantidad Solicitada</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in servicios_stats %}
+            <tr>
+                <td>{{ s.servicio__nombre }}</td>
+                <td class="text-right"><b>{{ s.cantidad_solicitada|default:"0" }}</b></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2" class="text-center">No hay datos suficientes.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- ESTADOS -->
+    <h2>Estado de las Órdenes</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Estado Actual</th>
+                <th class="text-right">Total de Órdenes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for o in ordenes_por_estado %}
+            <tr>
+                <td>{{ o.estado_actual }}</td>
+                <td class="text-right"><b>{{ o.total }}</b></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2" class="text-center">No hay datos suficientes.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- FOOTER -->
+    <div id="footer_content">
+        Generado por <b>LavaFácil</b> - Página <pdf:pagenumber> de <pdf:pagecount>
+    </div>
+
+</body>
+</html>

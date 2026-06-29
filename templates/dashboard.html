@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load auth_extras %}
 {% block title %}Dashboard Principal - LavaFácil{% endblock %}
 
 {% block content %}
@@ -60,6 +60,7 @@
                 </div>
 
                 <!-- Ingresos del Día -->
+                {% if request.user|has_group:'Administrador' %}
                 <div class="metric-card">
                     <div class="metric-info">
                         <span class="metric-title">Ingresos del Día</span>
@@ -72,6 +73,31 @@
                     </div>
                     <div class="metric-icon-container icon-emerald">
                         <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    </div>
+                </div>
+                {% endif %}
+            </section>
+            </section>
+
+            <!-- GRÁFICOS (CHART.JS) -->
+            <section class="dashboard-grid" style="margin-bottom: 2rem;">
+                <!-- Ingresos últimos 7 días -->
+                <div class="dashboard-card" style="box-shadow: var(--shadow-sm); transition: var(--transition);" onmouseover="this.style.boxShadow='var(--shadow-md)';" onmouseout="this.style.boxShadow='var(--shadow-sm)';">
+                    <div class="card-header-row" style="margin-bottom: 1rem;">
+                        <h2>Ingresos Últimos 7 Días</h2>
+                    </div>
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="ingresosChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Estado de Órdenes Activas -->
+                <div class="dashboard-card" style="box-shadow: var(--shadow-sm); transition: var(--transition);" onmouseover="this.style.boxShadow='var(--shadow-md)';" onmouseout="this.style.boxShadow='var(--shadow-sm)';">
+                    <div class="card-header-row" style="margin-bottom: 1rem;">
+                        <h2>Estado de Órdenes Activas</h2>
+                    </div>
+                    <div style="position: relative; height: 250px; width: 100%; display: flex; justify-content: center;">
+                        <canvas id="estadoChart"></canvas>
                     </div>
                 </div>
             </section>
@@ -226,4 +252,127 @@
     </main>
 
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctxIngresos = document.getElementById('ingresosChart').getContext('2d');
+        const ingresosLabels = {{ ingresos_chart_labels|safe }};
+        const ingresosData = {{ ingresos_chart_data|safe }};
+        
+        new Chart(ctxIngresos, {
+            type: 'bar',
+            data: {
+                labels: ingresosLabels,
+                datasets: [{
+                    label: 'Ingresos ($)',
+                    data: ingresosData,
+                    backgroundColor: 'rgba(37, 99, 235, 0.8)',
+                    borderColor: 'rgba(37, 99, 235, 1)',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleFont: { family: "'Inter', sans-serif", size: 13 },
+                        bodyFont: { family: "'Inter', sans-serif", size: 14, weight: 'bold' },
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return '$' + context.parsed.y.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: 'rgba(0,0,0,0.04)' },
+                        border: { display: false },
+                        ticks: {
+                            callback: function(value) { return '$' + value; },
+                            font: { family: "'Inter', sans-serif", size: 11, color: '#64748b' }
+                        }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        border: { display: false },
+                        ticks: { font: { family: "'Inter', sans-serif", size: 12, color: '#64748b' } }
+                    }
+                },
+                animation: {
+                    y: {
+                        duration: 2000,
+                        delay: 200
+                    }
+                }
+            }
+        });
+
+        const ctxEstado = document.getElementById('estadoChart').getContext('2d');
+        const estadoLabels = {{ estado_chart_labels|safe }};
+        const estadoData = {{ estado_chart_data|safe }};
+        
+        // Colores que combinan con el diseño premium
+        const premiumColors = [
+            '#3b82f6', // blue
+            '#8b5cf6', // purple
+            '#10b981', // emerald
+            '#f59e0b', // amber
+            '#ec4899', // pink
+            '#06b6d4', // cyan
+            '#6366f1'  // indigo
+        ];
+        
+        new Chart(ctxEstado, {
+            type: 'doughnut',
+            data: {
+                labels: estadoLabels,
+                datasets: [{
+                    data: estadoData,
+                    backgroundColor: premiumColors.slice(0, estadoData.length),
+                    borderWidth: 3,
+                    borderColor: '#ffffff',
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        position: 'right', 
+                        labels: { 
+                            font: { family: "'Inter', sans-serif", size: 12 },
+                            usePointStyle: true,
+                            padding: 20
+                        } 
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleFont: { family: "'Inter', sans-serif", size: 13 },
+                        bodyFont: { family: "'Inter', sans-serif", size: 14, weight: 'bold' },
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                },
+                cutout: '65%',
+                animation: {
+                    animateScale: true,
+                    animateRotate: true,
+                    duration: 2000
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

@@ -107,6 +107,7 @@ class SeguimientoLavado(models.Model):
 
 class Pago(models.Model):
     orden = models.ForeignKey(Orden, on_delete=models.CASCADE, related_name='pagos')
+    turno = models.ForeignKey('TurnoCaja', on_delete=models.SET_NULL, null=True, blank=True, related_name='pagos')
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     fecha_pago = models.DateTimeField(auto_now_add=True)
     metodo_pago = models.CharField(max_length=50, help_text='Efectivo, Transferencia, Tarjeta')
@@ -152,3 +153,40 @@ class Configuracion(models.Model):
 
     def __str__(self):
         return "Configuración Global"
+
+
+from django.contrib.auth.models import User
+
+class TurnoCaja(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.PROTECT, related_name='turnos')
+    fecha_apertura = models.DateTimeField(auto_now_add=True)
+    fecha_cierre = models.DateTimeField(null=True, blank=True)
+    saldo_inicial = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    saldo_final_esperado = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    saldo_final_real = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    estado = models.CharField(max_length=20, default='Abierta', help_text='Abierta, Cerrada')
+    observaciones = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'turnos_caja'
+        verbose_name = 'Turno de Caja'
+        verbose_name_plural = 'Turnos de Caja'
+
+    def __str__(self):
+        return f"Turno #{self.id} - {self.usuario.username} ({self.estado})"
+
+
+class MovimientoCaja(models.Model):
+    turno = models.ForeignKey(TurnoCaja, on_delete=models.CASCADE, related_name='movimientos')
+    tipo = models.CharField(max_length=20, help_text='Ingreso, Egreso')
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    concepto = models.CharField(max_length=255)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'movimientos_caja'
+        verbose_name = 'Movimiento de Caja'
+        verbose_name_plural = 'Movimientos de Caja'
+
+    def __str__(self):
+        return f"{self.tipo}: ${self.monto} ({self.concepto})"

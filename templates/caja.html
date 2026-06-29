@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load auth_extras %}
+
+{% block title %}Corte de Caja - LavaFácil{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    {% include 'includes/sidebar.html' with active_tab='caja' %}
+
+    <main class="main-layout">
+        {% include 'includes/header.html' with page_title='Corte de Caja' %}
+
+        <div class="content-wrapper">
+            
+            <!-- TARJETA DE ESTADO DE CAJA -->
+            <section class="dashboard-card" style="margin-bottom: 2rem;">
+                <div class="card-header-row">
+                    <h2>Estado de Caja</h2>
+                    {% if turno_abierto %}
+                        <span style="padding: 0.25rem 0.75rem; border-radius: var(--radius-full); background: rgba(34, 197, 94, 0.15); color: var(--success); font-weight: 600; font-size: 0.85rem;">Turno Abierto</span>
+                    {% else %}
+                        <span style="padding: 0.25rem 0.75rem; border-radius: var(--radius-full); background: rgba(239, 68, 68, 0.15); color: var(--danger); font-weight: 600; font-size: 0.85rem;">Turno Cerrado</span>
+                    {% endif %}
+                </div>
+
+                {% if turno_abierto %}
+                <section class="metrics-grid" style="margin-top: 1.5rem;">
+                    <div class="metric-card">
+                        <div class="metric-info">
+                            <span class="metric-title">Cajero</span>
+                            <span class="metric-value" style="font-size: 1.25rem;">{{ turno_abierto.usuario.get_full_name|default:turno_abierto.usuario.username }}</span>
+                        </div>
+                        <div class="metric-icon-container icon-blue">
+                            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-info">
+                            <span class="metric-title">Apertura</span>
+                            <span class="metric-value" style="font-size: 1.25rem;">{{ turno_abierto.fecha_apertura|date:"h:i A" }}</span>
+                            <div class="metric-trend"><span style="color:var(--text-muted);">{{ turno_abierto.fecha_apertura|date:"d/m/Y" }}</span></div>
+                        </div>
+                        <div class="metric-icon-container icon-purple">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-info">
+                            <span class="metric-title">Fondo Inicial</span>
+                            <span class="metric-value" style="color: var(--primary);">${{ turno_abierto.saldo_inicial|floatformat:2 }}</span>
+                        </div>
+                        <div class="metric-icon-container" style="background: rgba(59, 130, 246, 0.15); color: var(--primary);">
+                            <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-info">
+                            <span class="metric-title">Saldo Esperado (Actual)</span>
+                            <span class="metric-value" style="color: var(--success);">${{ saldo_calculado|floatformat:2 }}</span>
+                        </div>
+                        <div class="metric-icon-container icon-emerald">
+                            <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        </div>
+                    </div>
+                </section>
+                {% else %}
+                    <div style="text-align: center; padding: 3rem 1rem;">
+                        <div style="display: inline-flex; justify-content: center; align-items: center; width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.05); margin-bottom: 1.5rem;">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); opacity: 0.7;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        </div>
+                        <h3 style="color: var(--text); font-size: 1.5rem; margin-bottom: 0.5rem; font-weight: 600;">La caja está cerrada</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 2rem; max-width: 400px; margin-left: auto; margin-right: auto;">Debes abrir un turno para empezar a registrar cobros y movimientos de este día.</p>
+                        
+                        <form action="{% url 'caja_abrir' %}" method="post" style="display: inline-flex; flex-direction: column; gap: 1rem; align-items: center; background: rgba(37, 99, 235, 0.03); padding: 2.5rem; border-radius: var(--radius-lg); border: 1px dashed var(--border); box-shadow: var(--shadow-sm);">
+                            {% csrf_token %}
+                            <div>
+                                <label style="display: block; font-size: 0.95rem; font-weight: 500; color: var(--text-muted); margin-bottom: 0.75rem;">Fondo de Caja (Efectivo inicial)</label>
+                                <div style="position: relative; display: flex; align-items: center;">
+                                    <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1.25rem;">$</span>
+                                    <input type="number" step="0.01" name="saldo_inicial" required style="width: 260px; padding: 1rem 1rem 1rem 2.5rem; border-radius: var(--radius); border: 2px solid var(--border); background: var(--bg-card); color: var(--text); font-size: 1.5rem; font-weight: 700; text-align: left; transition: var(--transition); box-shadow: var(--shadow-sm);" value="0.00" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+                                </div>
+                            </div>
+                            <button type="submit" style="padding: 1rem 3rem; font-size: 1.1rem; width: 100%; margin-top: 0.5rem; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 0.5rem; box-shadow: var(--shadow-sm); transition: var(--transition);" onmouseover="this.style.background='var(--primary-hover)'" onmouseout="this.style.background='var(--primary)'">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
+                                Abrir Turno
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+
+                {% if turno_abierto %}
+                <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" style="padding: 0.65rem 1.25rem; font-size: 0.95rem; font-weight: 600; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: var(--transition); background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2);" onclick="document.getElementById('modal-egreso').style.display='flex'">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Registrar Egreso
+                    </button>
+                    <button type="button" style="padding: 0.65rem 1.25rem; font-size: 0.95rem; font-weight: 600; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: var(--transition); background: var(--primary); color: white; border: none; box-shadow: var(--shadow-sm);" onclick="document.getElementById('modal-cierre').style.display='flex'">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
+                        Hacer Corte de Caja
+                    </button>
+                </div>
+                {% endif %}
+            </section>
+
+            {% if turno_abierto %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; align-items: start;">
+                <!-- MOVIMIENTOS EXTRAORDINARIOS -->
+                <section class="dashboard-card">
+                    <div class="card-header-row">
+                        <h2>Movimientos Extra (Egresos/Ingresos)</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Concepto</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in movimientos %}
+                                <tr>
+                                    <td>{{ m.fecha|date:"H:i A" }}</td>
+                                    <td>
+                                        <span style="padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 600; background: {% if m.tipo == 'Ingreso' %}rgba(34, 197, 94, 0.15); color: var(--success){% else %}rgba(239, 68, 68, 0.15); color: var(--danger){% endif %}">
+                                            {{ m.tipo }}
+                                        </span>
+                                    </td>
+                                    <td>{{ m.concepto }}</td>
+                                    <td style="font-weight: 600;">${{ m.monto|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No hay movimientos registrados</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- COBROS DE ÓRDENES -->
+                <section class="dashboard-card">
+                    <div class="card-header-row">
+                        <h2>Cobros de Órdenes (Turno Actual)</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Orden</th>
+                                    <th>Hora</th>
+                                    <th>Método</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in pagos %}
+                                <tr>
+                                    <td><a href="{% url 'orden_detail' p.orden.id %}" style="color: var(--primary);">#{{ p.orden.id|stringformat:"06d" }}</a></td>
+                                    <td>{{ p.fecha_pago|date:"H:i A" }}</td>
+                                    <td>{{ p.metodo_pago }}</td>
+                                    <td style="font-weight: 600;">${{ p.monto|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No hay cobros registrados</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+            {% endif %}
+
+        </div>
+    </main>
+</div>
+
+{% if turno_abierto %}
+<!-- MODAL DE EGRESO -->
+<div id="modal-egreso" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-card); width: 100%; max-width: 400px; border-radius: 20px; padding: 2.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); border: 1px solid rgba(0,0,0,0.03);">
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 700; color: var(--text);">Registrar Egreso</h3>
+        <form action="{% url 'caja_movimiento_crear' %}" method="post" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            {% csrf_token %}
+            <input type="hidden" name="tipo" value="Egreso">
+            
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text);">Concepto (¿En qué se gastó?)</label>
+                <input type="text" name="concepto" required placeholder="Ej. Garrafón de agua" style="width: 100%; padding: 0.85rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-app); color: var(--text); font-size: 0.95rem; font-family: var(--font); transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text);">Monto extraído</label>
+                <input type="number" step="0.01" name="monto" required placeholder="0.00" style="width: 100%; padding: 0.85rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-app); color: var(--text); font-size: 1.1rem; font-weight: 600; font-family: var(--font); transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="button" style="flex: 1; padding: 0.75rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.95rem; cursor: pointer; background: var(--bg-app); color: var(--text-muted); border: 1px solid var(--border); transition: var(--transition);" onclick="document.getElementById('modal-egreso').style.display='none'" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">Cancelar</button>
+                <button type="submit" style="flex: 1; padding: 0.75rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.95rem; cursor: pointer; background: var(--primary); color: white; border: none; box-shadow: var(--shadow-sm); transition: var(--transition);" onmouseover="this.style.background='var(--primary-hover)'" onmouseout="this.style.background='var(--primary)'">Guardar Egreso</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL DE CIERRE DE CAJA -->
+<div id="modal-cierre" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-card); width: 100%; max-width: 450px; border-radius: 20px; padding: 2.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); border: 1px solid rgba(0,0,0,0.03);">
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 700; color: var(--text);">Hacer Corte de Caja</h3>
+        
+        <div style="background: rgba(37, 99, 235, 0.05); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.35rem; font-weight: 500;">Según el sistema, debes tener en caja:</p>
+            <p style="font-size: 1.75rem; font-weight: 800; color: var(--primary);">${{ saldo_calculado|floatformat:2 }}</p>
+        </div>
+        
+        <form action="{% url 'caja_cerrar' %}" method="post" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text);">Efectivo Real en Caja (Físico)</label>
+                <input type="number" step="0.01" name="saldo_final_real" required value="{{ saldo_calculado|floatformat:2 }}" style="width: 100%; padding: 1rem; border-radius: var(--radius-sm); border: 2px solid var(--border); background: var(--bg-app); color: var(--text); font-weight: 700; font-size: 1.5rem; text-align: left; font-family: var(--font); transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text);">Observaciones (Si hay faltante/sobrante)</label>
+                <textarea name="observaciones" rows="3" placeholder="Opcional..." style="width: 100%; padding: 0.85rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-app); color: var(--text); font-size: 0.95rem; font-family: var(--font); resize: none; transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="button" style="flex: 1; padding: 0.85rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.95rem; cursor: pointer; background: var(--bg-app); color: var(--text-muted); border: 1px solid var(--border); transition: var(--transition);" onclick="document.getElementById('modal-cierre').style.display='none'" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">Cancelar</button>
+                <button type="submit" style="flex: 1; padding: 0.85rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.95rem; cursor: pointer; background: var(--success); color: white; border: none; box-shadow: var(--shadow-sm); transition: var(--transition);" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Cerrar Turno</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

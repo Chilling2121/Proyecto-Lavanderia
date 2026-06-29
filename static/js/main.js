@@ -175,3 +175,18 @@ document.body.addEventListener('htmx:validation:failed', function(e) {
         }
     }
 });
+
+// Interceptar errores htmx:responseError globales
+document.body.addEventListener('htmx:responseError', function(evt) {
+    if (evt.detail.xhr.status === 400 && typeof showToast === 'function') {
+        showToast(evt.detail.xhr.responseText, "error");
+    }
+});
+
+// Escuchar evento personalizado para eliminación de servicios
+document.body.addEventListener('servicioDeleted', function(evt) {
+    if (typeof showToast === 'function') {
+        showToast("El servicio '" + evt.detail.value + "' ha sido eliminado con éxito.", "success");
+    }
+});
+
