@@ -47,7 +47,7 @@
                             onblur="this.style.borderColor='var(--border)';">
                         <option value="">Todos los Estados</option>
                         {% for estado in estados %}
-                        <option value="{{ estado }}">{{ estado }}</option>
+                        <option value="{{ estado }}" {% if estado == estado_preseleccionado %}selected{% endif %}>{{ estado }}</option>
                         {% endfor %}
                     </select>
                 </div>

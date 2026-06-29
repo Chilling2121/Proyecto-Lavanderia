@@ -293,10 +293,14 @@ def servicio_delete(request, servicio_id):
 @login_required
 @group_required('Administrador', 'Cajero')
 def ordenes_list(request):
+    estado = request.GET.get('estado', '').strip()
     ordenes = Orden.objects.select_related('cliente').order_by('-id')
+    if estado:
+        ordenes = ordenes.filter(estado_actual=estado)
     return render(request, 'ordenes.html', {
         'ordenes': ordenes,
         'estados': ESTADOS_LAVADO,
+        'estado_preseleccionado': estado,
     })
 
 @login_required

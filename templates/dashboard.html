@@ -52,7 +52,7 @@
                     <div class="metric-info">
                         <span class="metric-title">Listos para Entrega</span>
                         <span class="metric-value">{{ listos_entrega }}</span>
-                        <a href="#" class="metric-trend" style="color: var(--success); font-weight: 600;">Ver detalles</a>
+                        <a href="{% url 'ordenes_list' %}?estado=Lista para entrega" class="metric-trend" style="color: var(--success); font-weight: 600;">Ver detalles</a>
                     </div>
                     <div class="metric-icon-container icon-green">
                         <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
