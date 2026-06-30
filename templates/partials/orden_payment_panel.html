@@ -1,5 +1,5 @@
 <!-- Panel Financiero y Pagos (HTMX Partial) -->
-<div id="payment-panel-inner" data-saldo-pendiente="{{ orden.saldo_pendiente }}" hx-get="{% url 'orden_detail' orden.id %}" hx-trigger="statusUpdated from:body" hx-select="#payment-panel-inner" hx-swap="outerHTML" class="payment-panel-wrapper">
+<div id="payment-panel-inner" data-saldo-pendiente="{{ orden.saldo_pendiente }}" data-efectivo-disponible="{{ efectivo_disponible|default:'0.00' }}" hx-get="{% url 'orden_detail' orden.id %}" hx-trigger="statusUpdated from:body" hx-select="#payment-panel-inner" hx-swap="outerHTML" class="payment-panel-wrapper">
     
     <!-- Alerta de vuelto / cambio a entregar al cliente -->
     {% if cambio_info %}
@@ -81,7 +81,7 @@
             <div class="payment-form-grid">
                 <div class="payment-form-field">
                     <label class="payment-form-label">Monto ($)</label>
-                    <input type="number" name="monto" id="pago-monto-input" step="0.01" min="0.01" placeholder="0.00" required class="payment-form-input">
+                    <input type="number" name="monto" id="pago-monto-input" step="0.01" min="0.01" max="{{ orden.saldo_pendiente|stringformat:'.2f' }}" placeholder="0.00" required class="payment-form-input">
                 </div>
                 <div class="payment-form-field">
                     <label class="payment-form-label">Método</label>

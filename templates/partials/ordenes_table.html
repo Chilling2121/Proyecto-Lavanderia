@@ -1,7 +1,7 @@
 {% for orden in ordenes %}
 <tr style="transition: var(--transition);" onmouseover="this.style.backgroundColor='var(--bg-app)';" onmouseout="this.style.backgroundColor='transparent';">
     <td class="font-medium" style="padding-left: 0.5rem; color: var(--primary);">#{{ orden.id|stringformat:"06d" }}</td>
-    <td class="font-medium">{{ orden.cliente.nombre }}</td>
+    <td class="font-medium">{{ orden.cliente.nombre_completo }}</td>
     <td>{{ orden.fecha_recepcion|date:"d/m/Y H:i" }}</td>
     <td>{{ orden.fecha_entrega_estimada|date:"d/m/Y H:i"|default:"—" }}</td>
     <td class="font-medium" style="text-align: right;">${{ orden.total_a_pagar|floatformat:2 }}</td>

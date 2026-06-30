@@ -190,3 +190,29 @@ document.body.addEventListener('servicioDeleted', function(evt) {
     }
 });
 
+// Interceptar evento 'invalid' nativo para usar showToast en todos los formularios
+document.addEventListener('invalid', function(e) {
+    // Prevenir la burbuja nativa por defecto del navegador
+    e.preventDefault();
+    
+    const elt = e.target;
+    if (typeof showToast === 'function') {
+        let labelText = '';
+        // Intentar buscar una etiqueta label asociada al elemento
+        const label = document.querySelector(`label[for="${elt.id}"]`) || elt.closest('div')?.querySelector('label');
+        if (label) {
+            labelText = label.textContent.replace('*', '').trim() + ': ';
+        }
+        showToast(labelText + elt.validationMessage, "error");
+    }
+    
+    // Marcar el borde del input en rojo temporalmente
+    const oldBorder = elt.style.borderColor;
+    elt.style.borderColor = 'var(--danger)';
+    setTimeout(() => { elt.style.borderColor = oldBorder; }, 3000);
+    
+    // Enfocar el elemento con error
+    elt.focus();
+}, true); // Usar capture phase (true) ya que el evento 'invalid' no burbujea
+
+

@@ -14,36 +14,83 @@
         const cambioCheckboxVal = document.getElementById("cambio-checkbox-val");
         
         const maxDeuda = parseFloat(panel.getAttribute("data-saldo-pendiente")) || 0;
+        const efectivoDisponible = parseFloat(panel.getAttribute("data-efectivo-disponible")) || 0;
 
         function updateCambio() {
-            const monto = parseFloat(montoInput.value) || 0;
+            let monto = parseFloat(montoInput.value) || 0;
             const entregado = parseFloat(efectivoInput.value) || 0;
             
-            // Si el usuario ingresa un monto que supera la deuda pendiente, el cobro real se limita a maxDeuda
-            let cobroEfectivo = Math.min(monto, maxDeuda);
-            let cambio = 0;
-            
-            // Caso 1: Ingresó efectivo entregado en el campo específico
-            if (entregado > cobroEfectivo) {
-                cambio = entregado - cobroEfectivo;
-                if (cambioVal) cambioVal.textContent = cambio.toFixed(2);
-                if (cambioMsg) cambioMsg.style.display = "block";
-            }
-            // Caso 2: Ingresó directamente el billete más grande en el campo "Monto"
-            else if (monto > maxDeuda) {
-                cambio = monto - maxDeuda;
-                if (cambioVal) cambioVal.textContent = cambio.toFixed(2);
-                if (cambioMsg) cambioMsg.style.display = "block";
-            } else {
-                if (cambioMsg) cambioMsg.style.display = "none";
+            // Habilitar submitBtn por defecto
+            const submitBtn = panel.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = "";
+                submitBtn.style.cursor = "";
             }
 
-            // Mostrar y hacer obligatorio el checkbox si hay cambio y es en Efectivo
-            if (cambio > 0 && metodoSelect && metodoSelect.value === "Efectivo") {
+            // Validar que el monto no exceda la deuda pendiente
+            if (monto > maxDeuda) {
+                monto = maxDeuda;
+                montoInput.value = maxDeuda.toFixed(2);
+            }
+            
+            let cambio = 0;
+            const isEfectivo = metodoSelect && metodoSelect.value === "Efectivo";
+
+            // Validar efectivo entregado si es menor que el monto cobrado
+            if (isEfectivo && entregado > 0 && entregado < monto) {
+                if (cambioMsg) {
+                    cambioMsg.innerHTML = `<span style="color:var(--danger); display:block; font-size:0.78rem; font-weight:700; margin-top:0.25rem;">⚠️ El efectivo entregado debe ser mayor o igual al monto ($${monto.toFixed(2)})</span>`;
+                    cambioMsg.style.display = "block";
+                }
+                if (cambioGroup) cambioGroup.style.display = "none";
+                if (cambioCheckbox) {
+                    cambioCheckbox.required = false;
+                    cambioCheckbox.checked = false;
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = "0.5";
+                    submitBtn.style.cursor = "not-allowed";
+                }
+                return;
+            }
+
+            // Calcular vuelto
+            if (isEfectivo && entregado > monto) {
+                cambio = entregado - monto;
+            }
+
+            // Validar si el cambio supera el efectivo disponible físico en la caja
+            if (isEfectivo && cambio > efectivoDisponible) {
+                if (cambioMsg) {
+                    cambioMsg.innerHTML = `⚠️ Cambio estimado: $${cambio.toFixed(2)} <span style="color:var(--danger); display:block; margin-top:0.25rem; font-size:0.78rem; font-weight:700;">¡Efectivo insuficiente en caja! (Disponible: $${efectivoDisponible.toFixed(2)})</span>`;
+                    cambioMsg.style.display = "block";
+                }
+                if (cambioGroup) cambioGroup.style.display = "none";
+                if (cambioCheckbox) {
+                    cambioCheckbox.required = false;
+                    cambioCheckbox.checked = false;
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = "0.5";
+                    submitBtn.style.cursor = "not-allowed";
+                }
+                return;
+            }
+
+            // Flujo normal: Mostrar el vuelto estimado
+            if (cambio > 0) {
+                if (cambioMsg) {
+                    cambioMsg.innerHTML = `Cambio estimado: $<span id="cambio-dinamico-val">${cambio.toFixed(2)}</span>`;
+                    cambioMsg.style.display = "block";
+                }
                 if (cambioCheckboxVal) cambioCheckboxVal.textContent = cambio.toFixed(2);
                 if (cambioGroup) cambioGroup.style.display = "flex";
                 if (cambioCheckbox) cambioCheckbox.required = true;
             } else {
+                if (cambioMsg) cambioMsg.style.display = "none";
                 if (cambioGroup) cambioGroup.style.display = "none";
                 if (cambioCheckbox) {
                     cambioCheckbox.required = false;

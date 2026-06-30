@@ -10,7 +10,7 @@
 <div class="card-header-row" style="margin-bottom: 1.25rem;">
     <div>
         <h2 style="font-size: 1.15rem; font-weight: 750; color: var(--text);">Historial de Servicios</h2>
-        <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.15rem;">{{ cliente.nombre }} (Cel: {{ cliente.telefono }})</p>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.15rem;">{{ cliente.nombre_completo }} (Cédula: {{ cliente.cedula }} | Cel: {{ cliente.telefono }})</p>
     </div>
     <!-- Botón para Registrar Orden usando HTMX -->
     <button hx-get="{% url 'orden_create_partial' cliente.id %}" 

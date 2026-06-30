@@ -1,7 +1,9 @@
 from django.db import models
 
 class Cliente(models.Model):
-    nombre = models.CharField(max_length=150)
+    nombre = models.CharField(max_length=100)
+    apellido = models.CharField(max_length=100, default='')
+    cedula = models.CharField(max_length=20, default='9999999999')
     telefono = models.CharField(max_length=20)
     correo = models.EmailField(max_length=100, blank=True, null=True)
     direccion = models.TextField(blank=True, null=True)
@@ -12,8 +14,14 @@ class Cliente(models.Model):
         verbose_name = 'Cliente'
         verbose_name_plural = 'Clientes'
 
-    def __str__(self):
+    @property
+    def nombre_completo(self):
+        if self.apellido:
+            return f"{self.nombre} {self.apellido}".strip()
         return self.nombre
+
+    def __str__(self):
+        return self.nombre_completo
 
 
 class Servicio(models.Model):
@@ -174,6 +182,20 @@ class TurnoCaja(models.Model):
 
     def __str__(self):
         return f"Turno #{self.id} - {self.usuario.username} ({self.estado})"
+
+    @property
+    def efectivo_disponible(self):
+        from django.db.models import Sum
+        from decimal import Decimal
+        
+        pagos_efectivo = self.pagos.filter(metodo_pago='Efectivo')
+        ingresos_ordenes_efectivo = pagos_efectivo.aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+        
+        movimientos = self.movimientos.all()
+        ingresos_extra_efectivo = movimientos.filter(tipo='Ingreso').aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+        egresos_efectivo = movimientos.filter(tipo='Egreso').aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+        
+        return self.saldo_inicial + ingresos_ordenes_efectivo + ingresos_extra_efectivo - egresos_efectivo
 
 
 class MovimientoCaja(models.Model):

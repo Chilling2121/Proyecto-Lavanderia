@@ -323,8 +323,12 @@
         <div class="details-grid">
             <div class="section-title">Cliente</div>
             <div class="details-row">
+                <span class="details-label">Cédula/ID:</span>
+                <span class="details-val">{{ orden.cliente.cedula }}</span>
+            </div>
+            <div class="details-row">
                 <span class="details-label">Nombre:</span>
-                <span class="details-val">{{ orden.cliente.nombre }}</span>
+                <span class="details-val">{{ orden.cliente.nombre_completo }}</span>
             </div>
             <div class="details-row">
                 <span class="details-label">Teléfono:</span>

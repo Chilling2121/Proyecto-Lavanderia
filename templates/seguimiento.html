@@ -34,6 +34,30 @@
                     </div>
                 </div>
             {% else %}
+                <!-- BANNER DE ALERTA DE ÓRDENES CRÍTICAS -->
+                {% if ordenes_pendientes_criticas %}
+                    <div style="background: rgba(245, 158, 11, 0.08); border-left: 4px solid var(--warning); padding: 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: var(--shadow-sm);">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(245, 158, 11, 0.15); color: var(--warning); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></svg>
+                            </div>
+                            <div>
+                                <strong style="color: var(--text); font-size: 0.95rem; font-weight: 700;">Órdenes Listas y Liquidadas sin Entregar</strong>
+                                <p style="margin: 0.15rem 0 0 0; font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Tienes {{ ordenes_pendientes_criticas|length }} órdenes que ya están pagadas y listas para retirar. Por favor, realiza la entrega física al cliente para liberar espacio.</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted);">Ir a:</span>
+                            <select id="criticas-select" style="width: 280px;">
+                                <option value="">Seleccionar orden...</option>
+                                {% for op in ordenes_pendientes_criticas %}
+                                    <option value="{{ op.id }}" {% if op.id == orden_seleccionada.id %}selected{% endif %}>Orden #{{ op.id|stringformat:"06d" }} — {{ op.cliente.nombre_completo }} ({{ op.cliente.cedula }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                {% endif %}
+
                 <!-- Detalle de Seguimiento Individual (Prototipo v0.2 Pág 9) -->
                 <div class="detail-tracking-view">
                     
@@ -65,10 +89,10 @@
                         <!-- Fila 2: Lista de órdenes filtrable -->
                         <div id="ordenes-list-container" style="display: none; max-height: 280px; overflow-y: auto; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background-color: var(--bg-app);">
                             {% for o in ordenes_activas %}
-                            <a href="?orden_id={{ o.id }}" class="orden-search-item" data-search-text="orden #{{ o.id|stringformat:'06d' }} {{ o.cliente.nombre }} {{ o.estado_actual }}" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; text-decoration: none; color: var(--text); border-bottom: 1px solid var(--border); transition: var(--transition); gap: 0.75rem; {% if o.id == orden_seleccionada.id %}background-color: var(--primary-light); border-left: 3px solid var(--primary);{% endif %}" onmouseover="this.style.backgroundColor='var(--primary-light)';" onmouseout="this.style.backgroundColor='{% if o.id == orden_seleccionada.id %}var(--primary-light){% else %}transparent{% endif %}';">
+                            <a href="?orden_id={{ o.id }}" class="orden-search-item" data-search-text="orden #{{ o.id|stringformat:'06d' }} {{ o.cliente.nombre_completo }} {{ o.estado_actual }}" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; text-decoration: none; color: var(--text); border-bottom: 1px solid var(--border); transition: var(--transition); gap: 0.75rem; {% if o.id == orden_seleccionada.id %}background-color: var(--primary-light); border-left: 3px solid var(--primary);{% endif %}" onmouseover="this.style.backgroundColor='var(--primary-light)';" onmouseout="this.style.backgroundColor='{% if o.id == orden_seleccionada.id %}var(--primary-light){% else %}transparent{% endif %}';">
                                 <div style="display: flex; flex-direction: column; gap: 0.15rem;">
                                     <span style="font-weight: 700; font-size: 0.88rem; color: {% if o.id == orden_seleccionada.id %}var(--primary){% else %}var(--text){% endif %};">
-                                        #{{ o.id|stringformat:"06d" }} — {{ o.cliente.nombre }}
+                                        #{{ o.id|stringformat:"06d" }} — {{ o.cliente.nombre_completo }}
                                     </span>
                                     <span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 500;">
                                         {{ o.fecha_recepcion|date:"d/m/Y H:i" }}
@@ -97,7 +121,7 @@
                                 Orden #{{ orden_seleccionada.id|stringformat:"06d" }}
                             </span>
                             <span style="font-size: 0.88rem; font-weight: 600; color: var(--text);">
-                                — {{ orden_seleccionada.cliente.nombre }}
+                                — {{ orden_seleccionada.cliente.nombre_completo }}
                             </span>
                             <span class="status-badge-large state-{{ orden_seleccionada.estado_actual|slugify }}" style="font-size: 0.72rem; padding: 0.3rem 0.65rem; margin-left: auto;">
                                 {{ orden_seleccionada.estado_actual }}
@@ -287,7 +311,11 @@
                             <div class="panel-card-body">
                                 <div class="info-row-item">
                                     <span class="info-row-label">Cliente:</span>
-                                    <span class="info-row-value-accent">{{ orden_seleccionada.cliente.nombre }}</span>
+                                    <span class="info-row-value-accent">{{ orden_seleccionada.cliente.nombre_completo }}</span>
+                                </div>
+                                <div class="info-row-item">
+                                    <span class="info-row-label">Cédula:</span>
+                                    <span class="info-row-value">{{ orden_seleccionada.cliente.cedula }}</span>
                                 </div>
                                 <div class="info-row-item">
                                     <span class="info-row-label">Teléfono:</span>

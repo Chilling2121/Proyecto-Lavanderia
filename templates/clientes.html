@@ -60,7 +60,9 @@
                         <table class="custom-table">
                             <thead>
                                 <tr>
-                                    <th>Nombre</th>
+                                    <th>Cédula</th>
+                                    <th>Nombres</th>
+                                    <th>Apellidos</th>
                                     <th>Teléfono</th>
                                     <th>Correo</th>
                                     <th>Acciones</th>
@@ -100,14 +102,38 @@
         <form id="new-client-form" method="post" action="{% url 'cliente_create' %}" style="display: flex; flex-direction: column; gap: 1.25rem;">
             {% csrf_token %}
             
-            <!-- Campo Nombre -->
+            <!-- Campo Cédula -->
             <div class="login-field" style="margin-bottom: 0;">
-                <label for="id_nombre" style="font-weight: 600;">Nombre Completo *</label>
+                <label for="id_cedula" style="font-weight: 600;">Cédula / Identificación *</label>
                 <div class="login-input-wrapper">
                     <span class="login-input-icon">
-                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect><line x1="7" y1="8" x2="17" y2="8"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="15" y2="16"></line></svg>
                     </span>
-                    <input type="text" name="nombre" id="id_nombre" placeholder="Nombre del cliente" required>
+                    <input type="text" name="cedula" id="id_cedula" placeholder="Ej: 1712345678 o 9999999999" required maxlength="10" minlength="10">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <!-- Campo Nombres -->
+                <div class="login-field" style="margin-bottom: 0; flex: 1;">
+                    <label for="id_nombre" style="font-weight: 600;">Nombres *</label>
+                    <div class="login-input-wrapper">
+                        <span class="login-input-icon">
+                            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </span>
+                        <input type="text" name="nombre" id="id_nombre" placeholder="Nombres" required>
+                    </div>
+                </div>
+
+                <!-- Campo Apellidos -->
+                <div class="login-field" style="margin-bottom: 0; flex: 1;">
+                    <label for="id_apellido" style="font-weight: 600;">Apellidos *</label>
+                    <div class="login-input-wrapper">
+                        <span class="login-input-icon">
+                            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </span>
+                        <input type="text" name="apellido" id="id_apellido" placeholder="Apellidos" required>
+                    </div>
                 </div>
             </div>
 
@@ -168,14 +194,38 @@
         <form id="edit-client-form" method="post" action="" style="display: flex; flex-direction: column; gap: 1.25rem;">
             {% csrf_token %}
             
-            <!-- Campo Nombre -->
+            <!-- Campo Cédula -->
             <div class="login-field" style="margin-bottom: 0;">
-                <label for="edit_nombre" style="font-weight: 600;">Nombre Completo *</label>
+                <label for="edit_cedula" style="font-weight: 600;">Cédula / Identificación *</label>
                 <div class="login-input-wrapper">
                     <span class="login-input-icon">
-                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect><line x1="7" y1="8" x2="17" y2="8"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="15" y2="16"></line></svg>
                     </span>
-                    <input type="text" name="nombre" id="edit_nombre" placeholder="Nombre del cliente" required>
+                    <input type="text" name="cedula" id="edit_cedula" placeholder="Ej: 1712345678 o 9999999999" required maxlength="10" minlength="10">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <!-- Campo Nombres -->
+                <div class="login-field" style="margin-bottom: 0; flex: 1;">
+                    <label for="edit_nombre" style="font-weight: 600;">Nombres *</label>
+                    <div class="login-input-wrapper">
+                        <span class="login-input-icon">
+                            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </span>
+                        <input type="text" name="nombre" id="edit_nombre" placeholder="Nombres" required>
+                    </div>
+                </div>
+
+                <!-- Campo Apellidos -->
+                <div class="login-field" style="margin-bottom: 0; flex: 1;">
+                    <label for="edit_apellido" style="font-weight: 600;">Apellidos *</label>
+                    <div class="login-input-wrapper">
+                        <span class="login-input-icon">
+                            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </span>
+                        <input type="text" name="apellido" id="edit_apellido" placeholder="Apellidos" required>
+                    </div>
                 </div>
             </div>
 

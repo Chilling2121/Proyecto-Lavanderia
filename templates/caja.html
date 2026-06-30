@@ -80,7 +80,7 @@
                                 <label style="display: block; font-size: 0.95rem; font-weight: 500; color: var(--text-muted); margin-bottom: 0.75rem;">Fondo de Caja (Efectivo inicial)</label>
                                 <div style="position: relative; display: flex; align-items: center;">
                                     <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1.25rem;">$</span>
-                                    <input type="number" step="0.01" name="saldo_inicial" required style="width: 260px; padding: 1rem 1rem 1rem 2.5rem; border-radius: var(--radius); border: 2px solid var(--border); background: var(--bg-card); color: var(--text); font-size: 1.5rem; font-weight: 700; text-align: left; transition: var(--transition); box-shadow: var(--shadow-sm);" value="0.00" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+                                    <input type="number" step="0.01" min="10.00" name="saldo_inicial" required style="width: 260px; padding: 1rem 1rem 1rem 2.5rem; border-radius: var(--radius); border: 2px solid var(--border); background: var(--bg-card); color: var(--text); font-size: 1.5rem; font-weight: 700; text-align: left; transition: var(--transition); box-shadow: var(--shadow-sm);" value="10.00" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
                                 </div>
                             </div>
                             <button type="submit" style="padding: 1rem 3rem; font-size: 1.1rem; width: 100%; margin-top: 0.5rem; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 0.5rem; box-shadow: var(--shadow-sm); transition: var(--transition);" onmouseover="this.style.background='var(--primary-hover)'" onmouseout="this.style.background='var(--primary)'">
@@ -113,26 +113,26 @@
                         <h2>Movimientos Extra (Egresos/Ingresos)</h2>
                     </div>
                     <div class="table-responsive">
-                        <table class="custom-table">
+                        <table class="custom-table" style="min-width: auto;">
                             <thead>
                                 <tr>
-                                    <th>Fecha</th>
+                                    <th>Hora</th>
                                     <th>Tipo</th>
                                     <th>Concepto</th>
-                                    <th>Monto</th>
+                                    <th style="text-align: right;">Monto</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for m in movimientos %}
                                 <tr>
-                                    <td>{{ m.fecha|date:"H:i A" }}</td>
+                                    <td>{{ m.fecha|date:"h:i A" }}</td>
                                     <td>
                                         <span style="padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 600; background: {% if m.tipo == 'Ingreso' %}rgba(34, 197, 94, 0.15); color: var(--success){% else %}rgba(239, 68, 68, 0.15); color: var(--danger){% endif %}">
                                             {{ m.tipo }}
                                         </span>
                                     </td>
                                     <td>{{ m.concepto }}</td>
-                                    <td style="font-weight: 600;">${{ m.monto|floatformat:2 }}</td>
+                                    <td style="font-weight: 600; text-align: right;">${{ m.monto|floatformat:2 }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No hay movimientos registrados</td></tr>
@@ -148,22 +148,22 @@
                         <h2>Cobros de Órdenes (Turno Actual)</h2>
                     </div>
                     <div class="table-responsive">
-                        <table class="custom-table">
+                        <table class="custom-table" style="min-width: auto;">
                             <thead>
                                 <tr>
                                     <th>Orden</th>
                                     <th>Hora</th>
                                     <th>Método</th>
-                                    <th>Monto</th>
+                                    <th style="text-align: right;">Monto</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for p in pagos %}
                                 <tr>
                                     <td><a href="{% url 'orden_detail' p.orden.id %}" style="color: var(--primary);">#{{ p.orden.id|stringformat:"06d" }}</a></td>
-                                    <td>{{ p.fecha_pago|date:"H:i A" }}</td>
+                                    <td>{{ p.fecha_pago|date:"h:i A" }}</td>
                                     <td>{{ p.metodo_pago }}</td>
-                                    <td style="font-weight: 600;">${{ p.monto|floatformat:2 }}</td>
+                                    <td style="font-weight: 600; text-align: right;">${{ p.monto|floatformat:2 }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No hay cobros registrados</td></tr>
@@ -195,7 +195,7 @@
             
             <div class="form-group">
                 <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text);">Monto extraído</label>
-                <input type="number" step="0.01" name="monto" required placeholder="0.00" style="width: 100%; padding: 0.85rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-app); color: var(--text); font-size: 1.1rem; font-weight: 600; font-family: var(--font); transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+                <input type="number" step="0.01" min="0.01" max="{{ saldo_calculado|floatformat:2 }}" name="monto" required placeholder="0.00" style="width: 100%; padding: 0.85rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-app); color: var(--text); font-size: 1.1rem; font-weight: 600; font-family: var(--font); transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
             </div>
             
             <div style="display: flex; gap: 1rem; margin-top: 1rem;">
@@ -221,7 +221,7 @@
             
             <div class="form-group">
                 <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text);">Efectivo Real en Caja (Físico)</label>
-                <input type="number" step="0.01" name="saldo_final_real" required value="{{ saldo_calculado|floatformat:2 }}" style="width: 100%; padding: 1rem; border-radius: var(--radius-sm); border: 2px solid var(--border); background: var(--bg-app); color: var(--text); font-weight: 700; font-size: 1.5rem; text-align: left; font-family: var(--font); transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+                <input type="number" step="0.01" min="0.00" name="saldo_final_real" required value="{{ saldo_calculado|floatformat:2 }}" style="width: 100%; padding: 1rem; border-radius: var(--radius-sm); border: 2px solid var(--border); background: var(--bg-app); color: var(--text); font-weight: 700; font-size: 1.5rem; text-align: left; font-family: var(--font); transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
             </div>
             
             <div class="form-group">

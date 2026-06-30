@@ -60,4 +60,19 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     }
+
+    // 3. TomSelect para el selector de órdenes críticas en el banner de alerta
+    const criticasSelect = document.getElementById("criticas-select");
+    if (criticasSelect && typeof TomSelect !== 'undefined') {
+        new TomSelect(criticasSelect, {
+            create: false,
+            controlInput: null, // Deshabilita la escritura para comportarse como un select puro de solo selección
+            sortField: { field: "text", direction: "asc" },
+            onChange: function(value) {
+                if (value) {
+                    window.location.href = '?orden_id=' + value;
+                }
+            }
+        });
+    }
 });

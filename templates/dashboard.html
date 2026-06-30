@@ -127,7 +127,7 @@
                                 {% for orden in ordenes_recientes %}
                                 <tr>
                                     <td class="font-medium">#{{ orden.id|stringformat:"06d" }}</td>
-                                    <td>{{ orden.cliente.nombre }}</td>
+                                    <td>{{ orden.cliente.nombre_completo }}</td>
                                     <td>{{ orden.fecha_recepcion|date:"d/m/Y" }}</td>
                                     <td>
                                         <!-- Mapeo CSS de badges de estado -->

@@ -40,16 +40,50 @@
                     
                     <!-- Botones de Exportación -->
                     <div style="display: flex; gap: 0.5rem;">
-                        <a href="{% url 'reportes_export_excel' %}?periodo={{ periodo }}" class="login-btn" style="width: auto; padding: 0.6rem 1rem; font-size: 0.85rem; background-color: #10B981; border: none; display: flex; align-items: center; gap: 0.4rem;">
+                        <a href="{% url 'reportes_export_excel' %}?periodo={{ periodo }}&fecha_inicio={{ fecha_inicio_str }}&fecha_fin={{ fecha_fin_str }}" class="login-btn" style="width: auto; padding: 0.6rem 1rem; font-size: 0.85rem; background-color: #10B981; border: none; display: flex; align-items: center; gap: 0.4rem;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                             <span>Excel</span>
                         </a>
-                        <a href="{% url 'reportes_export_pdf' %}?periodo={{ periodo }}" target="_blank" class="login-btn" style="width: auto; padding: 0.6rem 1rem; font-size: 0.85rem; background-color: #EF4444; border: none; display: flex; align-items: center; gap: 0.4rem;">
+                        <a href="{% url 'reportes_export_pdf' %}?periodo={{ periodo }}&fecha_inicio={{ fecha_inicio_str }}&fecha_fin={{ fecha_fin_str }}" target="_blank" class="login-btn" style="width: auto; padding: 0.6rem 1rem; font-size: 0.85rem; background-color: #EF4444; border: none; display: flex; align-items: center; gap: 0.4rem;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                             <span>PDF</span>
                         </a>
                     </div>
                 </div>
+            </div>
+
+            <!-- Filtro de Rango de Fechas Personalizado -->
+            <div style="margin-bottom: 2rem; background-color: var(--bg-card); padding: 1rem 1.5rem; border-radius: var(--radius); border: 1.5px solid var(--border); display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <form method="get" action="" style="display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; width: 100%;">
+                    <input type="hidden" name="periodo" value="rango">
+                    
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Desde:</span>
+                        <input type="date" id="fecha_inicio" name="fecha_inicio" value="{{ fecha_inicio_str }}" 
+                               style="padding: 0.55rem 0.75rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font); background-color: var(--bg-app); color: var(--text); font-weight: 600; outline: none; transition: var(--transition);"
+                               onfocus="this.style.borderColor='var(--primary)'; this.style.backgroundColor='var(--bg-card)';"
+                               onblur="this.style.borderColor='var(--border)'; this.style.backgroundColor='var(--bg-app)';" required>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Hasta:</span>
+                        <input type="date" id="fecha_fin" name="fecha_fin" value="{{ fecha_fin_str }}" 
+                               style="padding: 0.55rem 0.75rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font); background-color: var(--bg-app); color: var(--text); font-weight: 600; outline: none; transition: var(--transition);"
+                               onfocus="this.style.borderColor='var(--primary)'; this.style.backgroundColor='var(--bg-card)';"
+                               onblur="this.style.borderColor='var(--border)'; this.style.backgroundColor='var(--bg-app)';" required>
+                    </div>
+
+                    <button type="submit" class="login-btn" style="width: auto; padding: 0.55rem 1.25rem; font-size: 0.85rem; border-radius: var(--radius-sm); font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        <span>Filtrar por Rango</span>
+                    </button>
+
+                    {% if fecha_inicio_str or fecha_fin_str %}
+                    <a href="?periodo=mes" class="login-btn" style="width: auto; padding: 0.55rem 1.25rem; font-size: 0.85rem; border-radius: var(--radius-sm); font-weight: 600; background-color: var(--bg-app); border: 1px solid var(--border); color: var(--danger); box-shadow: none; text-decoration: none; display: inline-flex; align-items: center;" onmouseover="this.style.backgroundColor='rgba(239, 68, 68, 0.05)';" onmouseout="this.style.backgroundColor='var(--bg-app)';">
+                        Limpiar Rango
+                    </a>
+                    {% endif %}
+                </form>
             </div>
 
             <!-- KPIs de Finanzas -->
@@ -115,7 +149,7 @@
                                 <tbody>
                                     {% for c in top_clientes %}
                                     <tr>
-                                        <td class="font-medium" style="color: var(--primary);">{{ c.nombre }}</td>
+                                        <td class="font-medium" style="color: var(--primary);">{{ c.nombre_completo }}</td>
                                         <td style="text-align: center;">{{ c.total_ordenes }}</td>
                                         <td class="font-medium" style="text-align: right; color: var(--success);">${{ c.total_gastado|floatformat:2 }}</td>
                                     </tr>
@@ -146,7 +180,7 @@
                                     {% for o in top_deudores %}
                                     <tr>
                                         <td class="font-medium">#{{ o.id|stringformat:"06d" }}</td>
-                                        <td>{{ o.cliente.nombre }}</td>
+                                        <td>{{ o.cliente.nombre_completo }}</td>
                                         <td class="font-medium" style="text-align: right; color: var(--danger);">${{ o.saldo_pendiente|floatformat:2 }}</td>
                                         <td style="text-align: center;">
                                             <a href="{% url 'orden_detail' o.id %}" class="badge" style="background-color: var(--primary-light); color: var(--primary); text-decoration: none; padding: 0.4rem 0.8rem; display: inline-block;">Cobrar Deuda</a>

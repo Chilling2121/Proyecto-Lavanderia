@@ -101,6 +101,15 @@
                         <small style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">
                             Define los permisos del empleado en el sistema (Administrador, Cajero u Operador).
                         </small>
+                        
+                        <!-- Descripción Dinámica del Rol Seleccionado -->
+                        <div id="rol-description-box" style="margin-top: 0.85rem; padding: 1rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background-color: var(--bg-app); font-size: 0.82rem; display: none; transition: var(--transition);">
+                            <div style="display: flex; align-items: center; gap: 0.45rem; margin-bottom: 0.35rem;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" style="flex-shrink: 0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                                <strong id="rol-title" style="color: var(--text); font-weight: 700;"></strong>
+                            </div>
+                            <span id="rol-text" style="color: var(--text-muted); line-height: 1.45; font-weight: 500; display: block;"></span>
+                        </div>
                     </div>
 
                     <div style="border-top: 1px solid var(--border); margin: 0.5rem 0;"></div>
@@ -152,14 +161,49 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        const descBox = document.getElementById('rol-description-box');
+        const rolTitle = document.getElementById('rol-title');
+        const rolText = document.getElementById('rol-text');
+        
+        const descriptions = {
+            'Administrador': 'Acceso completo e ilimitado a toda la plataforma, incluyendo reportes financieros, configuraciones del sistema, administración de usuarios, servicios, promociones y caja.',
+            'Cajero': 'Acceso enfocado a operaciones comerciales: registrar clientes, crear y gestionar órdenes de lavado, realizar cobros/vuelto, y manejar turnos de caja. No tiene acceso a reportes financieros, configuraciones ni gestión de usuarios.',
+            'Operador': 'Acceso exclusivo al procesamiento físico de prendas en planta: puede visualizar prendas, avanzar estados secuenciales de lavado de las órdenes y ver el tablero de seguimiento. Restringido de caja, clientes y reportes.'
+        };
+        
+        function updateDescription(roleName) {
+            if (roleName && descriptions[roleName]) {
+                rolTitle.textContent = `Puesto Asignado: ${roleName}`;
+                rolText.textContent = descriptions[roleName];
+                descBox.style.display = 'block';
+            } else {
+                descBox.style.display = 'none';
+            }
+        }
+
         // Inicializar Tom Select para selector de rol
         if (typeof TomSelect !== 'undefined') {
             const selectRol = document.getElementById('id_rol');
             if (selectRol) {
-                new TomSelect(selectRol, {
+                const ts = new TomSelect(selectRol, {
                     create: false,
                     controlInput: null
                 });
+                
+                // Evento cuando cambia el rol
+                ts.on('change', (value) => {
+                    const option = ts.options[value];
+                    const selectedText = option ? option.text.trim() : '';
+                    updateDescription(selectedText);
+                });
+                
+                // Chequeo inicial (si está editando un usuario existente)
+                setTimeout(() => {
+                    const val = ts.getValue();
+                    const option = ts.options[val];
+                    const selectedText = option ? option.text.trim() : '';
+                    updateDescription(selectedText);
+                }, 100);
             }
         }
     });

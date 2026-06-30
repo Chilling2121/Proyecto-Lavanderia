@@ -70,8 +70,12 @@
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                                     </div>
                                     <div>
-                                        <h3 style="font-weight: 750; font-size: 1.05rem; color: var(--text);">{{ orden.cliente.nombre }}</h3>
-                                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                                        <h3 style="font-weight: 750; font-size: 1.05rem; color: var(--text);">{{ orden.cliente.nombre_completo }}</h3>
+                                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem; display: flex; align-items: center; gap: 0.25rem;">
+                                            <span style="font-weight: 700; color: var(--text-muted);">Cédula:</span>
+                                            <span>{{ orden.cliente.cedula }}</span>
+                                        </p>
+                                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem;">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.2rem;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                                             {{ orden.cliente.telefono }}
                                         </p>
@@ -110,7 +114,7 @@
                     <section class="dashboard-card">
                         <div class="card-header-row" style="margin-bottom: 1rem;">
                             <h2>Estado Operativo de Lavado</h2>
-                            <a href="{% url 'seguimiento_list' %}" class="card-header-link">Ir al Tablero &rarr;</a>
+                            <a href="{% url 'seguimiento_list' %}?orden_id={{ orden.id }}" class="card-header-link">Ir al Tablero &rarr;</a>
                         </div>
                         
                         <div style="display: flex; align-items: center; justify-content: space-between; padding: 1.25rem; background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius); transition: var(--transition);" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
@@ -203,7 +207,7 @@
         if(telefono.length === 10) {
             telefono = '52' + telefono;
         }
-        let texto = `Hola *{{ orden.cliente.nombre }}*, somos LavaFácil.\n\n`;
+        let texto = `Hola *{{ orden.cliente.nombre_completo }}*, somos LavaFácil.\n\n`;
         texto += `Su orden de servicio *#{{ orden.id|stringformat:"06d" }}* ha sido registrada exitosamente y se encuentra en estado: *{{ orden.estado_actual }}*.\n\n`;
         texto += `*Resumen de cuenta:*\n`;
         texto += `• Total a pagar: $ {{ orden.total_a_pagar }}\n`;

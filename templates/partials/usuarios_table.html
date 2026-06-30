@@ -47,21 +47,18 @@
             
             <!-- Botón Activar / Desactivar -->
             {% if request.user != u %}
-            <form method="post" action="{% url 'usuario_toggle_status' u.id %}" style="display: inline-flex; margin: 0;">
-                {% csrf_token %}
-                <button type="submit" 
-                        onclick="return confirm('¿Seguro que deseas {% if u.is_active %}desactivar{% else %}activar{% endif %} la cuenta del usuario: {{ u.username }}?')"
-                        style="background: none; border: none; color: {% if u.is_active %}var(--danger){% else %}var(--success){% endif %}; cursor: pointer; padding: 0.25rem; display: inline-flex; align-items: center;" 
-                        title="{% if u.is_active %}Desactivar usuario{% else %}Activar usuario{% endif %}">
-                    {% if u.is_active %}
-                    <!-- Candado cerrado (bloquear) -->
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                    {% else %}
-                    <!-- Candado abierto (desbloquear) -->
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
-                    {% endif %}
-                </button>
-            </form>
+            <button type="button" 
+                    onclick="openStatusModal('{{ u.id }}', '{{ u.username|escapejs }}', {% if u.is_active %}true{% else %}false{% endif %}, '{% url 'usuario_toggle_status' u.id %}')"
+                    style="background: none; border: none; color: {% if u.is_active %}var(--danger){% else %}var(--success){% endif %}; cursor: pointer; padding: 0.25rem; display: inline-flex; align-items: center;" 
+                    title="{% if u.is_active %}Desactivar usuario{% else %}Activar usuario{% endif %}">
+                {% if u.is_active %}
+                <!-- Candado cerrado (bloquear) -->
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                {% else %}
+                <!-- Candado abierto (desbloquear) -->
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+                {% endif %}
+            </button>
             {% else %}
             <!-- Espaciador para no mostrar botón de desactivar a uno mismo -->
             <span style="width: 26px; height: 26px; display: inline-block;" title="No puedes desactivar tu propia cuenta"></span>

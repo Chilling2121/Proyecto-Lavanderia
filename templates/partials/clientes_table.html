@@ -1,17 +1,19 @@
 {% for cliente in clientes %}
 <tr id="row-{{ cliente.id }}" style="cursor: pointer;" hx-get="{% url 'cliente_historial' cliente.id %}" hx-target="#historial-container" hx-trigger="click">
+    <td>{{ cliente.cedula }}</td>
     <td class="font-medium">{{ cliente.nombre }}</td>
+    <td>{{ cliente.apellido }}</td>
     <td>{{ cliente.telefono }}</td>
     <td>{{ cliente.correo|default:"—" }}</td>
     <td style="display: flex; gap: 0.5rem;" onclick="event.stopPropagation();">
         <!-- Botón Editar -->
-        <button onclick="openEditModal('{{ cliente.id }}', '{{ cliente.nombre|escapejs }}', '{{ cliente.telefono|escapejs }}', '{{ cliente.correo|default:''|escapejs }}', '{{ cliente.direccion|default:''|escapejs }}')" 
+        <button onclick="openEditModal('{{ cliente.id }}', '{{ cliente.cedula|escapejs }}', '{{ cliente.nombre|escapejs }}', '{{ cliente.apellido|escapejs }}', '{{ cliente.telefono|escapejs }}', '{{ cliente.correo|default:''|escapejs }}', '{{ cliente.direccion|default:''|escapejs }}')" 
                 style="background: none; border: none; color: var(--primary); cursor: pointer; padding: 0.25rem;" 
                 title="Editar cliente">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
         </button>
         <!-- Botón Eliminar (Llama a Modal Personalizado) -->
-        <button onclick="openDeleteModal('{{ cliente.id }}', '{{ cliente.nombre|escapejs }}')" 
+        <button onclick="openDeleteModal('{{ cliente.id }}', '{{ cliente.nombre_completo|escapejs }}')" 
                 style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 0.25rem;" 
                 title="Eliminar cliente">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
@@ -20,7 +22,7 @@
 </tr>
 {% empty %}
 <tr>
-    <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
         No se encontraron clientes registrados.
     </td>
 </tr>

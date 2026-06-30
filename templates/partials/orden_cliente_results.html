@@ -1,10 +1,10 @@
 {% for cliente in clientes %}
-<li onclick="selectCliente('{{ cliente.id }}', '{{ cliente.nombre|escapejs }}', '{{ cliente.telefono|escapejs }}')" 
+<li onclick="selectCliente('{{ cliente.id }}', '{{ cliente.nombre_completo|escapejs }}', '{{ cliente.telefono|escapejs }}', '{{ cliente.cedula|escapejs }}')" 
     style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; flex-direction: column; gap: 0.25rem; transition: var(--transition);" 
     onmouseover="this.style.backgroundColor='var(--bg-app)';" 
     onmouseout="this.style.backgroundColor='transparent';">
-    <span style="font-weight: 600; color: var(--text);">{{ cliente.nombre }}</span>
-    <span style="font-size: 0.8rem; color: var(--text-muted);">Teléfono: {{ cliente.telefono }}</span>
+    <span style="font-weight: 600; color: var(--text);">{{ cliente.nombre_completo }}</span>
+    <span style="font-size: 0.8rem; color: var(--text-muted);">Cédula: {{ cliente.cedula }} | Teléfono: {{ cliente.telefono }}</span>
 </li>
 {% empty %}
 <li style="padding: 1rem; color: var(--text-muted); text-align: center; font-size: 0.9rem;">

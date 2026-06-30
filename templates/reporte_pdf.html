@@ -214,7 +214,7 @@
         <tbody>
             {% for c in top_clientes %}
             <tr>
-                <td><b>{{ c.nombre }}</b></td>
+                <td><b>{{ c.nombre_completo }}</b></td>
                 <td class="text-center">{{ c.total_ordenes }}</td>
                 <td class="text-right text-success">${{ c.total_gastado|floatformat:2 }}</td>
             </tr>
@@ -238,7 +238,7 @@
             {% for o in top_deudores %}
             <tr>
                 <td>{{ o.id|stringformat:"06d" }}</td>
-                <td>{{ o.cliente.nombre }}</td>
+                <td>{{ o.cliente.nombre_completo }}</td>
                 <td class="text-right text-danger">${{ o.saldo_pendiente|floatformat:2 }}</td>
             </tr>
             {% empty %}

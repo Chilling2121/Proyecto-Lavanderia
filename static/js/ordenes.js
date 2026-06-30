@@ -34,11 +34,11 @@ const initDeliveryDate = () => {
 };
 
 // Autocompletar y seleccionar cliente desde HTMX (usado en la versión standalone)
-function selectCliente(id, nombre, telefono) {
+function selectCliente(id, nombre, telefono, cedula) {
     document.getElementById('selected_cliente_id').value = id;
     
     document.getElementById('selected-cliente-nombre').textContent = nombre;
-    document.getElementById('selected-cliente-telefono').textContent = `Celular: ${telefono}`;
+    document.getElementById('selected-cliente-telefono').textContent = `Cédula: ${cedula || '9999999999'} | Celular: ${telefono}`;
     
     document.getElementById('cliente-search-container').style.display = 'none';
     document.getElementById('selected-cliente-card').style.display = 'flex';

@@ -66,14 +66,14 @@
                                 <p style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.55rem;">Clientes Frecuentes / Recientes</p>
                                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                                     {% for cliente in clientes_frecuentes %}
-                                    <button type="button" onclick="selectCliente('{{ cliente.id }}', '{{ cliente.nombre|escapejs }}', '{{ cliente.telefono|escapejs }}')"
+                                    <button type="button" onclick="selectCliente('{{ cliente.id }}', '{{ cliente.nombre_completo|escapejs }}', '{{ cliente.telefono|escapejs }}', '{{ cliente.cedula|escapejs }}')"
                                             style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.85rem; font-size: 0.82rem; font-weight: 600; color: var(--primary); background-color: var(--primary-light); border: 1px solid transparent; border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);"
                                             onmouseover="this.style.backgroundColor='rgba(37,99,235,0.15)';"
                                             onmouseout="this.style.backgroundColor='var(--primary-light)';"
-                                            title="Seleccionar a {{ cliente.nombre }}">
+                                            title="Seleccionar a {{ cliente.nombre_completo }}">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                                        <span>{{ cliente.nombre }}</span>
-                                    </button>
+                                        <span>{{ cliente.nombre_completo }}</span>
+                                    </button>ton>
                                     {% empty %}
                                     <span style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">No hay clientes registrados aún.</span>
                                     {% endfor %}

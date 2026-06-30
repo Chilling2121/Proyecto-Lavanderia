@@ -3,8 +3,10 @@ function toggleModal(show) {
     if (!modal) return;
     modal.style.display = show ? 'flex' : 'none';
     if (!show) {
-        clearErrors('new-client-form', 'id_telefono', 'id-tel-error');
+        clearErrors('new-client-form', 'id_cedula', 'id-cedula-error');
         clearErrors('new-client-form', 'id_nombre', 'id-name-error');
+        clearErrors('new-client-form', 'id_apellido', 'id-lastname-error');
+        clearErrors('new-client-form', 'id_telefono', 'id-tel-error');
     }
 }
 
@@ -13,8 +15,10 @@ function toggleEditModal(show) {
     if (!modal) return;
     modal.style.display = show ? 'flex' : 'none';
     if (!show) {
-        clearErrors('edit-client-form', 'edit_telefono', 'edit-tel-error');
+        clearErrors('edit-client-form', 'edit_cedula', 'edit-cedula-error');
         clearErrors('edit-client-form', 'edit_nombre', 'edit-name-error');
+        clearErrors('edit-client-form', 'edit_apellido', 'edit-lastname-error');
+        clearErrors('edit-client-form', 'edit_telefono', 'edit-tel-error');
     }
 }
 
@@ -24,12 +28,14 @@ function toggleDeleteModal(show) {
     modal.style.display = show ? 'flex' : 'none';
 }
 
-function openEditModal(id, nombre, telefono, correo, direccion) {
+function openEditModal(id, cedula, nombre, apellido, telefono, correo, direccion) {
     const form = document.getElementById('edit-client-form');
     if (!form) return;
     form.action = `/clientes/editar/${id}/`;
     
+    document.getElementById('edit_cedula').value = cedula;
     document.getElementById('edit_nombre').value = nombre;
+    document.getElementById('edit_apellido').value = apellido;
     document.getElementById('edit_telefono').value = telefono;
     document.getElementById('edit_correo').value = correo;
     document.getElementById('edit_direccion').value = direccion;
@@ -37,10 +43,10 @@ function openEditModal(id, nombre, telefono, correo, direccion) {
     toggleEditModal(true);
 }
 
-function openDeleteModal(id, nombre) {
+function openDeleteModal(id, nombreCompleto) {
     const text = document.getElementById('delete-modal-text');
     if (!text) return;
-    text.innerHTML = `¿Estás seguro de que deseas eliminar a <strong>${nombre}</strong>?<br><small style="color: var(--danger); display: inline-block; margin-top: 0.5rem;">Esta acción eliminará de forma permanente al cliente y todas sus órdenes asociadas.</small>`;
+    text.innerHTML = `¿Estás seguro de que deseas eliminar a <strong>${nombreCompleto}</strong>?<br><small style="color: var(--danger); display: inline-block; margin-top: 0.5rem;">Esta acción eliminará de forma permanente al cliente y todas sus órdenes asociadas.</small>`;
     
     const btn = document.getElementById('btn-confirm-delete');
     btn.setAttribute('hx-delete', `/clientes/eliminar/${id}/`);
@@ -88,93 +94,199 @@ const clearErrors = (formId, inputId, errorId) => {
     }
 }
 
-const setupFormValidation = (formId, inputId, errorId, nameInputId, nameErrorId) => {
-    const form = document.getElementById(formId);
-    const input = document.getElementById(inputId);
-    const nameInput = document.getElementById(nameInputId);
+function validarCedulaEcuatoriana(cedula) {
+    if (cedula === '9999999999') return true;
+    if (!/^\d{10}$/.test(cedula)) return false;
     
-    if (!form || !input || !nameInput) return;
+    const provincia = parseInt(cedula.substring(0, 2), 10);
+    if (provincia < 1 || (provincia > 24 && provincia !== 30)) return false;
+    
+    const tercerDigito = parseInt(cedula.charAt(2), 10);
+    if (tercerDigito >= 6) return false;
+    
+    const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+    let suma = 0;
+    for (let i = 0; i < 9; i++) {
+        let val = parseInt(cedula.charAt(i), 10) * coeficientes[i];
+        if (val >= 10) val -= 9;
+        suma += val;
+    }
+    
+    const verificador = parseInt(cedula.charAt(9), 10);
+    const residuo = suma % 10;
+    const valEsperado = residuo === 0 ? 0 : 10 - residuo;
+    
+    return verificador === valEsperado;
+}
+
+const setupFormValidation = (formId, fields) => {
+    const form = document.getElementById(formId);
+    if (!form) return;
     
     form.addEventListener('submit', (e) => {
         let hasError = false;
+        let firstErrorInput = null;
         
-        // Validar nombre
-        const nameVal = nameInput.value.trim();
-        let nameErrorDiv = document.getElementById(nameErrorId);
+        // 1. Validar Cédula
+        const cedulaInput = document.getElementById(fields.cedulaId);
+        const cedulaVal = cedulaInput.value.trim();
+        let cedulaErrorDiv = document.getElementById(fields.cedulaErrorId);
+        if (!cedulaErrorDiv) {
+            cedulaErrorDiv = document.createElement('div');
+            cedulaErrorDiv.id = fields.cedulaErrorId;
+            cedulaErrorDiv.style.color = 'var(--danger)';
+            cedulaErrorDiv.style.fontSize = '0.85rem';
+            cedulaErrorDiv.style.fontWeight = '600';
+            cedulaErrorDiv.style.marginTop = '0.35rem';
+            cedulaErrorDiv.style.display = 'none';
+            cedulaInput.parentNode.parentNode.appendChild(cedulaErrorDiv);
+        }
+        
+        if (!validarCedulaEcuatoriana(cedulaVal)) {
+            hasError = true;
+            cedulaErrorDiv.textContent = 'La cédula ingresada no es válida (debe tener 10 dígitos y cumplir el algoritmo o ser 9999999999).';
+            cedulaErrorDiv.style.display = 'block';
+            cedulaInput.style.borderColor = 'var(--danger)';
+            cedulaInput.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.1)';
+            if (!firstErrorInput) firstErrorInput = cedulaInput;
+        } else {
+            cedulaErrorDiv.style.display = 'none';
+            cedulaInput.style.borderColor = '';
+            cedulaInput.style.boxShadow = '';
+        }
+        
+        // 2. Validar Nombres
+        const nombreInput = document.getElementById(fields.nombreId);
+        const nombreVal = nombreInput.value.trim();
+        let nameErrorDiv = document.getElementById(fields.nombreErrorId);
         if (!nameErrorDiv) {
             nameErrorDiv = document.createElement('div');
-            nameErrorDiv.id = nameErrorId;
+            nameErrorDiv.id = fields.nombreErrorId;
             nameErrorDiv.style.color = 'var(--danger)';
             nameErrorDiv.style.fontSize = '0.85rem';
             nameErrorDiv.style.fontWeight = '600';
             nameErrorDiv.style.marginTop = '0.35rem';
             nameErrorDiv.style.display = 'none';
-            nameInput.parentNode.parentNode.appendChild(nameErrorDiv);
+            nombreInput.parentNode.parentNode.appendChild(nameErrorDiv);
         }
         
-        if (nameVal === '') {
+        if (nombreVal === '') {
             hasError = true;
-            nameErrorDiv.textContent = 'El nombre completo es requerido.';
+            nameErrorDiv.textContent = 'Los nombres son requeridos.';
             nameErrorDiv.style.display = 'block';
-            nameInput.style.borderColor = 'var(--danger)';
-            nameInput.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.1)';
+            nombreInput.style.borderColor = 'var(--danger)';
+            nombreInput.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.1)';
+            if (!firstErrorInput) firstErrorInput = nombreInput;
         } else {
             nameErrorDiv.style.display = 'none';
-            nameInput.style.borderColor = '';
-            nameInput.style.boxShadow = '';
+            nombreInput.style.borderColor = '';
+            nombreInput.style.boxShadow = '';
+        }
+
+        // 3. Validar Apellidos
+        const apellidoInput = document.getElementById(fields.apellidoId);
+        const apellidoVal = apellidoInput.value.trim();
+        let lastnameErrorDiv = document.getElementById(fields.apellidoErrorId);
+        if (!lastnameErrorDiv) {
+            lastnameErrorDiv = document.createElement('div');
+            lastnameErrorDiv.id = fields.apellidoErrorId;
+            lastnameErrorDiv.style.color = 'var(--danger)';
+            lastnameErrorDiv.style.fontSize = '0.85rem';
+            lastnameErrorDiv.style.fontWeight = '600';
+            lastnameErrorDiv.style.marginTop = '0.35rem';
+            lastnameErrorDiv.style.display = 'none';
+            apellidoInput.parentNode.parentNode.appendChild(lastnameErrorDiv);
         }
         
-        // Validar teléfono
-        const val = input.value.trim();
-        let errorDiv = document.getElementById(errorId);
-        if (!errorDiv) {
-            errorDiv = document.createElement('div');
-            errorDiv.id = errorId;
-            errorDiv.style.color = 'var(--danger)';
-            errorDiv.style.fontSize = '0.85rem';
-            errorDiv.style.fontWeight = '600';
-            errorDiv.style.marginTop = '0.35rem';
-            errorDiv.style.display = 'none';
-            input.parentNode.parentNode.appendChild(errorDiv);
-        }
-        
-        if (val.length !== 10 || !/^\d{10}$/.test(val)) {
+        if (apellidoVal === '') {
             hasError = true;
-            errorDiv.textContent = 'El celular debe tener exactamente 10 dígitos numéricos (ej. 0991234567).';
-            errorDiv.style.display = 'block';
-            input.style.borderColor = 'var(--danger)';
-            input.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.1)';
+            lastnameErrorDiv.textContent = 'Los apellidos son requeridos.';
+            lastnameErrorDiv.style.display = 'block';
+            apellidoInput.style.borderColor = 'var(--danger)';
+            apellidoInput.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.1)';
+            if (!firstErrorInput) firstErrorInput = apellidoInput;
         } else {
-            errorDiv.style.display = 'none';
-            input.style.borderColor = '';
-            input.style.boxShadow = '';
+            lastnameErrorDiv.style.display = 'none';
+            apellidoInput.style.borderColor = '';
+            apellidoInput.style.boxShadow = '';
+        }
+        
+        // 4. Validar Teléfono
+        const telInput = document.getElementById(fields.telefonoId);
+        const telVal = telInput.value.trim();
+        let telErrorDiv = document.getElementById(fields.telefonoErrorId);
+        if (!telErrorDiv) {
+            telErrorDiv = document.createElement('div');
+            telErrorDiv.id = fields.telefonoErrorId;
+            telErrorDiv.style.color = 'var(--danger)';
+            telErrorDiv.style.fontSize = '0.85rem';
+            telErrorDiv.style.fontWeight = '600';
+            telErrorDiv.style.marginTop = '0.35rem';
+            telErrorDiv.style.display = 'none';
+            telInput.parentNode.parentNode.appendChild(telErrorDiv);
+        }
+        
+        if (telVal.length !== 10 || !/^\d{10}$/.test(telVal)) {
+            hasError = true;
+            telErrorDiv.textContent = 'El celular debe tener exactamente 10 dígitos numéricos (ej. 0991234567).';
+            telErrorDiv.style.display = 'block';
+            telInput.style.borderColor = 'var(--danger)';
+            telInput.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.1)';
+            if (!firstErrorInput) firstErrorInput = telInput;
+        } else {
+            telErrorDiv.style.display = 'none';
+            telInput.style.borderColor = '';
+            telInput.style.boxShadow = '';
         }
         
         if (hasError) {
             e.preventDefault();
-            if (nameVal === '') {
-                nameInput.focus();
-            } else {
-                input.focus();
-            }
+            if (firstErrorInput) firstErrorInput.focus();
         }
     });
 
-    input.addEventListener('input', () => {
-        clearErrors(formId, inputId, errorId);
+    // Listeners para limpiar errores en tiempo real
+    document.getElementById(fields.cedulaId).addEventListener('input', () => {
+        clearErrors(formId, fields.cedulaId, fields.cedulaErrorId);
     });
-    
-    nameInput.addEventListener('input', () => {
-        clearErrors(formId, nameInputId, nameErrorId);
+    document.getElementById(fields.nombreId).addEventListener('input', () => {
+        clearErrors(formId, fields.nombreId, fields.nombreErrorId);
+    });
+    document.getElementById(fields.apellidoId).addEventListener('input', () => {
+        clearErrors(formId, fields.apellidoId, fields.apellidoErrorId);
+    });
+    document.getElementById(fields.telefonoId).addEventListener('input', () => {
+        clearErrors(formId, fields.telefonoId, fields.telefonoErrorId);
     });
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    restrictToNumbers(document.getElementById('id_cedula'));
+    restrictToNumbers(document.getElementById('edit_cedula'));
     restrictToNumbers(document.getElementById('id_telefono'));
     restrictToNumbers(document.getElementById('edit_telefono'));
     
-    setupFormValidation('new-client-form', 'id_telefono', 'id-tel-error', 'id_nombre', 'id-name-error');
-    setupFormValidation('edit-client-form', 'edit_telefono', 'edit-tel-error', 'edit_nombre', 'edit-name-error');
+    setupFormValidation('new-client-form', {
+        cedulaId: 'id_cedula',
+        cedulaErrorId: 'id-cedula-error',
+        nombreId: 'id_nombre',
+        nombreErrorId: 'id-name-error',
+        apellidoId: 'id_apellido',
+        apellidoErrorId: 'id-lastname-error',
+        telefonoId: 'id_telefono',
+        telefonoErrorId: 'id-tel-error'
+    });
+    
+    setupFormValidation('edit-client-form', {
+        cedulaId: 'edit_cedula',
+        cedulaErrorId: 'edit-cedula-error',
+        nombreId: 'edit_nombre',
+        nombreErrorId: 'edit-name-error',
+        apellidoId: 'edit_apellido',
+        apellidoErrorId: 'edit-lastname-error',
+        telefonoId: 'edit_telefono',
+        telefonoErrorId: 'edit-tel-error'
+    });
 
     const tbody = document.getElementById('clientes-tbody');
     if (tbody) {

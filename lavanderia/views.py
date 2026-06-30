@@ -27,6 +27,33 @@ ESTADOS_LAVADO = [
     'Entregada',
 ]
 
+def validar_cedula_ecuatoriana(cedula):
+    if cedula == '9999999999':
+        return True
+    if not re.match(r'^\d{10}$', cedula):
+        return False
+    
+    provincia = int(cedula[:2])
+    if not (1 <= provincia <= 24 or provincia == 30):
+        return False
+    
+    tercer_digito = int(cedula[2])
+    if tercer_digito >= 6:
+        return False
+    
+    coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2]
+    suma = 0
+    for i in range(9):
+        val = int(cedula[i]) * coeficientes[i]
+        if val >= 10:
+            val -= 9
+        suma += val
+    
+    verificador = int(cedula[9])
+    residuo = suma % 10
+    val_esperado = 0 if residuo == 0 else 10 - residuo
+    
+    return verificador == val_esperado
 
 def home_redirect(request):
     if request.user.is_authenticated:
@@ -120,7 +147,7 @@ def clientes_search(request):
     query = request.GET.get('search', '').strip()
     if query:
         clientes = Cliente.objects.filter(
-            Q(nombre__icontains=query) | Q(telefono__icontains=query)
+            Q(nombre__icontains=query) | Q(apellido__icontains=query) | Q(cedula__icontains=query) | Q(telefono__icontains=query)
         ).order_by('-id')
     else:
         clientes = Cliente.objects.all().order_by('-id')
@@ -141,22 +168,39 @@ def cliente_historial(request, cliente_id):
 @group_required('Administrador', 'Cajero')
 def cliente_create(request):
     if request.method == 'POST':
-        nombre = request.POST.get('nombre')
+        cedula = request.POST.get('cedula', '').strip()
+        nombre = request.POST.get('nombre', '').strip()
+        apellido = request.POST.get('apellido', '').strip()
         telefono = request.POST.get('telefono', '').strip()
         correo = request.POST.get('correo')
         direccion = request.POST.get('direccion')
+        
+        # Validaciones
+        if not validar_cedula_ecuatoriana(cedula):
+            messages.error(request, "Error al registrar cliente: La cédula ingresada no es válida.")
+            return redirect('clientes_list')
+            
+        if cedula != '9999999999' and Cliente.objects.filter(cedula=cedula).exists():
+            messages.error(request, "Error al registrar cliente: La cédula ya está registrada para otro cliente.")
+            return redirect('clientes_list')
+            
+        if not nombre or not apellido:
+            messages.error(request, "Error al registrar cliente: El nombre y el apellido son obligatorios.")
+            return redirect('clientes_list')
         
         if not re.match(r'^\d{10}$', telefono):
             messages.error(request, "Error al registrar cliente: El número de celular debe tener exactamente 10 dígitos.")
             return redirect('clientes_list')
         
         Cliente.objects.create(
+            cedula=cedula,
             nombre=nombre,
+            apellido=apellido,
             telefono=telefono,
             correo=correo or None,
             direccion=direccion or None
         )
-        messages.success(request, f"Cliente '{nombre}' registrado con éxito.")
+        messages.success(request, f"Cliente '{nombre} {apellido}' registrado con éxito.")
     return redirect('clientes_list')
 
 @login_required
@@ -165,21 +209,38 @@ def cliente_edit(request, cliente_id):
     if request.method == 'POST':
         try:
             cliente = Cliente.objects.get(id=cliente_id)
-            nombre = request.POST.get('nombre')
+            cedula = request.POST.get('cedula', '').strip()
+            nombre = request.POST.get('nombre', '').strip()
+            apellido = request.POST.get('apellido', '').strip()
             telefono = request.POST.get('telefono', '').strip()
             correo = request.POST.get('correo')
             direccion = request.POST.get('direccion')
+            
+            # Validaciones
+            if not validar_cedula_ecuatoriana(cedula):
+                messages.error(request, "Error al editar cliente: La cédula ingresada no es válida.")
+                return redirect('clientes_list')
+                
+            if cedula != '9999999999' and Cliente.objects.filter(cedula=cedula).exclude(id=cliente.id).exists():
+                messages.error(request, "Error al editar cliente: La cédula ya está registrada para otro cliente.")
+                return redirect('clientes_list')
+                
+            if not nombre or not apellido:
+                messages.error(request, "Error al editar cliente: El nombre y el apellido son obligatorios.")
+                return redirect('clientes_list')
             
             if not re.match(r'^\d{10}$', telefono):
                 messages.error(request, "Error al editar cliente: El número de celular debe tener exactamente 10 dígitos.")
                 return redirect('clientes_list')
             
+            cliente.cedula = cedula
             cliente.nombre = nombre
+            cliente.apellido = apellido
             cliente.telefono = telefono
             cliente.correo = correo or None
             cliente.direccion = direccion or None
             cliente.save()
-            messages.success(request, f"Datos del cliente '{nombre}' actualizados con éxito.")
+            messages.success(request, f"Datos del cliente '{cliente.nombre_completo}' actualizados con éxito.")
         except Cliente.DoesNotExist:
             messages.error(request, "Error al editar cliente: El cliente especificado no existe.")
     return redirect('clientes_list')
@@ -328,7 +389,7 @@ def orden_cliente_search_api(request):
     query = request.GET.get('search', '').strip()
     if query:
         clientes = Cliente.objects.filter(
-            Q(nombre__icontains=query) | Q(telefono__icontains=query)
+            Q(nombre__icontains=query) | Q(apellido__icontains=query) | Q(cedula__icontains=query) | Q(telefono__icontains=query)
         ).order_by('-id')[:5]
     else:
         clientes = []
@@ -618,6 +679,9 @@ def orden_detail(request, orden_id):
             'subtotal': subtotal
         })
 
+    turno_activo = TurnoCaja.objects.filter(estado='Abierta').first()
+    efectivo_disponible = turno_activo.efectivo_disponible if turno_activo else Decimal('0.00')
+
     context = {
         'orden': orden,
         'prendas_detalle': prendas_detalle,
@@ -626,6 +690,7 @@ def orden_detail(request, orden_id):
         'siguiente_estado': siguiente_estado,
         'estados_lavado': ESTADOS_LAVADO,
         'estado_actual_idx': ESTADOS_LAVADO.index(estado_actual) if estado_actual in ESTADOS_LAVADO else 0,
+        'efectivo_disponible': efectivo_disponible,
     }
 
     return render(request, 'orden_detalle.html', context)
@@ -640,6 +705,16 @@ def orden_register_payment(request, orden_id):
             orden = Orden.objects.get(id=orden_id)
         except Orden.DoesNotExist:
             return HttpResponse("<p style='color:var(--danger);'>Orden no encontrada.</p>", status=404)
+
+        # Validar si el turno de caja está abierto antes de registrar cobros
+        turno_activo = TurnoCaja.objects.filter(estado='Abierta').first()
+        if not turno_activo:
+            pagos = Pago.objects.filter(orden=orden).order_by('fecha_pago')
+            return render(request, 'partials/orden_payment_panel.html', {
+                'orden': orden,
+                'pagos': pagos,
+                'payment_error': 'No se pueden registrar cobros si el turno de caja está cerrado. Abre un turno en el módulo de Caja primero.'
+            })
 
         try:
             monto_str = request.POST.get('monto', '0.00').strip()
@@ -687,9 +762,23 @@ def orden_register_payment(request, orden_id):
                 pass
 
         if metodo_pago == 'Efectivo' and cambio > Decimal('0.00'):
+            # Calcular efectivo disponible en caja usando la propiedad del modelo
+            efectivo_disponible = turno_activo.efectivo_disponible
+            
+            if cambio > efectivo_disponible:
+                return render(request, 'partials/orden_payment_panel.html', {
+                    'orden': orden,
+                    'pagos': Pago.objects.filter(orden=orden).order_by('fecha_pago'),
+                    'payment_error': f'No hay suficiente efectivo físico en caja para entregar el vuelto de ${cambio:.2f} (Efectivo disponible en caja: ${efectivo_disponible:.2f}).',
+                    'efectivo_disponible': efectivo_disponible,
+                })
+
             if not confirmacion_cambio:
                 return render(request, 'partials/orden_payment_panel.html', {
-                    'orden': orden, 'pagos': pagos, 'payment_error': 'Debe confirmar que ha entregado el cambio exacto al cliente.'
+                    'orden': orden,
+                    'pagos': pagos,
+                    'payment_error': 'Debe confirmar que ha entregado el cambio exacto al cliente.',
+                    'efectivo_disponible': efectivo_disponible,
                 })
             detalles_cambio = f"Recibido: ${efectivo_recibido:.2f} | Cambio entregado: ${cambio:.2f}"
             if observaciones_pago:
@@ -726,10 +815,14 @@ def orden_register_payment(request, orden_id):
             orden.save()
 
         pagos = Pago.objects.filter(orden=orden).order_by('fecha_pago')
+        
+        # Calcular efectivo disponible actualizado después de registrar el pago
+        efectivo_disponible = turno_activo.efectivo_disponible if turno_activo else Decimal('0.00')
 
         context = {
             'orden': orden,
             'pagos': pagos,
+            'efectivo_disponible': efectivo_disponible,
             'cambio_info': {
                 'monto_cobrado': monto_registrado,
                 'efectivo_recibido': efectivo_recibido,
@@ -1073,10 +1166,8 @@ def seguimiento_advance_status(request, orden_id):
         except ValueError:
             pass
             
-        referer = request.META.get('HTTP_REFERER')
-        if referer:
-            return redirect(referer)
-        return redirect('seguimiento_list')
+        from django.urls import reverse
+        return redirect(reverse('seguimiento_list') + f'?orden_id={orden.id}')
     
     return HttpResponse(status=405)
 
@@ -1085,26 +1176,45 @@ def seguimiento_advance_status(request, orden_id):
 #  MÓDULO DE REPORTES
 # ==========================================
 
-def get_report_data(periodo):
+def get_report_data(periodo, start_date=None, end_date=None):
     local_now = timezone.localtime(timezone.now())
     
-    if periodo == 'hoy':
-        fecha_inicio = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
-        fecha_fin = local_now.replace(hour=23, minute=59, second=59, microsecond=999999)
-        titulo_periodo = "Hoy"
-    elif periodo == 'semana':
-        dias_restar = local_now.weekday()
-        fecha_inicio = (local_now - timezone.timedelta(days=dias_restar)).replace(hour=0, minute=0, second=0, microsecond=0)
-        fecha_fin = local_now.replace(hour=23, minute=59, second=59, microsecond=999999)
-        titulo_periodo = "Esta Semana"
-    elif periodo == 'historico':
-        fecha_inicio = None
-        fecha_fin = None
-        titulo_periodo = "Histórico (Todo)"
-    else: # mes (default)
-        fecha_inicio = local_now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        fecha_fin = local_now.replace(hour=23, minute=59, second=59, microsecond=999999)
-        titulo_periodo = "Este Mes"
+    fecha_inicio = None
+    fecha_fin = None
+    titulo_periodo = ""
+    
+    if start_date and end_date:
+        try:
+            from django.utils.dateparse import parse_date
+            parsed_start = parse_date(start_date)
+            parsed_end = parse_date(end_date)
+            if parsed_start and parsed_end:
+                fecha_inicio = timezone.make_aware(timezone.datetime.combine(parsed_start, timezone.datetime.min.time()))
+                fecha_fin = timezone.make_aware(timezone.datetime.combine(parsed_end, timezone.datetime.max.time()))
+                titulo_periodo = f"Personalizado: {parsed_start.strftime('%d/%m/%Y')} al {parsed_end.strftime('%d/%m/%Y')}"
+                periodo = 'rango'
+        except Exception:
+            pass
+
+    if not titulo_periodo:
+        if periodo == 'hoy':
+            fecha_inicio = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+            fecha_fin = local_now.replace(hour=23, minute=59, second=59, microsecond=999999)
+            titulo_periodo = "Hoy"
+        elif periodo == 'semana':
+            dias_restar = local_now.weekday()
+            fecha_inicio = (local_now - timezone.timedelta(days=dias_restar)).replace(hour=0, minute=0, second=0, microsecond=0)
+            fecha_fin = local_now.replace(hour=23, minute=59, second=59, microsecond=999999)
+            titulo_periodo = "Esta Semana"
+        elif periodo == 'historico':
+            fecha_inicio = None
+            fecha_fin = None
+            titulo_periodo = "Histórico (Todo)"
+        else: # mes (default)
+            fecha_inicio = local_now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            fecha_fin = local_now.replace(hour=23, minute=59, second=59, microsecond=999999)
+            titulo_periodo = "Este Mes"
+            periodo = 'mes'
         
     pagos_filter = Q()
     ordenes_filter = Q()
@@ -1128,10 +1238,16 @@ def get_report_data(periodo):
     
     ordenes_por_estado = ordenes.values('estado_actual').annotate(total=Count('id')).order_by('-total')
 
-    top_clientes = Cliente.objects.annotate(
-        total_gastado=Sum('ordenes__total_a_pagar', filter=Q(ordenes__fecha_recepcion__range=(fecha_inicio, fecha_fin)) if fecha_inicio else None),
-        total_ordenes=Count('ordenes', filter=Q(ordenes__fecha_recepcion__range=(fecha_inicio, fecha_fin)) if fecha_inicio else None)
-    ).exclude(total_gastado=None).order_by('-total_gastado')[:5]
+    if fecha_inicio and fecha_fin:
+        top_clientes = Cliente.objects.annotate(
+            total_gastado=Sum('ordenes__total_a_pagar', filter=Q(ordenes__fecha_recepcion__range=(fecha_inicio, fecha_fin))),
+            total_ordenes=Count('ordenes', filter=Q(ordenes__fecha_recepcion__range=(fecha_inicio, fecha_fin)))
+        ).exclude(total_gastado=None).order_by('-total_gastado')[:5]
+    else:
+        top_clientes = Cliente.objects.annotate(
+            total_gastado=Sum('ordenes__total_a_pagar'),
+            total_ordenes=Count('ordenes')
+        ).exclude(total_gastado=None).order_by('-total_gastado')[:5]
 
     servicios_stats = PrendaOrden.objects.filter(
         orden__fecha_recepcion__range=(fecha_inicio, fecha_fin) if fecha_inicio else Q()
@@ -1152,13 +1268,17 @@ def get_report_data(periodo):
         'ordenes_por_estado': ordenes_por_estado,
         'top_clientes': top_clientes,
         'servicios_stats': servicios_stats,
+        'fecha_inicio_str': start_date or '',
+        'fecha_fin_str': end_date or '',
     }
 
 @login_required
 @group_required('Administrador')
 def reportes_dashboard(request):
     periodo = request.GET.get('periodo', 'mes')
-    context = get_report_data(periodo)
+    fecha_inicio = request.GET.get('fecha_inicio', '').strip()
+    fecha_fin = request.GET.get('fecha_fin', '').strip()
+    context = get_report_data(periodo, fecha_inicio, fecha_fin)
     return render(request, 'reportes.html', context)
 
 import openpyxl
@@ -1174,7 +1294,9 @@ from django.template.loader import get_template
 @group_required('Administrador')
 def reportes_export_excel(request):
     periodo = request.GET.get('periodo', 'mes')
-    data = get_report_data(periodo)
+    fecha_inicio = request.GET.get('fecha_inicio', '').strip()
+    fecha_fin = request.GET.get('fecha_fin', '').strip()
+    data = get_report_data(periodo, fecha_inicio, fecha_fin)
     
     wb = openpyxl.Workbook()
     
@@ -1212,7 +1334,7 @@ def reportes_export_excel(request):
             cell.font = header_font
             cell.fill = header_fill
     for c in data['top_clientes']:
-        ws2.append([c.nombre, c.total_ordenes, f"${c.total_gastado:.2f}"])
+        ws2.append([c.nombre_completo, c.total_ordenes, f"${c.total_gastado:.2f}"])
     ws2.column_dimensions['A'].width = 30
     ws2.column_dimensions['C'].width = 15
 
@@ -1223,7 +1345,7 @@ def reportes_export_excel(request):
             cell.font = header_font
             cell.fill = header_fill
     for d in data['top_deudores']:
-        ws3.append([f"#{d.id:06d}", d.cliente.nombre, d.cliente.telefono, f"${d.saldo_pendiente:.2f}"])
+        ws3.append([f"#{d.id:06d}", d.cliente.nombre_completo, d.cliente.telefono, f"${d.saldo_pendiente:.2f}"])
     ws3.column_dimensions['A'].width = 15
     ws3.column_dimensions['B'].width = 30
     ws3.column_dimensions['C'].width = 15
@@ -1238,7 +1360,9 @@ def reportes_export_excel(request):
 @group_required('Administrador')
 def reportes_export_pdf(request):
     periodo = request.GET.get('periodo', 'mes')
-    data = get_report_data(periodo)
+    fecha_inicio = request.GET.get('fecha_inicio', '').strip()
+    fecha_fin = request.GET.get('fecha_fin', '').strip()
+    data = get_report_data(periodo, fecha_inicio, fecha_fin)
     
     from .models import Configuracion
     data['config'] = Configuracion.load()
@@ -1339,6 +1463,10 @@ def caja_abrir(request):
         except InvalidOperation:
             saldo_inicial = Decimal('0.00')
             
+        if saldo_inicial < Decimal('10.00'):
+            messages.error(request, 'El turno de caja debe iniciarse con un fondo mínimo obligatorio de $10.00 para asegurar el cambio inicial.')
+            return redirect('caja_dashboard')
+            
         TurnoCaja.objects.create(
             usuario=request.user,
             saldo_inicial=saldo_inicial,
@@ -1361,6 +1489,10 @@ def caja_cerrar(request):
             saldo_real = Decimal(request.POST.get('saldo_final_real', '0.00'))
         except InvalidOperation:
             saldo_real = Decimal('0.00')
+            
+        if saldo_real < 0:
+            messages.error(request, 'El saldo físico real en caja no puede ser negativo.')
+            return redirect('caja_dashboard')
             
         observaciones = request.POST.get('observaciones', '')
         
@@ -1402,6 +1534,21 @@ def caja_movimiento_crear(request):
             monto = Decimal('0.00')
             
         if monto > 0 and concepto:
+            if tipo == 'Egreso':
+                # Calcular saldo actual
+                pagos = Pago.objects.filter(turno=turno)
+                ingresos_ordenes = pagos.aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+                
+                movimientos = MovimientoCaja.objects.filter(turno=turno)
+                ingresos_extra = movimientos.filter(tipo='Ingreso').aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+                egresos = movimientos.filter(tipo='Egreso').aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
+                
+                saldo_calculado = turno.saldo_inicial + ingresos_ordenes + ingresos_extra - egresos
+                
+                if monto > saldo_calculado:
+                    messages.error(request, f'No se puede registrar el egreso. Fondos insuficientes en caja (Disponible: ${saldo_calculado:.2f}).')
+                    return redirect('caja_dashboard')
+
             MovimientoCaja.objects.create(
                 turno=turno,
                 tipo=tipo,
@@ -1426,11 +1573,11 @@ def export_clientes_csv(request):
     response['Content-Disposition'] = 'attachment; filename="clientes.csv"'
     
     writer = csv.writer(response)
-    writer.writerow(['ID', 'Nombre', 'Teléfono', 'Correo', 'Dirección'])
+    writer.writerow(['ID', 'Cédula', 'Nombres', 'Apellidos', 'Teléfono', 'Correo', 'Dirección'])
     
     clientes = Cliente.objects.all().order_by('id')
     for c in clientes:
-        writer.writerow([c.id, c.nombre, c.telefono, c.correo or '', c.direccion or ''])
+        writer.writerow([c.id, c.cedula, c.nombre, c.apellido, c.telefono, c.correo or '', c.direccion or ''])
         
     return response
 
@@ -1447,7 +1594,7 @@ def export_ordenes_csv(request):
     for o in ordenes:
         writer.writerow([
             o.id, 
-            o.cliente.nombre, 
+            o.cliente.nombre_completo, 
             timezone.localtime(o.fecha_recepcion).strftime("%Y-%m-%d %H:%M"), 
             o.estado_actual, 
             o.estado_pago, 
