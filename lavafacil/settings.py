@@ -90,6 +90,8 @@ WSGI_APPLICATION = 'lavafacil.wsgi.application'
 
 import dj_database_url
 
+DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite')
+
 if os.getenv('DATABASE_URL'):
     DATABASES = {
         'default': dj_database_url.config(
@@ -98,10 +100,7 @@ if os.getenv('DATABASE_URL'):
             conn_health_checks=True,
         )
     }
-else:
-    DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite')
-
-if DB_ENGINE == 'mysql':
+elif DB_ENGINE == 'mysql':
     try:
         import pymysql
         pymysql.install_as_MySQLdb()
