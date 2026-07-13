@@ -230,12 +230,12 @@
             
             <div class="form-group">
                 <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text);">Efectivo Real en Caja (Físico)</label>
-                <input type="number" step="0.01" min="0.00" name="saldo_final_real" required value="{{ saldo_calculado|stringformat:'.2f' }}" style="width: 100%; padding: 1rem; border-radius: var(--radius-sm); border: 2px solid var(--border); background: var(--bg-app); color: var(--text); font-weight: 700; font-size: 1.5rem; text-align: left; font-family: var(--font); transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'" oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);">
+                <input type="number" step="0.01" min="0.00" name="saldo_final_real" id="saldo_final_real" required value="{{ saldo_calculado|stringformat:'.2f' }}" style="width: 100%; padding: 1rem; border-radius: var(--radius-sm); border: 2px solid var(--border); background: var(--bg-app); color: var(--text); font-weight: 700; font-size: 1.5rem; text-align: left; font-family: var(--font); transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/^0+(?=\d)/, ''); if(this.value.length > 8) this.value = this.value.slice(0, 8); verificarCuadre();">
             </div>
             
             <div class="form-group">
                 <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text);">Observaciones (Si hay faltante/sobrante)</label>
-                <textarea name="observaciones" rows="3" placeholder="Opcional..." style="width: 100%; padding: 0.85rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-app); color: var(--text); font-size: 0.95rem; font-family: var(--font); resize: none; transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+                <textarea name="observaciones" id="observaciones_cierre" rows="3" placeholder="Opcional..." style="width: 100%; padding: 0.85rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-app); color: var(--text); font-size: 0.95rem; font-family: var(--font); resize: none; transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"></textarea>
             </div>
             
             <div style="display: flex; gap: 1rem; margin-top: 1rem;">
@@ -246,5 +246,34 @@
     </div>
 </div>
 {% endif %}
+
+<script>
+    const saldoEsperadoStr = "{{ saldo_calculado|stringformat:'.2f'|default:'0.00' }}".replace(',', '.');
+    const saldoEsperado = parseFloat(saldoEsperadoStr) || 0;
+    
+    function verificarCuadre() {
+        const inputReal = document.getElementById('saldo_final_real');
+        const observaciones = document.getElementById('observaciones_cierre');
+        if (!inputReal || !observaciones) return;
+        
+        let valorReal = parseFloat(inputReal.value || 0);
+        let diferencia = Math.abs(saldoEsperado - valorReal);
+        
+        if (diferencia > 0.01) {
+            observaciones.required = true;
+            observaciones.placeholder = "OBLIGATORIO: Explique el motivo del descuadre detectado por $" + diferencia.toFixed(2);
+            observaciones.style.borderColor = "var(--danger)";
+        } else {
+            observaciones.required = false;
+            observaciones.placeholder = "Opcional...";
+            observaciones.style.borderColor = "var(--border)";
+        }
+    }
+    
+    // Check on load
+    document.addEventListener("DOMContentLoaded", function() {
+        verificarCuadre();
+    });
+</script>
 
 {% endblock %}

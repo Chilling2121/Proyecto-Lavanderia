@@ -266,7 +266,7 @@ def cliente_delete(request, cliente_id):
 # ==========================================
 
 @login_required
-@group_required('Administrador', 'Cajero')
+@group_required('Administrador')
 def servicios_list(request):
     servicios = Servicio.objects.all().order_by('nombre')
     return render(request, 'servicios.html', {'servicios': servicios})
@@ -1512,7 +1512,7 @@ def caja_cerrar(request):
             messages.error(request, 'El saldo físico real en caja no puede ser negativo.')
             return redirect('caja_dashboard')
             
-        observaciones = request.POST.get('observaciones', '')
+        observaciones = request.POST.get('observaciones', '').strip()
         
         # Calcular saldo esperado
         pagos = Pago.objects.filter(turno=turno)
@@ -1523,6 +1523,12 @@ def caja_cerrar(request):
         egresos = movimientos.filter(tipo='Egreso').aggregate(Sum('monto'))['monto__sum'] or Decimal('0.00')
         
         saldo_esperado = turno.saldo_inicial + ingresos_ordenes + ingresos_extra - egresos
+        
+        # Validar cuadre obligatorio
+        diferencia = abs(saldo_esperado - saldo_real)
+        if diferencia > Decimal('0.01') and not observaciones:
+            messages.error(request, f'⚠️ Descuadre detectado (Diferencia: ${diferencia}). Es OBLIGATORIO escribir observaciones explicando el motivo del faltante o sobrante.')
+            return redirect('caja_dashboard')
         
         turno.saldo_final_esperado = saldo_esperado
         turno.saldo_final_real = saldo_real
@@ -1690,14 +1696,14 @@ def mi_perfil(request):
 from datetime import datetime
 
 @login_required
-@group_required('Administrador', 'Cajero')
+@group_required('Administrador')
 def promociones_list(request):
     promociones = Promocion.objects.all().order_by('-fecha_inicio')
     context = {'promociones': promociones}
     return render(request, 'promociones.html', context)
 
 @login_required
-@group_required('Administrador', 'Cajero')
+@group_required('Administrador')
 def promociones_search(request):
     query = request.GET.get('search', '')
     if query:
@@ -1707,7 +1713,7 @@ def promociones_search(request):
     return render(request, 'partials/promociones_table.html', {'promociones': promociones})
 
 @login_required
-@group_required('Administrador', 'Cajero')
+@group_required('Administrador')
 def promocion_create(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
@@ -1735,7 +1741,7 @@ def promocion_create(request):
     return redirect('promociones_list')
 
 @login_required
-@group_required('Administrador', 'Cajero')
+@group_required('Administrador')
 def promocion_edit(request, id):
     promocion = get_object_or_404(Promocion, id=id)
     if request.method == 'POST':
@@ -1754,7 +1760,7 @@ def promocion_edit(request, id):
     return redirect('promociones_list')
 
 @login_required
-@group_required('Administrador', 'Cajero')
+@group_required('Administrador')
 def promocion_delete(request, id):
     promocion = get_object_or_404(Promocion, id=id)
     promocion.delete()
@@ -1762,7 +1768,7 @@ def promocion_delete(request, id):
     return redirect('promociones_list')
 
 @login_required
-@group_required('Administrador', 'Cajero')
+@group_required('Administrador')
 def promocion_toggle(request, id):
     promocion = get_object_or_404(Promocion, id=id)
     promocion.esta_activa = not promocion.esta_activa
