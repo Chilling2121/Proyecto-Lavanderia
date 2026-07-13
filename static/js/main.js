@@ -70,7 +70,16 @@ document.addEventListener('htmx:afterSwap', (e) => {
             if (!select.tomselect) {
                 new TomSelect(select, {
                     create: false,
-                    sortField: { field: "text", direction: "asc" }
+                    controlInput: null,
+                    wrapperClass: 'ts-wrapper ts-no-typing',
+                    sortField: { field: "text", direction: "asc" },
+                    onInitialize: function() {
+                        if (this.control_input) {
+                            this.control_input.readOnly = true;
+                            this.control_input.disabled = true;
+                            this.control_input.style.display = 'none';
+                        }
+                    }
                 });
             }
         });

@@ -319,4 +319,20 @@
         }
     });
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'ver_reportes') {
+            if (typeof showToast === 'function') {
+                setTimeout(() => {
+                    showToast("Aquí puedes consultar los reportes financieros y operativos. Usa los filtros de período para personalizar la vista.", "info");
+                }, 300);
+            }
+            // Limpiar la URL para evitar notificaciones dobles al recargar
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({path: newUrl}, '', newUrl);
+        }
+    });
+</script>
 {% endblock %}

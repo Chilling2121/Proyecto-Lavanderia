@@ -11,74 +11,181 @@
     </div>
     
     <ul class="sidebar-menu">
-        <li class="sidebar-item {% if active_tab == 'dashboard' %}active{% endif %}">
+        <!-- Dashboard: Admin, Cajero -->
+        <li class="sidebar-item {% if active_tab == 'dashboard' %}active{% endif %}" {% if not request.user|has_group:"Administrador,Cajero" %}style="opacity: 0.5; filter: grayscale(100%);"{% endif %}>
+            {% if request.user|has_group:"Administrador,Cajero" %}
             <a href="{% url 'dashboard' %}">
+            {% else %}
+            <a href="javascript:void(0)" onclick="showToast('Acceso Denegado: Tu rol no tiene permisos para este módulo.', 'error');" style="cursor: not-allowed;">
+            {% endif %}
                 <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
-                <span>Dashboard</span>
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span>Dashboard</span>
+                    {% if not request.user|has_group:"Administrador,Cajero" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    {% endif %}
+                </div>
             </a>
         </li>
-        <li class="sidebar-item {% if active_tab == 'clientes' %}active{% endif %}">
+
+        <!-- Clientes: Admin, Cajero -->
+        <li class="sidebar-item {% if active_tab == 'clientes' %}active{% endif %}" {% if not request.user|has_group:"Administrador,Cajero" %}style="opacity: 0.5; filter: grayscale(100%);"{% endif %}>
+            {% if request.user|has_group:"Administrador,Cajero" %}
             <a href="{% url 'clientes_list' %}">
+            {% else %}
+            <a href="javascript:void(0)" onclick="showToast('Acceso Denegado: Tu rol no tiene permisos para este módulo.', 'error');" style="cursor: not-allowed;">
+            {% endif %}
                 <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                <span>Clientes</span>
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span>Clientes</span>
+                    {% if not request.user|has_group:"Administrador,Cajero" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    {% endif %}
+                </div>
             </a>
         </li>
-        <li class="sidebar-item {% if active_tab == 'ordenes' %}active{% endif %}">
+
+        <!-- Órdenes: Admin, Cajero -->
+        <li class="sidebar-item {% if active_tab == 'ordenes' %}active{% endif %}" {% if not request.user|has_group:"Administrador,Cajero" %}style="opacity: 0.5; filter: grayscale(100%);"{% endif %}>
+            {% if request.user|has_group:"Administrador,Cajero" %}
             <a href="{% url 'ordenes_list' %}">
+            {% else %}
+            <a href="javascript:void(0)" onclick="showToast('Acceso Denegado: Tu rol no tiene permisos para este módulo.', 'error');" style="cursor: not-allowed;">
+            {% endif %}
                 <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                <span>Órdenes</span>
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span>Órdenes</span>
+                    {% if not request.user|has_group:"Administrador,Cajero" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    {% endif %}
+                </div>
             </a>
         </li>
+
+        <!-- Seguimiento: Todos -->
         <li class="sidebar-item {% if active_tab == 'seguimiento' %}active{% endif %}">
             <a href="{% url 'seguimiento_list' %}">
                 <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></svg>
                 <span>Seguimiento</span>
             </a>
         </li>
-        <li class="sidebar-item {% if active_tab == 'servicios' %}active{% endif %}">
+
+        <!-- Servicios: Admin -->
+        <li class="sidebar-item {% if active_tab == 'servicios' %}active{% endif %}" {% if not request.user|has_group:"Administrador" %}style="opacity: 0.5; filter: grayscale(100%);"{% endif %}>
+            {% if request.user|has_group:"Administrador" %}
             <a href="{% url 'servicios_list' %}">
+            {% else %}
+            <a href="javascript:void(0)" onclick="showToast('Acceso Denegado: Tu rol no tiene permisos para este módulo.', 'error');" style="cursor: not-allowed;">
+            {% endif %}
                 <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-                <span>Servicios</span>
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span>Servicios</span>
+                    {% if not request.user|has_group:"Administrador" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    {% endif %}
+                </div>
             </a>
         </li>
-        {% if request.user|has_group:"Administrador,Cajero" %}
-        <li class="sidebar-item {% if active_tab == 'caja' %}active{% endif %}">
+
+        <!-- Caja: Admin, Cajero -->
+        <li class="sidebar-item {% if active_tab == 'caja' %}active{% endif %}" {% if not request.user|has_group:"Administrador,Cajero" %}style="opacity: 0.5; filter: grayscale(100%);"{% endif %}>
+            {% if request.user|has_group:"Administrador,Cajero" %}
             <a href="{% url 'caja_dashboard' %}">
+            {% else %}
+            <a href="javascript:void(0)" onclick="showToast('Acceso Denegado: Tu rol no tiene permisos para este módulo.', 'error');" style="cursor: not-allowed;">
+            {% endif %}
                 <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-                <span>Caja</span>
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span>Caja</span>
+                    {% if not request.user|has_group:"Administrador,Cajero" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    {% endif %}
+                </div>
             </a>
         </li>
-        {% endif %}
-        {% if request.user|has_group:"Administrador,Cajero" %}
-        <li class="sidebar-item {% if active_tab == 'pagos' %}active{% endif %}">
+
+        <!-- Pagos: Admin, Cajero -->
+        <li class="sidebar-item {% if active_tab == 'pagos' %}active{% endif %}" {% if not request.user|has_group:"Administrador,Cajero" %}style="opacity: 0.5; filter: grayscale(100%);"{% endif %}>
+            {% if request.user|has_group:"Administrador,Cajero" %}
             <a href="{% url 'pagos_list' %}">
+            {% else %}
+            <a href="javascript:void(0)" onclick="showToast('Acceso Denegado: Tu rol no tiene permisos para este módulo.', 'error');" style="cursor: not-allowed;">
+            {% endif %}
                 <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                <span>Pagos</span>
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span>Pagos</span>
+                    {% if not request.user|has_group:"Administrador,Cajero" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    {% endif %}
+                </div>
             </a>
         </li>
-        {% endif %}
-        <li class="sidebar-item {% if active_tab == 'promociones' %}active{% endif %}">
+
+        <!-- Promociones: Admin -->
+        <li class="sidebar-item {% if active_tab == 'promociones' %}active{% endif %}" {% if not request.user|has_group:"Administrador" %}style="opacity: 0.5; filter: grayscale(100%);"{% endif %}>
+            {% if request.user|has_group:"Administrador" %}
             <a href="{% url 'promociones_list' %}">
+            {% else %}
+            <a href="javascript:void(0)" onclick="showToast('Acceso Denegado: Tu rol no tiene permisos para este módulo.', 'error');" style="cursor: not-allowed;">
+            {% endif %}
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                <span>Promociones</span>
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span>Promociones</span>
+                    {% if not request.user|has_group:"Administrador" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    {% endif %}
+                </div>
             </a>
         </li>
-        <li class="sidebar-item {% if active_tab == 'reportes' %}active{% endif %}">
+
+        <!-- Reportes: Admin -->
+        <li class="sidebar-item {% if active_tab == 'reportes' %}active{% endif %}" {% if not request.user|has_group:"Administrador" %}style="opacity: 0.5; filter: grayscale(100%);"{% endif %}>
+            {% if request.user|has_group:"Administrador" %}
             <a href="{% url 'reportes_dashboard' %}">
+            {% else %}
+            <a href="javascript:void(0)" onclick="showToast('Acceso Denegado: Tu rol no tiene permisos para este módulo.', 'error');" style="cursor: not-allowed;">
+            {% endif %}
                 <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                <span>Reportes</span>
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span>Reportes</span>
+                    {% if not request.user|has_group:"Administrador" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    {% endif %}
+                </div>
             </a>
         </li>
-        <li class="sidebar-item {% if active_tab == 'usuarios' %}active{% endif %}">
+
+        <!-- Usuarios: Admin -->
+        <li class="sidebar-item {% if active_tab == 'usuarios' %}active{% endif %}" {% if not request.user|has_group:"Administrador" %}style="opacity: 0.5; filter: grayscale(100%);"{% endif %}>
+            {% if request.user|has_group:"Administrador" %}
             <a href="{% url 'usuarios_list' %}">
+            {% else %}
+            <a href="javascript:void(0)" onclick="showToast('Acceso Denegado: Tu rol no tiene permisos para este módulo.', 'error');" style="cursor: not-allowed;">
+            {% endif %}
                 <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                <span>Usuarios</span>
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span>Usuarios</span>
+                    {% if not request.user|has_group:"Administrador" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    {% endif %}
+                </div>
             </a>
         </li>
-        <li class="sidebar-item {% if active_tab == 'configuracion' %}active{% endif %}">
+
+        <!-- Configuración: Admin -->
+        <li class="sidebar-item {% if active_tab == 'configuracion' %}active{% endif %}" {% if not request.user|has_group:"Administrador" %}style="opacity: 0.5; filter: grayscale(100%);"{% endif %}>
+            {% if request.user|has_group:"Administrador" %}
             <a href="{% url 'configuracion' %}">
+            {% else %}
+            <a href="javascript:void(0)" onclick="showToast('Acceso Denegado: Tu rol no tiene permisos para este módulo.', 'error');" style="cursor: not-allowed;">
+            {% endif %}
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                <span>Configuración</span>
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span>Configuración</span>
+                    {% if not request.user|has_group:"Administrador" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    {% endif %}
+                </div>
             </a>
         </li>
     </ul>

@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('htmx:afterSwap', (event) => {
     if (event.detail.target.id === 'historial-container') {
         const container = event.detail.target;
-        const hasPlaceholder = container.querySelector('svg') && container.querySelector('p');
+        const hasPlaceholder = !container.querySelector('.card-header-row');
         if (hasPlaceholder) {
             container.style.borderStyle = 'dashed';
             container.style.borderWidth = '2px';

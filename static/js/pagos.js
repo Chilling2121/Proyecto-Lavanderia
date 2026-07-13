@@ -22,14 +22,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (metodoPago && typeof TomSelect !== 'undefined') {
         new TomSelect("#metodo_pago", {
             create: false,
-            controlInput: null
+            controlInput: null,
+            wrapperClass: 'ts-wrapper ts-no-typing',
+            onInitialize: function() {
+                if (this.control_input) {
+                    this.control_input.readOnly = true;
+                    this.control_input.disabled = true;
+                    this.control_input.style.display = 'none';
+                }
+            }
         });
     }
     const tipoPago = document.getElementById("tipo_pago");
     if (tipoPago && typeof TomSelect !== 'undefined') {
         new TomSelect("#tipo_pago", {
             create: false,
-            controlInput: null
+            controlInput: null,
+            wrapperClass: 'ts-wrapper ts-no-typing',
+            onInitialize: function() {
+                if (this.control_input) {
+                    this.control_input.readOnly = true;
+                    this.control_input.disabled = true;
+                    this.control_input.style.display = 'none';
+                }
+            }
         });
     }
 });

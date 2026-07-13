@@ -2,6 +2,18 @@
 /* SEGUIMIENTO INDIVIDUAL DE LAVADO           */
 /* ========================================== */
 
+:root {
+    /* State Unique Colors */
+    --color-recibida: #475569;
+    --color-clasificada: #334155;
+    --color-en-lavado: #2563eb;
+    --color-en-secado: #f59e0b;
+    --color-en-planchado: #c026d3;
+    --color-empaquetada: #4f46e5;
+    --color-lista-para-entrega: #10b981;
+    --color-entregada: #16a34a;
+}
+
 /* KPI Panel Superior (por si se usa en la cabecera) */
 .tracking-kpis {
     display: grid;
@@ -250,7 +262,7 @@
 
 .timeline-line-background {
     position: absolute;
-    top: 29px;
+    top: 34px;
     left: 4%;
     right: 4%;
     height: 4px;
@@ -261,7 +273,7 @@
 
 .timeline-progress-line {
     position: absolute;
-    top: 29px;
+    top: 34px;
     left: 4%;
     height: 4px;
     background-color: var(--primary);
@@ -764,3 +776,55 @@
     align-items: center;
     gap: 0.35rem;
 }
+
+/* ------------------------------------
+   STATE-SPECIFIC UNIQUE COLORS
+------------------------------------ */
+
+/* 1. Recibida */
+.timeline-step.step-recibida.completed .step-icon-circle, .timeline-step.step-recibida.active .step-icon-circle { background-color: var(--color-recibida); border-color: var(--color-recibida); color: white; }
+.timeline-step.step-recibida.active .step-label { color: var(--color-recibida); }
+.btn-advance-state-recibida { background-color: rgba(71, 85, 105, 0.08); color: var(--color-recibida); border-color: rgba(71, 85, 105, 0.15); }
+.btn-advance-state-recibida:hover { background-color: var(--color-recibida); color: white; border-color: var(--color-recibida); }
+
+/* 2. Clasificada */
+.timeline-step.step-clasificada.completed .step-icon-circle, .timeline-step.step-clasificada.active .step-icon-circle { background-color: var(--color-clasificada); border-color: var(--color-clasificada); color: white; }
+.timeline-step.step-clasificada.active .step-label { color: var(--color-clasificada); }
+.btn-advance-state-clasificada { background-color: rgba(51, 65, 85, 0.08); color: var(--color-clasificada); border-color: rgba(51, 65, 85, 0.15); }
+.btn-advance-state-clasificada:hover { background-color: var(--color-clasificada); color: white; border-color: var(--color-clasificada); }
+
+/* 3. En lavado */
+.timeline-step.step-en-lavado.completed .step-icon-circle, .timeline-step.step-en-lavado.active .step-icon-circle { background-color: var(--color-en-lavado); border-color: var(--color-en-lavado); color: white; }
+.timeline-step.step-en-lavado.active .step-label { color: var(--color-en-lavado); }
+.btn-advance-state-en-lavado { background-color: rgba(37, 99, 235, 0.08); color: var(--color-en-lavado); border-color: rgba(37, 99, 235, 0.15); }
+.btn-advance-state-en-lavado:hover { background-color: var(--color-en-lavado); color: white; border-color: var(--color-en-lavado); }
+
+/* 4. En secado */
+.timeline-step.step-en-secado.completed .step-icon-circle, .timeline-step.step-en-secado.active .step-icon-circle { background-color: var(--color-en-secado); border-color: var(--color-en-secado); color: white; }
+.timeline-step.step-en-secado.active .step-label { color: var(--color-en-secado); }
+.btn-advance-state-en-secado { background-color: rgba(245, 158, 11, 0.08); color: var(--color-en-secado); border-color: rgba(245, 158, 11, 0.15); }
+.btn-advance-state-en-secado:hover { background-color: var(--color-en-secado); color: white; border-color: var(--color-en-secado); }
+
+/* 5. En planchado */
+.timeline-step.step-en-planchado.completed .step-icon-circle, .timeline-step.step-en-planchado.active .step-icon-circle { background-color: var(--color-en-planchado); border-color: var(--color-en-planchado); color: white; }
+.timeline-step.step-en-planchado.active .step-label { color: var(--color-en-planchado); }
+.btn-advance-state-en-planchado { background-color: rgba(192, 38, 211, 0.08); color: var(--color-en-planchado); border-color: rgba(192, 38, 211, 0.15); }
+.btn-advance-state-en-planchado:hover { background-color: var(--color-en-planchado); color: white; border-color: var(--color-en-planchado); }
+
+/* 6. Empaquetada */
+.timeline-step.step-empaquetada.completed .step-icon-circle, .timeline-step.step-empaquetada.active .step-icon-circle { background-color: var(--color-empaquetada); border-color: var(--color-empaquetada); color: white; }
+.timeline-step.step-empaquetada.active .step-label { color: var(--color-empaquetada); }
+.btn-advance-state-empaquetada { background-color: rgba(79, 70, 229, 0.08); color: var(--color-empaquetada); border-color: rgba(79, 70, 229, 0.15); }
+.btn-advance-state-empaquetada:hover { background-color: var(--color-empaquetada); color: white; border-color: var(--color-empaquetada); }
+
+/* 7. Lista para entrega */
+.timeline-step.step-lista-para-entrega.completed .step-icon-circle, .timeline-step.step-lista-para-entrega.active .step-icon-circle { background-color: var(--color-lista-para-entrega); border-color: var(--color-lista-para-entrega); color: white; }
+.timeline-step.step-lista-para-entrega.active .step-label { color: var(--color-lista-para-entrega); }
+.btn-advance-state-lista-para-entrega { background-color: rgba(16, 185, 129, 0.08); color: var(--color-lista-para-entrega); border-color: rgba(16, 185, 129, 0.15); }
+.btn-advance-state-lista-para-entrega:hover { background-color: var(--color-lista-para-entrega); color: white; border-color: var(--color-lista-para-entrega); }
+
+/* 8. Entregada */
+.timeline-step.step-entregada.completed .step-icon-circle, .timeline-step.step-entregada.active .step-icon-circle { background-color: var(--color-entregada); border-color: var(--color-entregada); color: white; }
+.timeline-step.step-entregada.active .step-label { color: var(--color-entregada); }
+.btn-advance-state-entregada { background-color: rgba(22, 163, 74, 0.08); color: var(--color-entregada); border-color: rgba(22, 163, 74, 0.15); }
+.btn-advance-state-entregada:hover { background-color: var(--color-entregada); color: white; border-color: var(--color-entregada); }

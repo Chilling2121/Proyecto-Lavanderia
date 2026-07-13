@@ -89,4 +89,20 @@
         </div>
     </main>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'registrar_pago') {
+            if (typeof showToast === 'function') {
+                setTimeout(() => {
+                    showToast("Para registrar un pago, busca la orden en la tabla y haz clic en el botón \"Ver\" para acceder al detalle.", "info");
+                }, 300);
+            }
+            // Limpiar la URL para evitar notificaciones dobles al recargar
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({path: newUrl}, '', newUrl);
+        }
+    });
+</script>
 {% endblock %}

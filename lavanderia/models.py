@@ -40,6 +40,7 @@ class Servicio(models.Model):
 
 
 class Promocion(models.Model):
+    id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
     tipo = models.CharField(max_length=50, help_text='Porcentaje, Fijo')
     valor = models.DecimalField(max_digits=10, decimal_places=2)
@@ -58,6 +59,7 @@ class Promocion(models.Model):
 
 class Orden(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='ordenes')
+    promocion = models.ForeignKey(Promocion, on_delete=models.SET_NULL, null=True, blank=True, related_name='ordenes')
     fecha_recepcion = models.DateTimeField(auto_now_add=True)
     fecha_entrega_estimada = models.DateTimeField(blank=True, null=True)
     fecha_entrega_real = models.DateTimeField(blank=True, null=True)
@@ -96,6 +98,18 @@ class PrendaOrden(models.Model):
 
     def __str__(self):
         return f"{self.cantidad}x {self.tipo_prenda} (Orden #{self.orden_id:06d})"
+
+
+class CatalogoPrenda(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        db_table = 'catalogo_prendas'
+        verbose_name = 'Prenda de Catálogo'
+        verbose_name_plural = 'Prendas de Catálogo'
+
+    def __str__(self):
+        return self.nombre
 
 
 class SeguimientoLavado(models.Model):

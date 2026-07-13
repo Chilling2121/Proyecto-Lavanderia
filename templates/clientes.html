@@ -302,7 +302,7 @@
 
 <!-- Lógica JavaScript para control de Modales -->
 <script src="{% static 'js/clientes.js' %}"></script>
-<script src="{% static 'js/ordenes.js' %}"></script>
+<script src="{% static 'js/ordenes.js' %}?v={% now 'U' %}"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -314,6 +314,15 @@
                 }, 300); // Pequeño retraso para la animación
             }
             // Limpiar la URL para evitar notificaciones dobles al recargar
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({path: newUrl}, '', newUrl);
+        }
+        if (urlParams.get('action') === 'nuevo_cliente') {
+            if (typeof showToast === 'function') {
+                setTimeout(() => {
+                    showToast("Para registrar un nuevo cliente, haz clic en el botón \"Nuevo Cliente\" en la parte superior.", "info");
+                }, 300);
+            }
             const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
             window.history.replaceState({path: newUrl}, '', newUrl);
         }

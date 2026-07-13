@@ -94,6 +94,45 @@
             .promo-modal-field input.promo-modal-input {
                 padding: 0.85rem 1rem !important;
             }
+            
+            /* Estilos específicos para TomSelect */
+            .promo-modal-field .ts-wrapper {
+                width: 100%;
+            }
+            .promo-modal-field .ts-control {
+                width: 100%;
+                padding: 0.85rem 1rem !important;
+                font-size: 0.95rem !important;
+                font-family: var(--font) !important;
+                background-color: var(--bg-app) !important;
+                border: 1.5px solid var(--border) !important;
+                border-radius: 10px !important;
+                color: var(--text) !important;
+                transition: var(--transition) !important;
+                box-sizing: border-box !important;
+                box-shadow: none !important;
+                min-height: auto;
+            }
+            .promo-modal-field .ts-control.focus {
+                background-color: var(--bg-card) !important;
+                border-color: var(--primary) !important;
+                box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
+            }
+            .promo-modal-field .ts-dropdown {
+                border-radius: 10px;
+                border: 1px solid var(--border);
+                box-shadow: var(--shadow-md);
+                font-family: var(--font);
+                font-size: 0.95rem;
+                overflow: hidden;
+            }
+            .promo-modal-field .ts-dropdown .option {
+                padding: 0.75rem 1rem;
+            }
+            .promo-modal-field .ts-dropdown .active {
+                background-color: var(--primary-light);
+                color: var(--primary);
+            }
         </style>
 
         <form id="promocionForm" method="post" action="{% url 'promocion_create' %}">
@@ -108,7 +147,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="promo-modal-field">
                     <label>Tipo de Descuento</label>
-                    <select id="tipo_promocion" name="tipo" class="promo-modal-input" required style="cursor: pointer;">
+                    <select id="tipo_promocion" name="tipo" required style="cursor: pointer;">
                         <option value="Porcentaje">Porcentaje (%)</option>
                         <option value="Fijo">Monto Fijo ($)</option>
                     </select>
@@ -173,6 +212,12 @@ window.togglePromocionModal = function(show) {
         document.getElementById('promocionForm').reset();
         document.getElementById('promocion_id').value = '';
         document.getElementById('promocionForm').action = '{% url "promocion_create" %}';
+        
+        const selectEl = document.getElementById('tipo_promocion');
+        if (selectEl.tomselect) {
+            selectEl.tomselect.setValue('Porcentaje');
+        }
+        
         modal.style.display = 'flex';
     } else {
         modal.style.display = 'none';
@@ -183,7 +228,13 @@ window.editPromocion = function(id, nombre, tipo, valor, fechaInicio, fechaFin) 
     document.getElementById('modalPromocionTitle').textContent = 'Editar Promoción';
     document.getElementById('promocion_id').value = id;
     document.getElementById('nombre_promocion').value = nombre;
-    document.getElementById('tipo_promocion').value = tipo;
+    
+    const selectEl = document.getElementById('tipo_promocion');
+    if (selectEl.tomselect) {
+        selectEl.tomselect.setValue(tipo);
+    } else {
+        selectEl.value = tipo;
+    }
     
     // Convertir a float string directo por si trae formato extra
     const formattedValor = parseFloat(String(valor).replace(',', '.')).toString();
@@ -222,6 +273,24 @@ document.body.addEventListener('showToast', function(evt) {
         window.showToast(evt.detail.message, evt.detail.type);
     } else if (typeof showToast === 'function') {
         showToast(evt.detail.message, evt.detail.type);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const tsElement = document.getElementById('tipo_promocion');
+    if (tsElement) {
+        new TomSelect(tsElement, {
+            create: false,
+            controlInput: null,
+            render: {
+                item: function(data, escape) {
+                    return '<div>' + escape(data.text) + '</div>';
+                },
+                option: function(data, escape) {
+                    return '<div>' + escape(data.text) + '</div>';
+                }
+            }
+        });
     }
 });
 </script>

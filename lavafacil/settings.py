@@ -150,6 +150,6 @@ STATICFILES_DIRS = [
 ]
 
 # Authentication configuration
-LOGIN_REDIRECT_URL = 'dashboard'
+LOGIN_REDIRECT_URL = 'home_redirect'
 LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'

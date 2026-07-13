@@ -73,7 +73,7 @@
                                             title="Seleccionar a {{ cliente.nombre_completo }}">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                                         <span>{{ cliente.nombre_completo }}</span>
-                                    </button>ton>
+                                    </button>
                                     {% empty %}
                                     <span style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">No hay clientes registrados aún.</span>
                                     {% endfor %}
@@ -155,7 +155,7 @@
                             <label for="id_fecha_entrega_estimada" style="font-weight: 600;">Fecha Estimada de Entrega *</label>
                             <div class="login-input-wrapper">
                                 <span class="login-input-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></span style="position: absolute; left: 1rem; color: var(--text-muted); pointer-events: none; display: flex; align-items: center;">
                                 </span>
                                 <input type="datetime-local" name="fecha_entrega_estimada" id="id_fecha_entrega_estimada" required
                                        style="width: 100%; padding: 0.85rem 1rem 0.85rem 3rem; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid transparent; border-radius: var(--radius); color: var(--text);"
@@ -190,6 +190,18 @@
                                 <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">Subtotal</span>
                                 <span id="label-subtotal" style="font-weight: 600; color: var(--text); font-size: 1.05rem;">$0.00</span>
                                 <input type="hidden" name="total" id="input-subtotal" value="0.00">
+                            </div>
+
+                            <!-- Promoción (Oferta) -->
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">Aplicar Oferta</span>
+                                <select name="promocion_id" id="select-promocion" onchange="onPromotionChange()"
+                                        style="width: 150px; padding: 0.4rem 0.5rem; font-size: 0.85rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600;">
+                                    <option value="" data-tipo="" data-valor="0.00">Sin Oferta</option>
+                                    {% for p in promociones %}
+                                        <option value="{{ p.id }}" data-tipo="{{ p.tipo }}" data-valor="{{ p.valor }}">{{ p.nombre }} ({{ p.valor }}{% if p.tipo == 'Porcentaje' %}%{% else %}${% endif %})</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                             
                             <!-- Descuento -->
@@ -245,11 +257,16 @@
                             </div>
                         </div>
 
-                        <!-- Botón de Envío -->
-                        <button type="submit" class="login-btn" style="box-shadow: var(--shadow-sm); width: 100%; padding: 1rem; font-size: 1rem; font-weight: 700; margin-top: 0.5rem; {% if not caja_abierta %}opacity: 0.5; cursor: not-allowed;{% endif %}" {% if not caja_abierta %}disabled title="Abre un turno de caja para registrar órdenes"{% endif %}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                            <span>Guardar Orden de Servicio</span>
-                        </button>
+                        <!-- BOTONES ACCIÓN -->
+                        <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 0.5rem;">
+                            <a href="{% url 'ordenes_list' %}" class="login-btn" style="width: auto; background-color: var(--bg-app); border: 1px solid var(--border); color: var(--text); box-shadow: none; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                                Cancelar
+                            </a>
+                            <button type="submit" class="login-btn" style="width: auto; display: inline-flex; align-items: center; gap: 0.5rem; {% if not caja_abierta %}opacity: 0.5; cursor: not-allowed;{% endif %}" {% if not caja_abierta %}disabled title="Abre un turno de caja para registrar órdenes"{% endif %}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                <span>Guardar Orden de Servicio</span>
+                            </button>
+                        </div>
                     </section>
                 </div>
             </form>
@@ -273,12 +290,12 @@
     <option value="Zapatos"></option>
 </datalist>
 
-<!-- Datos de los Servicios en formato JSON -->
+<!-- Datos de los Servicios y Catálogo de Prendas en formato JSON -->
 <script>
     window.SERVICIOS = {{ servicios_json|safe }};
+    window.CATALOGO_PRENDAS = {{ prendas_catalog_json|safe }};
 </script>
 
-<script src="{% static 'js/ordenes.js' %}"></script>
-
+<script src="{% static 'js/ordenes.js' %}?v={% now 'U' %}"></script>
 
 {% endblock %}

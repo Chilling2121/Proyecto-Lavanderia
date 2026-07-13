@@ -204,8 +204,10 @@
 <script>
     function enviarWhatsApp() {
         let telefono = "{{ orden.cliente.telefono|default:'' }}".replace(/\D/g,'');
-        if(telefono.length === 10) {
-            telefono = '52' + telefono;
+        if(telefono.length === 10 && telefono.startsWith('09')) {
+            telefono = '593' + telefono.substring(1);
+        } else if(telefono.length === 10) {
+            telefono = '593' + telefono;
         }
         let texto = `Hola *{{ orden.cliente.nombre_completo }}*, somos LavaFácil.\n\n`;
         texto += `Su orden de servicio *#{{ orden.id|stringformat:"06d" }}* ha sido registrada exitosamente y se encuentra en estado: *{{ orden.estado_actual }}*.\n\n`;

@@ -106,20 +106,20 @@ function addPrendaRow() {
         opcionesServicio += `<option value="${s.id}">${s.nombre}</option>`;
     });
     
+    // Crear opciones dinámicamente usando el CATÁLOGO DE PRENDAS
+    let opcionesPrenda = '<option value=""></option>';
+    const listaPrendas = window.CATALOGO_PRENDAS || (typeof CATALOGO_PRENDAS !== 'undefined' ? CATALOGO_PRENDAS : []);
+    listaPrendas.forEach(p => {
+        opcionesPrenda += `<option value="${p}">${p}</option>`;
+    });
+    
     // Contenido HTML de la fila con Tarifa editable e input de tipo de prenda estándar (con datalist)
     row.innerHTML = `
         <!-- Tipo de Prenda (TomSelect con creación libre) -->
         <div style="min-width: 0;">
             <select class="input-tipo" placeholder="Prenda..." required
                     style="box-sizing: border-box; width: 100%; padding: 0.45rem 0.4rem; font-size: 0.82rem; font-family: var(--font); background-color: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); text-overflow: ellipsis;">
-                <option value=""></option>
-                <option value="Pantalón">Pantalón</option>
-                <option value="Camisa">Camisa</option>
-                <option value="Chaqueta / Saco">Chaqueta / Saco</option>
-                <option value="Vestido">Vestido</option>
-                <option value="Falda">Falda</option>
-                <option value="Edredón / Cobija">Edredón / Cobija</option>
-                <option value="Abrigo">Abrigo</option>
+                ${opcionesPrenda}
             </select>
         </div>
         
@@ -133,19 +133,19 @@ function addPrendaRow() {
         
         <!-- Tarifa / Precio Unitario (Editable!) -->
         <div style="min-width: 0;">
-            <input type="number" class="input-tarifa" value="0.00" min="0" step="0.01" oninput="calculateRow(this)" required
+            <input type="number" class="input-tarifa" value="0.00" min="0" max="9999" step="0.01" oninput="if(this.value.length > 7) this.value = this.value.slice(0,7); calculateRow(this)" required
                    style="box-sizing: border-box; width: 100%; padding: 0.45rem 0.1rem; text-align: center; font-size: 0.82rem; font-family: var(--font); background-color: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600;">
         </div>
         
         <!-- Cantidad -->
         <div style="min-width: 0;">
-            <input type="number" class="input-cantidad" value="1" min="1" oninput="calculateRow(this)"
+            <input type="number" class="input-cantidad" value="1" min="1" max="9999" oninput="if(this.value.length > 4) this.value = this.value.slice(0,4); calculateRow(this)"
                    style="box-sizing: border-box; width: 100%; padding: 0.45rem 0.1rem; text-align: center; font-size: 0.82rem; font-family: var(--font); background-color: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600;">
         </div>
         
         <!-- Peso (Kg) -->
         <div style="min-width: 0;">
-            <input type="number" class="input-peso" step="0.01" min="0.05" oninput="calculateRow(this)" placeholder="Kg" disabled
+            <input type="number" class="input-peso" step="0.01" min="0.05" max="999" oninput="if(this.value.length > 6) this.value = this.value.slice(0,6); calculateRow(this)" placeholder="Kg" disabled
                    style="box-sizing: border-box; width: 100%; padding: 0.45rem 0.1rem; text-align: center; font-size: 0.82rem; font-family: var(--font); background-color: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600; opacity: 0.5;">
         </div>
         
@@ -156,7 +156,7 @@ function addPrendaRow() {
         </div>
         
         <!-- Subtotal de fila -->
-        <div style="text-align: right; font-weight: 700; color: var(--text); font-size: 0.88rem; padding-right: 0.25rem;">
+        <div style="text-align: right; font-weight: 700; color: var(--text); font-size: 0.88rem; padding-right: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;" title="Subtotal">
             $<span class="label-row-subtotal">0.00</span>
         </div>
         
@@ -215,6 +215,19 @@ function addPrendaRow() {
                 option_create: function(data, escape) {
                     return '<div class="create">Añadir <strong>' + escape(data.input) + '</strong>&hellip;</div>';
                 }
+            },
+            onOptionAdd: function(value, data) {
+                // Agregar al catálogo global si no existe
+                if (window.CATALOGO_PRENDAS && !window.CATALOGO_PRENDAS.includes(value)) {
+                    window.CATALOGO_PRENDAS.push(value);
+                    window.CATALOGO_PRENDAS.sort();
+                }
+                // Actualizar las otras instancias de TomSelect para que tengan esta opción
+                document.querySelectorAll('.input-tipo').forEach(select => {
+                    if (select.tomselect && select.tomselect !== this) {
+                        select.tomselect.addOption({value: value, text: value});
+                    }
+                });
             }
         });
     }
@@ -239,7 +252,11 @@ function removePrendaRow(id) {
             }
             
             // Recalcular totales generales
-            calculateOrderTotals();
+            if (typeof applyPromotion === 'function') {
+                applyPromotion();
+            } else {
+                calculateOrderTotals();
+            }
         }, 200);
     }
 }
@@ -260,22 +277,20 @@ function onServiceChange(select) {
         // Cargar la tarifa base del servicio en el campo editable
         tarifaInput.value = parseFloat(servicio.tarifa).toFixed(2);
         
-        // Verificar tipo de cobro
+        // La cantidad siempre debe ser editable para inventario/detalle
+        cantInput.disabled = false;
+        cantInput.style.opacity = '1';
+        if (!cantInput.value) cantInput.value = 1;
+        
+        // Verificar tipo de cobro para configurar el campo de Peso
         if (servicio.tipo_cobro.toLowerCase().includes('kg')) {
             // Cobro por Peso
-            cantInput.disabled = true;
-            cantInput.style.opacity = '0.5';
-            cantInput.value = 1;
-            
             pesoInput.disabled = false;
             pesoInput.style.opacity = '1';
             pesoInput.required = true;
             if (!pesoInput.value) pesoInput.value = 1.0;
         } else {
             // Cobro por Unidad (Por Prenda)
-            cantInput.disabled = false;
-            cantInput.style.opacity = '1';
-            
             pesoInput.disabled = true;
             pesoInput.style.opacity = '0.5';
             pesoInput.value = '';
@@ -313,6 +328,51 @@ function calculateRow(element) {
     }
     
     labelSubtotal.textContent = subtotal.toFixed(2);
+    
+    if (typeof applyPromotion === 'function') {
+        applyPromotion();
+    } else {
+        calculateOrderTotals();
+    }
+}
+
+// Aplicar promoción seleccionada
+function applyPromotion() {
+    const promoSelect = document.getElementById('id_promocion');
+    const inputDesc = document.getElementById('input-descuento');
+    if (!promoSelect || !inputDesc || typeof window.PROMOCIONES === 'undefined') {
+        calculateOrderTotals();
+        return;
+    }
+    
+    // Calcular subtotal actual
+    let subtotal = 0.00;
+    document.querySelectorAll('.label-row-subtotal').forEach(label => {
+        subtotal += parseFloat(label.textContent) || 0.00;
+    });
+    
+    const promoId = parseInt(promoSelect.value);
+    const promo = window.PROMOCIONES.find(p => p.id === promoId);
+    
+    if (promo) {
+        let descuento = 0;
+        if (promo.tipo.toLowerCase() === 'porcentaje') {
+            descuento = subtotal * (promo.valor / 100);
+        } else {
+            descuento = promo.valor;
+        }
+        
+        if (descuento > subtotal) descuento = subtotal;
+        
+        inputDesc.value = descuento.toFixed(2);
+        // Deshabilitar la edición manual si hay una promoción activa, o resaltarlo
+        inputDesc.style.backgroundColor = 'var(--primary-light)';
+        inputDesc.style.color = 'var(--primary)';
+    } else {
+        inputDesc.value = '0.00';
+        inputDesc.style.backgroundColor = 'var(--bg-card)';
+        inputDesc.style.color = 'var(--text)';
+    }
     
     calculateOrderTotals();
 }
@@ -513,7 +573,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (metodoPagoSelect && !metodoPagoSelect.tomselect) {
             new TomSelect(metodoPagoSelect, {
                 create: false,
-                sortField: { field: "text", direction: "asc" }
+                controlInput: null,
+                wrapperClass: 'ts-wrapper ts-no-typing',
+                sortField: { field: "text", direction: "asc" },
+                onInitialize: function() {
+                    if (this.control_input) {
+                        this.control_input.readOnly = true;
+                        this.control_input.disabled = true;
+                        this.control_input.style.display = 'none';
+                    }
+                }
             });
         }
     }

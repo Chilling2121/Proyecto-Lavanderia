@@ -398,10 +398,22 @@ def orden_cliente_search_api(request):
 @login_required
 @group_required('Administrador', 'Cajero')
 def orden_create(request):
+    from .models import CatalogoPrenda, Promocion
+    from django.utils import timezone
+    today = timezone.localtime(timezone.now()).date()
+    
     if request.method == 'POST':
         cliente_id = request.POST.get('cliente_id')
         fecha_entrega_estimada_str = request.POST.get('fecha_entrega_estimada')
         observaciones = request.POST.get('observaciones', '')
+        promocion_id = request.POST.get('promocion_id')
+        
+        promocion = None
+        if promocion_id:
+            try:
+                promocion = Promocion.objects.filter(id=promocion_id).first()
+            except Exception:
+                pass
         
         try:
             total = Decimal(request.POST.get('total', '0.00') or '0.00')
@@ -447,6 +459,7 @@ def orden_create(request):
                 
                 orden = Orden.objects.create(
                     cliente=cliente,
+                    promocion=promocion,
                     fecha_entrega_estimada=fecha_entrega_estimada,
                     total=total,
                     descuento=descuento,
@@ -466,11 +479,14 @@ def orden_create(request):
                 
                 for p in prendas_data:
                     servicio = Servicio.objects.get(id=p['servicio_id'])
+                    tipo_prenda_nombre = p['tipo_prenda'].strip()
+                    if tipo_prenda_nombre:
+                        CatalogoPrenda.objects.get_or_create(nombre=tipo_prenda_nombre)
                     # Leer el precio unitario si se envía tarifa personalizada
                     precio_unitario = float(p['precio_unitario']) if p.get('precio_unitario') is not None else None
                     PrendaOrden.objects.create(
                         orden=orden,
-                        tipo_prenda=p['tipo_prenda'],
+                        tipo_prenda=tipo_prenda_nombre,
                         cantidad=int(p.get('cantidad', 1)),
                         peso=float(p['peso']) if p.get('peso') else None,
                         servicio=servicio,
@@ -510,10 +526,20 @@ def orden_create(request):
         for s in servicios
     ]
     
+    promociones_activas = Promocion.objects.filter(
+        esta_activa=True,
+        fecha_inicio__lte=today,
+        fecha_fin__ge=today
+    )
+    
+    prendas_catalog = [p.nombre for p in CatalogoPrenda.objects.all().order_by('nombre')]
+    
     context = {
         'clientes_frecuentes': Cliente.objects.annotate(num_ordenes=Count('ordenes')).order_by('-num_ordenes')[:5],
         'servicios_json': json.dumps(servicios_data),
-        'active_tab': 'ordenes'
+        'active_tab': 'ordenes',
+        'promociones': promociones_activas,
+        'prendas_catalog_json': json.dumps(prendas_catalog),
     }
     return render(request, 'nueva_orden.html', context)
 
@@ -521,6 +547,10 @@ def orden_create(request):
 @login_required
 @group_required('Administrador', 'Cajero')
 def orden_create_partial(request, cliente_id):
+    from .models import CatalogoPrenda, Promocion
+    from django.utils import timezone
+    today = timezone.localtime(timezone.now()).date()
+
     try:
         cliente = Cliente.objects.get(id=cliente_id)
     except Cliente.DoesNotExist:
@@ -528,6 +558,15 @@ def orden_create_partial(request, cliente_id):
 
     if request.method == 'POST':
         observaciones = request.POST.get('observaciones', '')
+        promocion_id = request.POST.get('promocion_id')
+        
+        promocion = None
+        if promocion_id:
+            try:
+                promocion = Promocion.objects.filter(id=promocion_id).first()
+            except Exception:
+                pass
+
         try:
             total = Decimal(request.POST.get('total', '0.00') or '0.00')
             descuento = Decimal(request.POST.get('descuento', '0.00') or '0.00')
@@ -563,6 +602,7 @@ def orden_create_partial(request, cliente_id):
             with transaction.atomic():
                 orden = Orden.objects.create(
                     cliente=cliente,
+                    promocion=promocion,
                     fecha_entrega_estimada=fecha_entrega_estimada,
                     total=total,
                     descuento=descuento,
@@ -582,10 +622,13 @@ def orden_create_partial(request, cliente_id):
                 
                 for p in prendas_data:
                     servicio = Servicio.objects.get(id=p['servicio_id'])
+                    tipo_prenda_nombre = p['tipo_prenda'].strip()
+                    if tipo_prenda_nombre:
+                        CatalogoPrenda.objects.get_or_create(nombre=tipo_prenda_nombre)
                     precio_unitario = float(p['precio_unitario']) if p.get('precio_unitario') is not None else None
                     PrendaOrden.objects.create(
                         orden=orden,
-                        tipo_prenda=p['tipo_prenda'],
+                        tipo_prenda=tipo_prenda_nombre,
                         cantidad=int(p.get('cantidad', 1)),
                         peso=float(p['peso']) if p.get('peso') else None,
                         servicio=servicio,
@@ -633,10 +676,30 @@ def orden_create_partial(request, cliente_id):
         for s in servicios
     ]
     
+    promociones_activas = Promocion.objects.filter(
+        esta_activa=True,
+        fecha_inicio__lte=today,
+        fecha_fin__gte=today
+    )
+    
+    promociones_data = [
+        {
+            'id': p.id,
+            'tipo': p.tipo,
+            'valor': float(p.valor)
+        }
+        for p in promociones_activas
+    ]
+    
+    prendas_catalog = [p.nombre for p in CatalogoPrenda.objects.all().order_by('nombre')]
+    
     context = {
         'cliente': cliente,
         'servicios_json': json.dumps(servicios_data),
-        'servicios': servicios
+        'servicios': servicios,
+        'promociones': promociones_activas,
+        'promociones_json': json.dumps(promociones_data),
+        'prendas_catalog_json': json.dumps(prendas_catalog),
     }
     return render(request, 'partials/orden_create_partial.html', context)
 
@@ -735,58 +798,16 @@ def orden_register_payment(request, orden_id):
 
         saldo_actual = Decimal(str(orden.saldo_pendiente))
         
-        # Validaciones de Sobrepago para Transferencia/Tarjeta
-        if metodo_pago in ['Transferencia', 'Tarjeta'] and monto > saldo_actual:
-            return render(request, 'partials/orden_payment_panel.html', {
-                'orden': orden, 'pagos': pagos, 'payment_error': f'No se puede cobrar un monto superior al saldo pendiente (${saldo_actual:.2f}) mediante {metodo_pago}.'
-            })
-        
-        # Calcular cambio para pagos en Efectivo
-        efectivo_recibido = monto
-        cambio = Decimal('0.00')
-        monto_registrado = monto
-        
-        efectivo_entregado_str = request.POST.get('efectivo_entregado', '').strip()
-        
+        # Si la orden ya está liquidada (saldo 0) y llega un cobro redundante, lo ignoramos sin lanzar error
+        if saldo_actual <= 0:
+            return render(request, 'partials/orden_payment_panel.html', {'orden': orden, 'pagos': pagos})
+
+        # Autocorrección: si por alguna razón técnica el monto supera el saldo real, simplemente lo limitamos
         if monto > saldo_actual:
-            monto_registrado = saldo_actual
-            if metodo_pago == 'Efectivo':
-                cambio = monto - saldo_actual
-        elif efectivo_entregado_str and metodo_pago == 'Efectivo':
-            try:
-                efectivo_entregado_val = Decimal(efectivo_entregado_str)
-                if efectivo_entregado_val > monto:
-                    efectivo_recibido = efectivo_entregado_val
-                    cambio = efectivo_entregado_val - monto
-            except InvalidOperation:
-                pass
-
-        if metodo_pago == 'Efectivo' and cambio > Decimal('0.00'):
-            # Calcular efectivo disponible en caja usando la propiedad del modelo
-            efectivo_disponible = turno_activo.efectivo_disponible
-            
-            if cambio > efectivo_disponible:
-                return render(request, 'partials/orden_payment_panel.html', {
-                    'orden': orden,
-                    'pagos': Pago.objects.filter(orden=orden).order_by('fecha_pago'),
-                    'payment_error': f'No hay suficiente efectivo físico en caja para entregar el vuelto de ${cambio:.2f} (Efectivo disponible en caja: ${efectivo_disponible:.2f}).',
-                    'efectivo_disponible': efectivo_disponible,
-                })
-
-            if not confirmacion_cambio:
-                return render(request, 'partials/orden_payment_panel.html', {
-                    'orden': orden,
-                    'pagos': pagos,
-                    'payment_error': 'Debe confirmar que ha entregado el cambio exacto al cliente.',
-                    'efectivo_disponible': efectivo_disponible,
-                })
-            detalles_cambio = f"Recibido: ${efectivo_recibido:.2f} | Cambio entregado: ${cambio:.2f}"
-            if observaciones_pago:
-                observaciones_db = f"{observaciones_pago} ({detalles_cambio})"
-            else:
-                observaciones_db = detalles_cambio
-        else:
-            observaciones_db = observaciones_pago or f"Pago registrado (${monto_registrado:.2f})"
+            monto = saldo_actual
+        
+        monto_registrado = monto
+        observaciones_db = observaciones_pago or f"Pago registrado (${monto_registrado:.2f})"
 
         with transaction.atomic():
             tipo_pago = 'Saldo Final' if monto_registrado >= saldo_actual else 'Abono'
@@ -1367,17 +1388,14 @@ def reportes_export_pdf(request):
     from .models import Configuracion
     data['config'] = Configuracion.load()
     
-    template = get_template('reporte_pdf.html')
-    html = template.render(data)
+    # Pre-calcular listas JSON para que Chart.js las lea fácilmente en el HTML
+    data['chart_labels_dona'] = json.dumps([s['servicio__nombre'] for s in data.get('servicios_stats', [])[:5]])
+    data['chart_data_dona'] = json.dumps([s['cantidad_solicitada'] for s in data.get('servicios_stats', [])[:5]])
     
-    result = io.BytesIO()
-    if pisa:
-        pdf = pisa.pisaDocument(io.BytesIO(html.encode("UTF-8")), result)
-        if not pdf.err:
-            response = HttpResponse(result.getvalue(), content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="reporte_lavafacil_{periodo}.pdf"'
-            return response
-    return HttpResponse('Error generando PDF. Verifique que xhtml2pdf esté instalado.', status=400)
+    data['chart_labels_barras'] = json.dumps([e['estado_actual'] for e in data.get('ordenes_por_estado', [])])
+    data['chart_data_barras'] = json.dumps([e['total'] for e in data.get('ordenes_por_estado', [])])
+    
+    return render(request, 'reporte_pdf.html', data)
 
 
 # ==========================================

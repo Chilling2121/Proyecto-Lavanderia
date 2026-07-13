@@ -90,6 +90,18 @@
                     <option value="Tarjeta">Tarjeta</option>
                 </select>
             </div>
+            
+            <!-- Promociones -->
+            <div class="login-field" style="margin-bottom: 0;">
+                <label for="id_promocion" style="font-weight: 600; font-size: 0.82rem;">Promoción / Cupón</label>
+                <select name="promocion_id" id="id_promocion" onchange="applyPromotion()" style="width: 100%; padding: 0.55rem; font-size: 0.88rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid transparent; border-radius: var(--radius-sm); color: var(--text);">
+                    <option value="" selected>Ninguna</option>
+                    {% for p in promociones %}
+                        <option value="{{ p.id }}">{{ p.nombre }} ({% if p.tipo == 'Porcentaje' %}{{ p.valor }}%{% else %}${{ p.valor }}{% endif %})</option>
+                    {% endfor %}
+                </select>
+                <script>window.PROMOCIONES = {{ promociones_json|safe }};</script>
+            </div>
         </div>
 
         <!-- Observaciones -->
@@ -134,9 +146,9 @@
             </div>
 
             <!-- Total a Pagar -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border); padding-top: 0.4rem;">
-                <span style="font-weight: 600;">Total:</span>
-                <span id="label-total-pagar" style="font-weight: 800; color: var(--primary); font-size: 1.05rem;">$0.00</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border); padding-top: 0.4rem; min-width: 0;">
+                <span style="font-weight: 600; flex-shrink: 0; margin-right: 0.5rem;">Total:</span>
+                <span id="label-total-pagar" style="font-weight: 800; color: var(--primary); font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;" title="Total">$0.00</span>
                 <input type="hidden" name="total_a_pagar" id="input-total-pagar" value="0.00">
             </div>
 
@@ -149,9 +161,9 @@
             </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 0.5rem; font-size: 0.88rem;">
-            <span style="font-weight: 700;">Saldo Pendiente:</span>
-            <span id="label-saldo-pendiente" style="font-weight: 800; color: var(--danger); font-size: 1.05rem;">$0.00</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 0.5rem; font-size: 0.88rem; min-width: 0;">
+            <span style="font-weight: 700; flex-shrink: 0; margin-right: 0.5rem;">Saldo Pendiente:</span>
+            <span id="label-saldo-pendiente" style="font-weight: 800; color: var(--danger); font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;" title="Saldo Pendiente">$0.00</span>
         </div>
     </div>
 
@@ -182,9 +194,10 @@
     <option value="Zapatos"></option>
 </datalist>
 
-<!-- Cargar los servicios en JSON -->
+<!-- Cargar datos JSON desde backend -->
 <script>
     window.SERVICIOS = {{ servicios_json|safe }};
+    window.CATALOGO_PRENDAS = {{ prendas_catalog_json|safe }};
 </script>
 
 <script>
@@ -200,9 +213,47 @@
             if (selectPayment && !selectPayment.tomselect) {
                 new TomSelect(selectPayment, {
                     create: false,
-                    controlInput: null
+                    controlInput: null,
+                    wrapperClass: 'ts-wrapper ts-no-typing',
+                    onInitialize: function() {
+                        if (this.control_input) {
+                            this.control_input.readOnly = true;
+                            this.control_input.disabled = true;
+                            this.control_input.style.display = 'none';
+                        }
+                    }
+                });
+            }
+            
+            // Inicializar Tom Select de promociones
+            const selectPromocion = document.getElementById('id_promocion');
+            if (selectPromocion && !selectPromocion.tomselect) {
+                new TomSelect(selectPromocion, {
+                    create: false,
+                    controlInput: null,
+                    wrapperClass: 'ts-wrapper ts-no-typing',
+                    onInitialize: function() {
+                        if (this.control_input) {
+                            this.control_input.readOnly = true;
+                            this.control_input.disabled = true;
+                            this.control_input.style.display = 'none';
+                        }
+                    },
+                    onChange: function() {
+                        if (typeof applyPromotion === 'function') {
+                            applyPromotion();
+                        }
+                    }
                 });
             }
         }
     })();
 </script>
+<style>
+    /* Forzar ocultamiento del input interno en selectores de solo lectura */
+    .ts-no-typing .ts-control > input {
+        display: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+</style>

@@ -3,296 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <title>Reporte Financiero - LavaFácil</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2pdf.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
     <style>
-        @page {
-            size: A4 portrait;
-            margin: 1.5cm;
-            @frame footer_frame {
-                -pdf-frame-content: footer_content;
-                bottom: 1cm;
-                height: 1cm;
-                margin-left: 1.5cm;
-                margin-right: 1.5cm;
-            }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; padding: 2rem; display: flex; justify-content: center; }
+        #reporte-wrapper { background: white; width: 100%; max-width: 900px; padding: 3rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); position: relative; border-radius: 8px; }
+        .color-primary { color: #2563eb; }
+        .bg-primary { background-color: #2563eb; }
+        table th { background-color: #2563eb; color: white; padding: 12px; font-size: 13px; text-transform: uppercase; border-radius: 4px 4px 0 0; }
+        table td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+        table tr:nth-child(even) { background-color: #f8fafc; }
+        table tr:last-child td { border-bottom: none; }
+        
+        /* Reglas Anti-Cortes para el PDF */
+        table, tr, td, th, tbody, thead, tfoot {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
-        body {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 11px;
-            color: #334155;
-            line-height: 1.5;
+        .section-title {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
         }
         
-        /* Cabecera */
-        .header-table {
-            width: 100%;
-            background-color: #0f172a;
-            color: #ffffff;
-            margin-bottom: 25px;
-        }
-        .header-table td {
-            padding: 20px;
-            border: none;
-        }
-        .header-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ffffff;
-            margin: 0;
-        }
-        .header-subtitle {
-            font-size: 14px;
-            color: #38bdf8;
-            margin-top: 5px;
-            text-transform: uppercase;
-        }
-        .header-meta {
-            text-align: right;
-            font-size: 10px;
-            color: #94a3b8;
-        }
-        .header-meta b {
-            color: #e2e8f0;
-        }
-
-        /* Títulos de sección */
-        h2 {
-            font-size: 14px;
-            color: #0f172a;
-            margin-top: 25px;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            border-bottom: 2px solid #38bdf8;
-            padding-bottom: 4px;
-        }
-
-        /* Cajas de Resumen */
-        table.summary-wrapper {
-            width: 100%;
-            margin-bottom: 25px;
-        }
-        table.summary-wrapper td {
-            padding: 5px;
-            border: none;
-            vertical-align: top;
-        }
-        .summary-box {
-            padding: 15px;
-            border-radius: 4px;
-        }
-        .box-primary {
-            background-color: #0f172a;
-            color: #ffffff;
-        }
-        .box-secondary {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-        }
-        .box-danger {
-            background-color: #fff1f2;
-            border: 1px solid #fecdd3;
-        }
-
-        .box-title {
-            font-size: 10px;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        .box-primary .box-title { color: #94a3b8; }
-        .box-secondary .box-title { color: #64748b; }
-        .box-danger .box-title { color: #e11d48; }
-
-        .box-value {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        .box-primary .box-value { color: #38bdf8; }
-        .box-secondary .box-value { color: #0f172a; }
-        .box-danger .box-value { color: #be123c; }
-
-        .box-detail { font-size: 9px; line-height: 1.4; }
-        .box-primary .box-detail { color: #cbd5e1; }
-        .box-secondary .box-detail { color: #64748b; }
-        .box-danger .box-detail { color: #be123c; }
-
-        /* Tablas */
-        table.data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-        }
-        table.data-table th {
-            background-color: #f8fafc;
-            color: #475569;
-            text-align: left;
-            padding: 8px;
-            font-size: 10px;
-            text-transform: uppercase;
-            border-bottom: 2px solid #cbd5e1;
-        }
-        table.data-table td {
-            padding: 8px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        table.data-table tr:nth-child(even) td {
-            background-color: #f8fafc;
-        }
-        
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
-        .text-danger { color: #e11d48; font-weight: bold; }
-        .text-success { color: #059669; font-weight: bold; }
-
-        /* Pie de página */
-        #footer_content {
-            text-align: right;
-            font-size: 9px;
-            color: #94a3b8;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 8px;
+        /* Ocultar botón al imprimir */
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; background: white; }
+            #reporte-wrapper { box-shadow: none; max-width: none; padding: 0; }
         }
     </style>
 </head>
 <body>
 
-    <!-- CABECERA -->
-    <table class="header-table">
-        <tr>
-            <td style="width: 60%;">
-                <div class="header-title">{{ config.nombre_negocio|default:"LavaFácil" }}</div>
-                <div class="header-subtitle">Reporte Financiero y Operativo</div>
-            </td>
-            <td style="width: 40%;" class="header-meta">
-                <b>Período Analizado:</b><br>{{ titulo_periodo }}<br><br>
-                <b>Fecha de Emisión:</b><br>{% now "d/m/Y H:i" %}
-            </td>
-        </tr>
-    </table>
+    <button onclick="descargarPDF()" class="no-print" style="position: fixed; bottom: 30px; right: 30px; background: #2563eb; color: white; padding: 0.85rem 1.5rem; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer; border: none; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4); z-index: 100; transition: all 0.25s ease; display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 30px -5px rgba(37, 99, 235, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px -5px rgba(37, 99, 235, 0.4)';">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Descargar Reporte PDF
+    </button>
 
-    <!-- Cajas de Resumen -->
-    <table class="summary-wrapper">
-        <tr>
-            <td style="width: 33%;">
-                <div class="summary-box box-primary">
-                    <div class="box-title">Ingresos Totales</div>
-                    <div class="box-value">${{ ingresos_totales|floatformat:2 }}</div>
-                    <div class="box-detail">
-                        Efectivo: ${{ ingresos_efectivo|floatformat:2 }}<br>
-                        Transf: ${{ ingresos_transferencia|floatformat:2 }}<br>
-                        Tarjeta: ${{ ingresos_tarjeta|floatformat:2 }}
-                    </div>
+    <div id="reporte-wrapper">
+        <!-- CABECERA -->
+        <div class="flex justify-between items-end border-b-4 pb-4 mb-10" style="border-color: #2563eb;">
+            <div>
+                <h1 class="text-4xl font-extrabold color-primary mb-1">{{ config.nombre_negocio|default:"LavaFácil" }}</h1>
+                <p class="text-sm font-semibold text-gray-500 uppercase tracking-widest">Gestión Operativa y Ventas</p>
+            </div>
+            <div class="text-right">
+                <h2 class="text-3xl font-bold color-primary mb-1">Reporte de Ventas</h2>
+                <p class="text-sm text-gray-500 font-semibold uppercase">{{ titulo_periodo }}</p>
+            </div>
+        </div>
+
+        <!-- PANEL SUPERIOR: Resumen y Gráfico Barras -->
+        <div class="grid grid-cols-2 gap-10 mb-12">
+            <!-- Resumen Verde -->
+            <div class="bg-primary text-white p-7 rounded-xl shadow-lg flex flex-col justify-center relative overflow-hidden">
+                <!-- Decoración circular de fondo -->
+                <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-10"></div>
+                
+                <h3 class="text-lg font-bold border-b border-white/30 pb-3 mb-5">Rendimiento General</h3>
+                <div class="space-y-4 relative z-10">
+                    <div class="flex justify-between items-center"><span class="text-sm opacity-90 font-semibold">Ingresos Totales</span><span class="text-2xl font-bold">${{ ingresos_totales|floatformat:2 }}</span></div>
+                    <div class="flex justify-between items-center"><span class="text-sm opacity-90 font-semibold">Efectivo Recaudado</span><span class="text-xl font-bold">${{ ingresos_efectivo|floatformat:2 }}</span></div>
+                    <div class="flex justify-between items-center"><span class="text-sm opacity-90 font-semibold">Órdenes Procesadas</span><span class="text-xl font-bold">{{ total_ordenes }}</span></div>
+                    <div class="flex justify-between items-center"><span class="text-sm opacity-90 font-semibold">Cuentas por Cobrar</span><span class="text-xl font-bold">${{ total_por_cobrar|floatformat:2 }}</span></div>
                 </div>
-            </td>
-            <td style="width: 33%;">
-                <div class="summary-box box-secondary">
-                    <div class="box-title">Órdenes Procesadas</div>
-                    <div class="box-value">{{ total_ordenes }}</div>
-                    <div class="box-detail"><br>Total de órdenes registradas en el período.</div>
-                </div>
-            </td>
-            <td style="width: 34%;">
-                <div class="summary-box box-danger">
-                    <div class="box-title">Cuentas por Cobrar</div>
-                    <div class="box-value">${{ total_por_cobrar|floatformat:2 }}</div>
-                    <div class="box-detail"><br>Saldo pendiente de pago de los clientes.</div>
-                </div>
-            </td>
-        </tr>
-    </table>
+            </div>
+            
+            <!-- Gráfico Barras -->
+            <div class="flex flex-col items-center justify-center p-2">
+                <h4 class="text-sm font-bold text-gray-600 uppercase mb-2">Flujo de Órdenes por Estado</h4>
+                <canvas id="barChart" style="max-height: 230px; width: 100%;"></canvas>
+            </div>
+        </div>
 
-    <!-- CLIENTES -->
-    <h2>Análisis de Clientes (Top 5)</h2>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Cliente</th>
-                <th class="text-center">Órdenes Realizadas</th>
-                <th class="text-right">Total Gastado</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for c in top_clientes %}
-            <tr>
-                <td><b>{{ c.nombre_completo }}</b></td>
-                <td class="text-center">{{ c.total_ordenes }}</td>
-                <td class="text-right text-success">${{ c.total_gastado|floatformat:2 }}</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="3" class="text-center">No hay datos suficientes.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <!-- TABLA PRINCIPAL 1 -->
+        <h3 class="text-lg font-bold color-primary mb-3">Desglose de Top Clientes</h3>
+        <table class="w-full mb-10 shadow-sm border border-gray-100 rounded-lg overflow-hidden">
+            <thead>
+                <tr>
+                    <th class="text-left">Cliente</th>
+                    <th class="text-center">Órdenes Realizadas</th>
+                    <th class="text-right">Total Gastado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in top_clientes %}
+                <tr>
+                    <td class="font-semibold text-gray-800">{{ c.nombre_completo }}</td>
+                    <td class="text-center font-bold text-gray-600">{{ c.total_ordenes }}</td>
+                    <td class="text-right font-bold text-blue-700">${{ c.total_gastado|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-center py-6 text-gray-500 italic">No hay datos suficientes para mostrar top de clientes.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-    <!-- DEUDORES -->
-    <h2>Detalle de Deudores (Activos)</h2>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Orden #</th>
-                <th>Cliente</th>
-                <th class="text-right">Saldo Pendiente</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for o in top_deudores %}
-            <tr>
-                <td>{{ o.id|stringformat:"06d" }}</td>
-                <td>{{ o.cliente.nombre_completo }}</td>
-                <td class="text-right text-danger">${{ o.saldo_pendiente|floatformat:2 }}</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="3" class="text-center" style="color: #059669;">No hay cuentas pendientes de cobro. ¡Excelente!</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <!-- SALTO DE PÁGINA MANUAL PARA EVITAR BUGS DE RENDERIZADO -->
+        <div class="html2pdf__page-break"></div>
 
-    <!-- SERVICIOS -->
-    <h2>Servicios Más Solicitados</h2>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Servicio</th>
-                <th class="text-right">Cantidad Solicitada</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for s in servicios_stats %}
-            <tr>
-                <td>{{ s.servicio__nombre }}</td>
-                <td class="text-right"><b>{{ s.cantidad_solicitada|default:"0" }}</b></td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="2" class="text-center">No hay datos suficientes.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <!-- SECCIÓN MEDIA: Servicios y Gráfico Dona -->
+        <div class="grid grid-cols-2 gap-10 mb-10 mt-12">
+            <div>
+                <h3 class="text-lg font-bold color-primary mb-3">Servicios Más Solicitados</h3>
+                <table class="w-full shadow-sm border border-gray-100 rounded-lg overflow-hidden">
+                    <thead>
+                        <tr>
+                            <th class="text-left">Servicio</th>
+                            <th class="text-right">Unidades</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in servicios_stats|slice:":5" %}
+                        <tr>
+                            <td class="font-semibold text-gray-800">{{ s.servicio__nombre }}</td>
+                            <td class="text-right font-bold text-gray-600">{{ s.cantidad_solicitada|default:"0" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center py-4 text-gray-500 italic">No hay datos suficientes.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex flex-col items-center justify-center">
+                <h4 class="text-sm font-bold text-gray-600 uppercase mb-4">Proporción de Servicios</h4>
+                <canvas id="doughnutChart" style="max-height: 220px;"></canvas>
+            </div>
+        </div>
 
-    <!-- ESTADOS -->
-    <h2>Estado de las Órdenes</h2>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Estado Actual</th>
-                <th class="text-right">Total de Órdenes</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for o in ordenes_por_estado %}
-            <tr>
-                <td>{{ o.estado_actual }}</td>
-                <td class="text-right"><b>{{ o.total }}</b></td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="2" class="text-center">No hay datos suficientes.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <!-- TABLA SECUNDARIA -->
+        <h3 class="text-lg font-bold color-primary mb-3 mt-12">Detalle de Deudores (Activos)</h3>
+        <table class="w-full mb-12 shadow-sm border border-gray-100 rounded-lg overflow-hidden">
+            <thead>
+                <tr>
+                    <th class="text-left">Orden #</th>
+                    <th class="text-left">Cliente</th>
+                    <th class="text-right">Saldo Pendiente</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for o in top_deudores %}
+                <tr>
+                    <td class="font-bold text-gray-500">{{ o.id|stringformat:"06d" }}</td>
+                    <td class="font-semibold text-gray-800">{{ o.cliente.nombre_completo }}</td>
+                    <td class="text-right font-bold text-red-600">${{ o.saldo_pendiente|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-center py-6 text-blue-600 font-bold bg-blue-50">🎉 No hay cuentas pendientes de cobro. ¡Excelente!</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-    <!-- FOOTER -->
-    <div id="footer_content">
-        Generado por <b>LavaFácil</b> - Página <pdf:pagenumber> de <pdf:pagecount>
+        <!-- FOOTER -->
+        <div class="bg-gray-800 text-gray-300 p-5 rounded-lg mt-12 flex justify-between items-center text-xs font-semibold shadow-inner">
+            <div class="flex items-center gap-2">📱 <span>{{ config.telefono|default:"Sin Teléfono" }}</span></div>
+            <div class="flex items-center gap-2">✉️ <span>{{ config.email|default:"contacto@lavafacil.com" }}</span></div>
+            <div class="flex items-center gap-2">📍 <span>{{ config.direccion|default:"Dirección no especificada" }}</span></div>
+        </div>
+
     </div>
 
+    <!-- SCRIPT PARA CHART.JS Y EXPORTACIÓN PDF -->
+    <script>
+        // Datos inyectados desde Django
+        const labelsBar = JSON.parse('{{ chart_labels_barras|escapejs }}');
+        const dataBar = JSON.parse('{{ chart_data_barras|escapejs }}');
+        
+        const labelsDonut = JSON.parse('{{ chart_labels_dona|escapejs }}');
+        const dataDonut = JSON.parse('{{ chart_data_dona|escapejs }}');
+
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = "#475569";
+
+        // Gráfico de Barras
+        new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: labelsBar,
+                datasets: [{
+                    label: 'Total Órdenes',
+                    data: dataBar,
+                    backgroundColor: '#2563eb',
+                    borderRadius: 6,
+                    barPercentage: 0.7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { weight: 'bold' } } },
+                    y: { beginAtZero: true, grid: { color: '#e2e8f0', borderDash: [4, 4] } }
+                }
+            }
+        });
+
+        // Gráfico de Dona
+        new Chart(document.getElementById('doughnutChart'), {
+            type: 'doughnut',
+            data: {
+                labels: labelsDonut,
+                datasets: [{
+                    data: dataDonut,
+                    backgroundColor: ['#2563eb', '#facc15', '#0ea5e9', '#334155', '#ef4444'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 10, font: { weight: '600' } } }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // FUNCIÓN PARA DESCARGAR EL PDF INSTANTÁNEAMENTE
+        function descargarPDF() {
+            const btn = document.querySelector('.no-print');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Generando... ⏳';
+            btn.style.opacity = '0.7';
+            btn.style.pointerEvents = 'none';
+
+            const element = document.getElementById('reporte-wrapper');
+            const opt = {
+                margin:       [10, 0, 10, 0], // top, left, bottom, right
+                filename:     'Reporte_Ventas_LavaFacil.pdf',
+                image:        { type: 'jpeg', quality: 1 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['css', 'avoid-all'] }
+            };
+
+            // Pequeña espera para asegurar que los gráficos terminaron su animación
+            setTimeout(() => {
+                html2pdf().set(opt).from(element).save().then(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                });
+            }, 500);
+        }
+    </script>
 </body>
 </html>

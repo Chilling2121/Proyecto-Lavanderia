@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load auth_extras %}
 
 {% block title %}Seguimiento de Órdenes - LavaFácil{% endblock %}
 
@@ -141,9 +142,16 @@
                         </div>
                         <div class="tracking-badge-block">
                             {% if orden_seleccionada.saldo_pendiente > 0 %}
+                                {% if request.user|has_group:"Administrador,Cajero" %}
                                 <a href="{% url 'orden_detail' orden_seleccionada.id %}?source=seguimiento" class="btn-pay-shortcut">
+                                {% else %}
+                                <a href="javascript:void(0)" onclick="showToast('El cliente tiene un saldo pendiente. Por favor, indíquele que pase por la Caja para cancelar antes de entregar las prendas.', 'error');" class="btn-pay-shortcut" style="opacity: 0.7; filter: grayscale(100%); cursor: not-allowed; border: 1px dashed var(--danger);">
+                                {% endif %}
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                                     <span>Pagar Saldo (${{ orden_seleccionada.saldo_pendiente|floatformat:2 }})</span>
+                                    {% if not request.user|has_group:"Administrador,Cajero" %}
+                                    <span style="margin-left: 4px;">🔒</span>
+                                    {% endif %}
                                 </a>
                             {% else %}
                                 <span class="payment-badge-liquidated">
@@ -167,7 +175,7 @@
                             <div class="timeline-progress-line" id="timeline-progress-width"></div>
                             
                             <!-- 1. RECIBIDA -->
-                            <div class="timeline-step {% if orden_seleccionada.estado_actual == 'Recibida' %}active{% else %}completed{% endif %}">
+                            <div class="timeline-step step-recibida {% if orden_seleccionada.estado_actual == 'Recibida' %}active{% else %}completed{% endif %}">
                                 <div class="step-icon-circle">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -185,7 +193,7 @@
                             </div>
 
                             <!-- 2. CLASIFICADA -->
-                            <div class="timeline-step {% if orden_seleccionada.estado_actual == 'Clasificada' %}active{% elif orden_seleccionada.estado_actual != 'Recibida' %}completed{% endif %}">
+                            <div class="timeline-step step-clasificada {% if orden_seleccionada.estado_actual == 'Clasificada' %}active{% elif orden_seleccionada.estado_actual != 'Recibida' %}completed{% endif %}">
                                 <div class="step-icon-circle">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -201,7 +209,7 @@
                             </div>
 
                             <!-- 3. EN LAVADO -->
-                            <div class="timeline-step {% if orden_seleccionada.estado_actual == 'En lavado' %}active{% elif orden_seleccionada.estado_actual != 'Recibida' and orden_seleccionada.estado_actual != 'Clasificada' %}completed{% endif %}">
+                            <div class="timeline-step step-en-lavado {% if orden_seleccionada.estado_actual == 'En lavado' %}active{% elif orden_seleccionada.estado_actual != 'Recibida' and orden_seleccionada.estado_actual != 'Clasificada' %}completed{% endif %}">
                                 <div class="step-icon-circle">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                         <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
@@ -217,7 +225,7 @@
                             </div>
 
                             <!-- 4. EN SECADO -->
-                            <div class="timeline-step {% if orden_seleccionada.estado_actual == 'En secado' %}active{% elif orden_seleccionada.estado_actual != 'Recibida' and orden_seleccionada.estado_actual != 'Clasificada' and orden_seleccionada.estado_actual != 'En lavado' %}completed{% endif %}">
+                            <div class="timeline-step step-en-secado {% if orden_seleccionada.estado_actual == 'En secado' %}active{% elif orden_seleccionada.estado_actual != 'Recibida' and orden_seleccionada.estado_actual != 'Clasificada' and orden_seleccionada.estado_actual != 'En lavado' %}completed{% endif %}">
                                 <div class="step-icon-circle">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                         <circle cx="12" cy="12" r="10"></circle>
@@ -233,7 +241,7 @@
                             </div>
 
                             <!-- 5. EN PLANCHADO -->
-                            <div class="timeline-step {% if orden_seleccionada.estado_actual == 'En planchado' %}active{% elif orden_seleccionada.estado_actual != 'Recibida' and orden_seleccionada.estado_actual != 'Clasificada' and orden_seleccionada.estado_actual != 'En lavado' and orden_seleccionada.estado_actual != 'En secado' %}completed{% endif %}">
+                            <div class="timeline-step step-en-planchado {% if orden_seleccionada.estado_actual == 'En planchado' %}active{% elif orden_seleccionada.estado_actual != 'Recibida' and orden_seleccionada.estado_actual != 'Clasificada' and orden_seleccionada.estado_actual != 'En lavado' and orden_seleccionada.estado_actual != 'En secado' %}completed{% endif %}">
                                 <div class="step-icon-circle">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                         <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
@@ -248,7 +256,7 @@
                             </div>
 
                             <!-- 6. EMPAQUETADA -->
-                            <div class="timeline-step {% if orden_seleccionada.estado_actual == 'Empaquetada' %}active{% elif orden_seleccionada.estado_actual != 'Recibida' and orden_seleccionada.estado_actual != 'Clasificada' and orden_seleccionada.estado_actual != 'En lavado' and orden_seleccionada.estado_actual != 'En secado' and orden_seleccionada.estado_actual != 'En planchado' %}completed{% endif %}">
+                            <div class="timeline-step step-empaquetada {% if orden_seleccionada.estado_actual == 'Empaquetada' %}active{% elif orden_seleccionada.estado_actual != 'Recibida' and orden_seleccionada.estado_actual != 'Clasificada' and orden_seleccionada.estado_actual != 'En lavado' and orden_seleccionada.estado_actual != 'En secado' and orden_seleccionada.estado_actual != 'En planchado' %}completed{% endif %}">
                                 <div class="step-icon-circle">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                         <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -265,15 +273,16 @@
                             </div>
 
                             <!-- 7. LISTA PARA ENTREGA -->
-                            <div class="timeline-step {% if orden_seleccionada.estado_actual == 'Lista para entrega' %}active{% elif orden_seleccionada.estado_actual == 'Entregada' %}completed{% endif %}">
+                            <div class="timeline-step step-lista-para-entrega {% if orden_seleccionada.estado_actual == 'Lista para entrega' %}active{% elif orden_seleccionada.estado_actual != 'Recibida' and orden_seleccionada.estado_actual != 'Clasificada' and orden_seleccionada.estado_actual != 'En lavado' and orden_seleccionada.estado_actual != 'En secado' and orden_seleccionada.estado_actual != 'En planchado' and orden_seleccionada.estado_actual != 'Empaquetada' %}completed{% endif %}">
                                 <div class="step-icon-circle">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                         <polyline points="14 2 14 8 20 8"></polyline>
-                                        <polyline points="9 15 11 17 15 13"></polyline>
+                                        <path d="M12 18v-6"></path>
+                                        <path d="M9 15l3 3 3-3"></path>
                                     </svg>
                                 </div>
-                                <span class="step-label">Listo p/ Entrega</span>
+                                <span class="step-label">Lista p/ Entrega</span>
                                 <span class="step-date">
                                     {% for s in seguimientos_orden %}
                                         {% if s.estado == 'Lista para entrega' %}{{ s.fecha_cambio|date:"d/m H:i" }}{% endif %}
@@ -282,7 +291,7 @@
                             </div>
 
                             <!-- 8. ENTREGADA -->
-                            <div class="timeline-step {% if orden_seleccionada.estado_actual == 'Entregada' %}active completed{% endif %}">
+                            <div class="timeline-step step-entregada {% if orden_seleccionada.estado_actual == 'Entregada' %}completed{% endif %}">
                                 <div class="step-icon-circle">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -348,9 +357,16 @@
                                 
                                 {% if orden_seleccionada.saldo_pendiente > 0 %}
                                     <div class="pay-cta-container">
+                                        {% if request.user|has_group:"Administrador,Cajero" %}
                                         <a href="{% url 'orden_detail' orden_seleccionada.id %}?source=seguimiento" class="btn-pay-cta">
+                                        {% else %}
+                                        <a href="javascript:void(0)" onclick="showToast('El cliente tiene un saldo pendiente. Por favor, indíquele que pase por la Caja para cancelar antes de entregar las prendas.', 'error');" class="btn-pay-cta" style="background: var(--bg-card); color: var(--text-muted); border: 1px dashed var(--border); box-shadow: none; cursor: not-allowed;">
+                                        {% endif %}
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                                             <span>Registrar Pago / Abonar Saldo</span>
+                                            {% if not request.user|has_group:"Administrador,Cajero" %}
+                                            <span style="margin-left: auto;">🔒</span>
+                                            {% endif %}
                                         </a>
                                     </div>
                                 {% endif %}
@@ -368,9 +384,13 @@
                                         <form method="POST" action="{% url 'seguimiento_advance_status' orden_seleccionada.id %}">
                                             {% csrf_token %}
                                             <button type="submit" class="btn-advance 
-                                                {% if orden_seleccionada.estado_actual == 'Lista para entrega' %}btn-advance-success
-                                                {% elif orden_seleccionada.estado_actual == 'En lavado' %}btn-advance-info
-                                                {% elif orden_seleccionada.estado_actual == 'En secado' or orden_seleccionada.estado_actual == 'En planchado' %}btn-advance-warning{% endif %}">
+                                                {% if orden_seleccionada.estado_actual == 'Recibida' %}btn-advance-state-clasificada
+                                                {% elif orden_seleccionada.estado_actual == 'Clasificada' %}btn-advance-state-en-lavado
+                                                {% elif orden_seleccionada.estado_actual == 'En lavado' %}btn-advance-state-en-secado
+                                                {% elif orden_seleccionada.estado_actual == 'En secado' %}btn-advance-state-en-planchado
+                                                {% elif orden_seleccionada.estado_actual == 'En planchado' %}btn-advance-state-empaquetada
+                                                {% elif orden_seleccionada.estado_actual == 'Empaquetada' %}btn-advance-state-lista-para-entrega
+                                                {% elif orden_seleccionada.estado_actual == 'Lista para entrega' %}btn-advance-state-entregada{% endif %}">
                                                 <span>
                                                     {% if orden_seleccionada.estado_actual == 'Recibida' %}Clasificar Orden
                                                     {% elif orden_seleccionada.estado_actual == 'Clasificada' %}Iniciar Lavado

@@ -195,7 +195,7 @@
             
             <div class="form-group">
                 <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text);">Monto extraído</label>
-                <input type="number" step="0.01" min="0.01" max="{{ saldo_calculado|floatformat:2 }}" name="monto" required placeholder="0.00" style="width: 100%; padding: 0.85rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-app); color: var(--text); font-size: 1.1rem; font-weight: 600; font-family: var(--font); transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+                <input type="number" step="0.01" min="0.01" max="{{ saldo_calculado|stringformat:'.2f' }}" name="monto" required placeholder="0.00" style="width: 100%; padding: 0.85rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-app); color: var(--text); font-size: 1.1rem; font-weight: 600; font-family: var(--font); transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'" oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);">
             </div>
             
             <div style="display: flex; gap: 1rem; margin-top: 1rem;">
@@ -212,6 +212,15 @@
         <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 700; color: var(--text);">Hacer Corte de Caja</h3>
         
         <div style="background: rgba(37, 99, 235, 0.05); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.85rem; font-weight: 600;">Desglose del Cálculo Automático:</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.85rem; color: var(--text); margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed rgba(37,99,235,0.2);">
+                <div style="display: flex; justify-content: space-between;"><span>Fondo Inicial:</span> <strong>+ ${{ turno_abierto.saldo_inicial|floatformat:2 }}</strong></div>
+                <div style="display: flex; justify-content: space-between;"><span>Órdenes Pagadas hoy:</span> <strong style="color: var(--success);">+ ${{ ingresos_ordenes|floatformat:2 }}</strong></div>
+                <div style="display: flex; justify-content: space-between;"><span>Ingresos Extra:</span> <strong style="color: var(--success);">+ ${{ ingresos_extra|floatformat:2 }}</strong></div>
+                <div style="display: flex; justify-content: space-between;"><span>Egresos (Gastos):</span> <strong style="color: var(--danger);">- ${{ egresos|floatformat:2 }}</strong></div>
+            </div>
+
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.35rem; font-weight: 500;">Según el sistema, debes tener en caja:</p>
             <p style="font-size: 1.75rem; font-weight: 800; color: var(--primary);">${{ saldo_calculado|floatformat:2 }}</p>
         </div>
@@ -221,7 +230,7 @@
             
             <div class="form-group">
                 <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text);">Efectivo Real en Caja (Físico)</label>
-                <input type="number" step="0.01" min="0.00" name="saldo_final_real" required value="{{ saldo_calculado|floatformat:2 }}" style="width: 100%; padding: 1rem; border-radius: var(--radius-sm); border: 2px solid var(--border); background: var(--bg-app); color: var(--text); font-weight: 700; font-size: 1.5rem; text-align: left; font-family: var(--font); transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+                <input type="number" step="0.01" min="0.00" name="saldo_final_real" required value="{{ saldo_calculado|stringformat:'.2f' }}" style="width: 100%; padding: 1rem; border-radius: var(--radius-sm); border: 2px solid var(--border); background: var(--bg-app); color: var(--text); font-weight: 700; font-size: 1.5rem; text-align: left; font-family: var(--font); transition: var(--transition);" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'" oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);">
             </div>
             
             <div class="form-group">
