@@ -12,8 +12,8 @@
     </div>
 </div>
 
-<div class="card" style="overflow-x: auto;">
-    <table class="table" style="width: 100%; border-collapse: collapse;">
+<div class="card" style="overflow-x: auto; padding: 0;">
+    <table class="custom-table">
         <thead>
             <tr>
                 <th>Nivel</th>
@@ -26,7 +26,7 @@
         </thead>
         <tbody>
             {% for registro in registros %}
-            <tr style="border-bottom: 1px solid var(--border);">
+            <tr>
                 <td>
                     {% if registro.nivel_severidad == 'WARNING' %}
                         <span style="background: rgba(220, 53, 69, 0.1); color: var(--danger); padding: 0.3rem 0.6rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700;"><i class="fas fa-exclamation-triangle"></i> Intrusión</span>
@@ -34,13 +34,13 @@
                         <span style="background: rgba(13, 110, 253, 0.1); color: var(--primary); padding: 0.3rem 0.6rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700;"><i class="fas fa-info-circle"></i> Acción</span>
                     {% endif %}
                 </td>
-                <td style="font-size: 0.9rem; color: var(--text-muted);">{{ registro.fecha|date:"d M Y - H:i:s" }}</td>
+                <td style="color: var(--text-muted);">{{ registro.fecha|date:"d M Y - H:i:s" }}</td>
                 <td style="font-weight: 600; color: var(--text);">
                     {{ registro.usuario.username|default:"Desconocido" }} 
                     <span style="font-weight: normal; font-size: 0.8rem; color: var(--text-muted);">({{ registro.usuario.groups.first.name|default:"Sin Rol" }})</span>
                 </td>
-                <td style="font-family: monospace; color: var(--text-muted); font-size: 0.9rem;">{{ registro.modulo }}</td>
-                <td style="color: var(--text); font-size: 0.95rem;">{{ registro.accion }}</td>
+                <td style="font-family: monospace; color: var(--text-muted);">{{ registro.modulo }}</td>
+                <td style="color: var(--text);">{{ registro.accion }}</td>
                 <td style="font-family: monospace; color: var(--text-muted); font-size: 0.85rem;">{{ registro.ip_address|default:"N/A" }}</td>
             </tr>
             {% empty %}
