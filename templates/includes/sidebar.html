@@ -172,6 +172,16 @@
             </a>
         </li>
 
+        <!-- Auditoría: Admin -->
+        <li class="sidebar-item {% if active_tab == 'auditoria' %}active{% endif %}" {% if not request.user|has_group:"Administrador" %}style="display: none;"{% endif %}>
+            <a href="{% url 'auditoria_list' %}">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4l3 3"></path></svg>
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span>Auditoría</span>
+                </div>
+            </a>
+        </li>
+
         <!-- Configuración: Admin -->
         <li class="sidebar-item {% if active_tab == 'configuracion' %}active{% endif %}" {% if not request.user|has_group:"Administrador" %}style="opacity: 0.5; filter: grayscale(100%);"{% endif %}>
             {% if request.user|has_group:"Administrador" %}

@@ -226,3 +226,26 @@ class MovimientoCaja(models.Model):
 
     def __str__(self):
         return f"{self.tipo}: ${self.monto} ({self.concepto})"
+
+
+class RegistroAuditoria(models.Model):
+    NIVELES = [
+        ('INFO', 'Información'),
+        ('WARNING', 'Advertencia (Intrusión)'),
+        ('ERROR', 'Error Crítico'),
+    ]
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    accion = models.CharField(max_length=255)
+    modulo = models.CharField(max_length=100)
+    nivel_severidad = models.CharField(max_length=10, choices=NIVELES, default='INFO')
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'auditoria_registros'
+        verbose_name = 'Registro de Auditoría'
+        verbose_name_plural = 'Registros de Auditoría'
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f"[{self.nivel_severidad}] {self.usuario} - {self.modulo}: {self.accion} ({self.fecha})"

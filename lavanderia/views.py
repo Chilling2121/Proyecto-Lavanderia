@@ -1767,6 +1767,17 @@ def promocion_delete(request, id):
     messages.success(request, 'Promoción eliminada exitosamente.')
     return redirect('promociones_list')
 
+# ==========================================
+# Módulo de Auditoría (Solo Administradores)
+# ==========================================
+
+@login_required
+@group_required('Administrador')
+def auditoria_list(request):
+    from .models import RegistroAuditoria
+    registros = RegistroAuditoria.objects.all().select_related('usuario')
+    return render(request, 'auditoria.html', {'registros': registros})
+
 @login_required
 @group_required('Administrador')
 def promocion_toggle(request, id):

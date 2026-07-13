@@ -60,6 +60,7 @@ urlpatterns = [
     path('usuarios/nuevo/', views.usuario_create, name='usuario_create'),
     path('usuarios/<int:id>/editar/', views.usuario_update, name='usuario_update'),
     path('usuarios/<int:id>/toggle/', views.usuario_toggle_status, name='usuario_toggle_status'),
+    path('auditoria/', views.auditoria_list, name='auditoria_list'),
     path('reportes/', views.reportes_dashboard, name='reportes_dashboard'),
     path('reportes/export/excel/', views.reportes_export_excel, name='reportes_export_excel'),
     path('reportes/export/pdf/', views.reportes_export_pdf, name='reportes_export_pdf'),
