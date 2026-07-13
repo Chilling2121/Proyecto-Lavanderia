@@ -16,8 +16,4 @@ python manage.py migrate
 # Asegurar que los roles básicos existan en la base de datos
 python create_groups.py || true
 
-# Crear superusuario automáticamente si se proveen las credenciales (Útil para planes Free)
-if [[ -n "$DJANGO_SUPERUSER_USERNAME" && -n "$DJANGO_SUPERUSER_PASSWORD" ]]; then
-    echo "Intentando crear superusuario automático..."
-    python manage.py createsuperuser --noinput --email "admin@lavafacil.com" || true
-fi
+
