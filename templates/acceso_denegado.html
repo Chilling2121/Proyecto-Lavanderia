@@ -1,26 +1,58 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Acceso Denegado | LavaFácil{% endblock %}
 
 {% block content %}
-<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70vh; text-align: center;">
-    <div style="font-size: 5rem; color: var(--danger); margin-bottom: 1rem;">
-        <i class="fas fa-lock"></i>
-    </div>
+<div class="dashboard-container">
     
-    <h1 style="font-size: 2.5rem; color: var(--danger); margin-bottom: 1rem; font-weight: 800;">ERROR 403: ACCESO DENEGADO</h1>
-    
-    <p style="font-size: 1.1rem; color: var(--text-muted); max-width: 600px; line-height: 1.6; margin-bottom: 2rem;">
-        Tu rol actual <strong>({{ request.user.groups.first.name|default:"Desconocido" }})</strong> no cuenta con los privilegios de seguridad necesarios para ver esta información o realizar esta acción.
-    </p>
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    {% include 'includes/sidebar.html' %}
 
-    <div style="padding: 1.5rem; background: rgba(220, 53, 69, 0.1); border-left: 4px solid var(--danger); border-radius: var(--radius-sm); text-align: left; max-width: 500px; margin-bottom: 2rem;">
-        <h3 style="color: var(--danger); font-size: 1rem; margin-bottom: 0.5rem; font-weight: 700;"><i class="fas fa-exclamation-triangle"></i> Incidente Registrado</h3>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Este intento de acceso no autorizado ha sido registrado en la bitácora de seguridad del sistema y notificado a la Administración.</p>
-    </div>
-    
-    <a href="{% url 'home_redirect' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.8rem 1.5rem; background: var(--primary); color: white; text-decoration: none; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.95rem; transition: var(--transition);" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-        <i class="fas fa-arrow-left"></i> Volver a mi inicio
-    </a>
+    <!-- CUERPO PRINCIPAL -->
+    <main class="main-layout">
+        
+        <!-- CABECERA SUPERIOR (HEADER) -->
+        {% include 'includes/header.html' with page_title='Acceso Denegado' %}
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content-wrapper">
+            <div style="display: flex; align-items: center; justify-content: center; min-height: 65vh;">
+                <section class="dashboard-card" style="max-width: 550px; width: 100%; padding: 3rem 2.5rem; text-align: center;">
+                    
+                    <!-- Icono animado -->
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(220, 53, 69, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                        <i class="fas fa-lock" style="font-size: 2rem; color: var(--danger);"></i>
+                    </div>
+
+                    <!-- Título -->
+                    <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--danger); margin-bottom: 0.5rem;">ACCESO DENEGADO</h1>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; letter-spacing: 0.5px;">ERROR 403 — PERMISOS INSUFICIENTES</p>
+                    
+                    <!-- Explicación -->
+                    <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 2rem;">
+                        Tu rol actual <strong style="color: var(--text);">({{ request.user.groups.first.name|default:"Desconocido" }})</strong> no tiene los privilegios necesarios para acceder a esta sección del sistema.
+                    </p>
+
+                    <!-- Alerta de incidente -->
+                    <div style="padding: 1rem 1.25rem; background: rgba(220, 53, 69, 0.08); border: 1px solid rgba(220, 53, 69, 0.2); border-radius: var(--radius-sm); text-align: left; margin-bottom: 2rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+                            <i class="fas fa-exclamation-triangle" style="color: var(--danger); font-size: 0.85rem;"></i>
+                            <span style="color: var(--danger); font-size: 0.85rem; font-weight: 700;">Incidente Registrado</span>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.82rem; margin: 0; line-height: 1.5;">
+                            Este intento de acceso ha sido registrado automáticamente en la bitácora de seguridad y será revisado por la Administración.
+                        </p>
+                    </div>
+                    
+                    <!-- Botón de regreso -->
+                    <a href="{% url 'home_redirect' %}" class="login-btn" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.9rem 1.5rem; font-size: 0.95rem; text-decoration: none;">
+                        <i class="fas fa-arrow-left"></i> Volver a mi inicio
+                    </a>
+
+                </section>
+            </div>
+        </div>
+    </main>
 </div>
 {% endblock %}

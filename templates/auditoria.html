@@ -1,59 +1,142 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Auditoría y Seguridad | LavaFácil{% endblock %}
+{% block title %}Auditoría de Seguridad - LavaFácil{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
-    <div>
-        <h1 style="font-size: 1.8rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fas fa-shield-alt" style="color: var(--danger);"></i> Auditoría de Seguridad
-        </h1>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">Registro clasificado de accesos e intrusiones al sistema.</p>
-    </div>
-</div>
+<div class="dashboard-container">
+    
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    {% include 'includes/sidebar.html' with active_tab='auditoria' %}
 
-<div class="card" style="display: flex; flex-direction: column; min-height: 60vh; padding: 1.5rem; background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow);">
-    <div class="table-responsive" style="flex: 1; overflow-y: auto;">
-        <table class="custom-table">
-            <thead>
-            <tr>
-                <th>Nivel</th>
-                <th>Fecha y Hora</th>
-                <th>Usuario (Rol)</th>
-                <th>Módulo Protegido</th>
-                <th>Descripción de la Infracción</th>
-                <th>Dirección IP</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for registro in registros %}
-            <tr>
-                <td>
-                    {% if registro.nivel_severidad == 'WARNING' %}
-                        <span style="background: rgba(220, 53, 69, 0.1); color: var(--danger); padding: 0.3rem 0.6rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700;"><i class="fas fa-exclamation-triangle"></i> Intrusión</span>
-                    {% else %}
-                        <span style="background: rgba(13, 110, 253, 0.1); color: var(--primary); padding: 0.3rem 0.6rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700;"><i class="fas fa-info-circle"></i> Acción</span>
-                    {% endif %}
-                </td>
-                <td style="color: var(--text-muted);">{{ registro.fecha|date:"d M Y - H:i:s" }}</td>
-                <td style="font-weight: 600; color: var(--text);">
-                    {{ registro.usuario.username|default:"Desconocido" }} 
-                    <span style="font-weight: normal; font-size: 0.8rem; color: var(--text-muted);">({{ registro.usuario.groups.first.name|default:"Sin Rol" }})</span>
-                </td>
-                <td style="font-family: monospace; color: var(--text-muted);">{{ registro.modulo }}</td>
-                <td style="color: var(--text);">{{ registro.accion }}</td>
-                <td style="font-family: monospace; color: var(--text-muted); font-size: 0.85rem;">{{ registro.ip_address|default:"N/A" }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">
-                    <i class="fas fa-check-circle" style="font-size: 3rem; color: var(--success); margin-bottom: 1rem; opacity: 0.5;"></i>
-                    <p>No se han detectado intrusiones ni violaciones de seguridad en el sistema.</p>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        </table>
-    </div>
+    <!-- CUERPO PRINCIPAL (MAIN LAYOUT) -->
+    <main class="main-layout">
+        
+        <!-- CABECERA SUPERIOR (HEADER) -->
+        {% include 'includes/header.html' with page_title='Auditoría de Seguridad' %}
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content-wrapper">
+
+            <!-- PANEL SUPERIOR: TÍTULO + DESCRIPCIÓN -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                <div>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+                        <i class="fas fa-shield-alt" style="color: var(--danger); margin-right: 0.25rem;"></i>
+                        Bitácora clasificada de accesos, acciones e intrusiones al sistema.
+                    </p>
+                </div>
+            </div>
+
+            <!-- TARJETAS DE RESUMEN -->
+            <div class="dashboard-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 1.5rem;">
+                <section class="dashboard-card" style="padding: 1.25rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: rgba(220, 53, 69, 0.1); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-exclamation-triangle" style="color: var(--danger); font-size: 1.2rem;"></i>
+                        </div>
+                        <div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Intrusiones Detectadas</p>
+                            <p style="font-size: 1.6rem; font-weight: 700; color: var(--danger); margin: 0;">
+                                {{ registros|length }}
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="dashboard-card" style="padding: 1.25rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: rgba(37, 99, 235, 0.1); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-eye" style="color: var(--primary); font-size: 1.2rem;"></i>
+                        </div>
+                        <div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Estado del Sistema</p>
+                            <p style="font-size: 1rem; font-weight: 600; color: var(--success); margin: 0;">
+                                <i class="fas fa-check-circle"></i> Monitoreando
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="dashboard-card" style="padding: 1.25rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-lock" style="color: var(--success); font-size: 1.2rem;"></i>
+                        </div>
+                        <div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Protección RBAC</p>
+                            <p style="font-size: 1rem; font-weight: 600; color: var(--success); margin: 0;">
+                                <i class="fas fa-shield-alt"></i> Activa
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- TABLA DE REGISTROS DE AUDITORÍA -->
+            <section class="dashboard-card" style="max-height: 520px; overflow: hidden; display: flex; flex-direction: column;">
+                <div class="card-header-row" style="margin-bottom: 0.5rem;">
+                    <h2>Historial de Incidentes</h2>
+                </div>
+
+                <div class="table-responsive" style="flex: 1; overflow-y: auto;">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Nivel</th>
+                                <th>Fecha y Hora</th>
+                                <th>Usuario (Rol)</th>
+                                <th>Módulo</th>
+                                <th>Descripción</th>
+                                <th>IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for registro in registros %}
+                            <tr>
+                                <td>
+                                    {% if registro.nivel_severidad == 'WARNING' %}
+                                        <span style="background: rgba(220, 53, 69, 0.15); color: var(--danger); padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;">
+                                            <i class="fas fa-exclamation-triangle"></i> Intrusión
+                                        </span>
+                                    {% elif registro.nivel_severidad == 'ERROR' %}
+                                        <span style="background: rgba(220, 53, 69, 0.25); color: #ff4d4f; padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;">
+                                            <i class="fas fa-times-circle"></i> Crítico
+                                        </span>
+                                    {% else %}
+                                        <span style="background: rgba(37, 99, 235, 0.1); color: var(--primary); padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;">
+                                            <i class="fas fa-info-circle"></i> Info
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ registro.fecha|date:"d/m/Y H:i:s" }}</td>
+                                <td>
+                                    <span style="font-weight: 600;">{{ registro.usuario.username|default:"Desconocido" }}</span>
+                                    <br>
+                                    <span style="font-size: 0.78rem; color: var(--text-muted);">{{ registro.usuario.groups.first.name|default:"Sin Rol" }}</span>
+                                </td>
+                                <td><code style="background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">{{ registro.modulo }}</code></td>
+                                <td>{{ registro.accion }}</td>
+                                <td><code style="font-size: 0.8rem;">{{ registro.ip_address|default:"N/A" }}</code></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 4rem 2rem;">
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                                        <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-check-circle" style="font-size: 1.8rem; color: var(--success);"></i>
+                                        </div>
+                                        <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">Todo limpio. No se han detectado intrusiones ni incidentes de seguridad.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div>
+    </main>
 </div>
 {% endblock %}
