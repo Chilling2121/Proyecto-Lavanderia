@@ -12,9 +12,10 @@
     </div>
 </div>
 
-<div class="card" style="overflow-x: auto; padding: 0;">
-    <table class="custom-table">
-        <thead>
+<div class="card" style="display: flex; flex-direction: column; min-height: 60vh; padding: 1.5rem; background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow);">
+    <div class="table-responsive" style="flex: 1; overflow-y: auto;">
+        <table class="custom-table">
+            <thead>
             <tr>
                 <th>Nivel</th>
                 <th>Fecha y Hora</th>
@@ -52,6 +53,7 @@
             </tr>
             {% endfor %}
         </tbody>
-    </table>
+        </table>
+    </div>
 </div>
 {% endblock %}
