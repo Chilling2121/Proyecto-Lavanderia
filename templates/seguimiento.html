@@ -148,7 +148,7 @@
                                 <a href="javascript:void(0)" onclick="showToast('El cliente tiene un saldo pendiente. Por favor, indíquele que pase por la Caja para cancelar antes de entregar las prendas.', 'error');" class="btn-pay-shortcut" style="opacity: 0.7; filter: grayscale(100%); cursor: not-allowed; border: 1px dashed var(--danger);">
                                 {% endif %}
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                                    <span>Pagar Saldo (${{ orden_seleccionada.saldo_pendiente|floatformat:2 }})</span>
+                                    <span>Pagar Saldo ({{ config.simbolo_moneda }}{{ orden_seleccionada.saldo_pendiente|floatformat:2 }})</span>
                                     {% if not request.user|has_group:"Administrador,Cajero" %}
                                     <span style="margin-left: 4px;">🔒</span>
                                     {% endif %}
@@ -342,16 +342,16 @@
                                 </div>
                                 <div class="info-row-item">
                                     <span class="info-row-label">Total a Pagar:</span>
-                                    <span class="info-row-value-price">${{ orden_seleccionada.total_a_pagar|floatformat:2 }}</span>
+                                    <span class="info-row-value-price">{{ config.simbolo_moneda }}{{ orden_seleccionada.total_a_pagar|floatformat:2 }}</span>
                                 </div>
                                 <div class="info-row-item">
                                     <span class="info-row-label">Total Abonado:</span>
-                                    <span class="info-row-value-success">${{ orden_seleccionada.anticipo|floatformat:2 }}</span>
+                                    <span class="info-row-value-success">{{ config.simbolo_moneda }}{{ orden_seleccionada.anticipo|floatformat:2 }}</span>
                                 </div>
                                 <div class="info-row-item">
                                     <span class="info-row-label">Saldo Pendiente:</span>
                                     <span class="{% if orden_seleccionada.saldo_pendiente > 0 %}info-row-value-danger{% else %}info-row-value-success{% endif %}">
-                                        ${{ orden_seleccionada.saldo_pendiente|floatformat:2 }}
+                                        {{ config.simbolo_moneda }}{{ orden_seleccionada.saldo_pendiente|floatformat:2 }}
                                     </span>
                                 </div>
                                 

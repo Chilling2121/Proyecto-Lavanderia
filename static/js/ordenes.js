@@ -91,7 +91,7 @@ function addPrendaRow() {
     row.className = 'prenda-row';
     row.id = `prenda-row-${rowCounter}`;
     row.style.display = 'grid';
-    row.style.gridTemplateColumns = '1.1fr 1.1fr 55px 45px 50px 1.1fr 65px 30px';
+    row.style.gridTemplateColumns = '1.5fr 1.1fr 55px 45px 50px 0.8fr 65px 30px';
     row.style.gap = '0.5rem';
     row.style.alignItems = 'center';
     row.style.padding = '0.6rem 0.5rem';
@@ -146,7 +146,7 @@ function addPrendaRow() {
         <!-- Peso (Kg) -->
         <div style="min-width: 0;">
             <input type="number" class="input-peso" step="0.01" min="0.05" max="999" oninput="if(this.value.length > 6) this.value = this.value.slice(0,6); calculateRow(this)" placeholder="Kg" disabled
-                   style="box-sizing: border-box; width: 100%; padding: 0.45rem 0.1rem; text-align: center; font-size: 0.82rem; font-family: var(--font); background-color: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600; opacity: 0.5;">
+                   style="box-sizing: border-box; width: 100%; padding: 0.45rem 0.1rem; text-align: center; font-size: 0.82rem; font-family: var(--font); background-color: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600; opacity: 0; visibility: hidden;">
         </div>
         
         <!-- Observaciones específicas de prenda -->
@@ -214,6 +214,14 @@ function addPrendaRow() {
             render: {
                 option_create: function(data, escape) {
                     return '<div class="create">Añadir <strong>' + escape(data.input) + '</strong>&hellip;</div>';
+                },
+                option: function(data, escape) {
+                    return '<div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding-right: 5px;">' +
+                           '<span>' + escape(data.text) + '</span>' +
+                           '<span title="Eliminar del catálogo" style="color: var(--danger); cursor: pointer; padding: 2px 8px; font-weight: bold; border-radius: 4px;" ' +
+                           'onmouseover="this.style.backgroundColor=\'#fee2e2\'" onmouseout="this.style.backgroundColor=\'transparent\'" ' +
+                           'onmousedown="event.preventDefault(); event.stopPropagation(); if(window.deleteCatalogoPrenda) window.deleteCatalogoPrenda(\'' + escape(data.value) + '\');">&times;</span>' +
+                           '</div>';
                 }
             },
             onOptionAdd: function(value, data) {
@@ -287,12 +295,14 @@ function onServiceChange(select) {
             // Cobro por Peso
             pesoInput.disabled = false;
             pesoInput.style.opacity = '1';
+            pesoInput.style.visibility = 'visible';
             pesoInput.required = true;
             if (!pesoInput.value) pesoInput.value = 1.0;
         } else {
             // Cobro por Unidad (Por Prenda)
             pesoInput.disabled = true;
-            pesoInput.style.opacity = '0.5';
+            pesoInput.style.opacity = '0';
+            pesoInput.style.visibility = 'hidden';
             pesoInput.value = '';
             pesoInput.required = false;
         }
@@ -405,7 +415,13 @@ function calculateOrderTotals() {
         inputDesc.value = subtotal.toFixed(2);
     }
     
-    const totalPagar = subtotal - descuento;
+    let subtotal_con_descuento = subtotal - descuento;
+    
+    // Calcular IVA
+    let iva_porcentaje = window.IVA_PORCENTAJE ? parseFloat(window.IVA_PORCENTAJE) : 0.00;
+    let monto_iva = subtotal_con_descuento * (iva_porcentaje / 100);
+    
+    const totalPagar = subtotal_con_descuento + monto_iva;
     
     // Evitar que el anticipo sea mayor que el total a pagar
     if (anticipo > totalPagar) {
@@ -418,6 +434,12 @@ function calculateOrderTotals() {
     // Actualizar etiquetas visuales e inputs ocultos
     const labelSub = document.getElementById('label-subtotal');
     if (labelSub) labelSub.textContent = '$' + subtotal.toFixed(2);
+    
+    // Actualizar IVA labels
+    const labelIvaPorc = document.getElementById('label-iva-porcentaje');
+    if (labelIvaPorc) labelIvaPorc.textContent = iva_porcentaje;
+    const labelIvaMonto = document.getElementById('label-iva-monto');
+    if (labelIvaMonto) labelIvaMonto.textContent = '$' + monto_iva.toFixed(2);
     
     const inputSub = document.getElementById('input-subtotal');
     if (inputSub) inputSub.value = subtotal.toFixed(2);
@@ -587,6 +609,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+// Función para eliminar prendas del catálogo dinámicamente
+window.deleteCatalogoPrenda = function(nombre) {
+    if (typeof window.customConfirm === 'function') {
+        window.customConfirm("¿Está seguro de que desea eliminar la prenda '" + nombre + "' del catálogo?", function() {
+            executeDeleteCatalogoPrenda(nombre);
+        });
+    } else {
+        if (!confirm("¿Está seguro de que desea eliminar la prenda '" + nombre + "' del catálogo?")) return;
+        executeDeleteCatalogoPrenda(nombre);
+    }
+};
+
+function executeDeleteCatalogoPrenda(nombre) {
+    // Obtener CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? 
+                      document.querySelector('[name=csrfmiddlewaretoken]').value : '';
+
+    fetch('/api/catalogo/eliminar/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({nombre: nombre})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if(data.status === 'ok') {
+            // Eliminar de array global si existe
+            if (window.CATALOGO_PRENDAS) {
+                window.CATALOGO_PRENDAS = window.CATALOGO_PRENDAS.filter(p => p !== nombre);
+            }
+            // Eliminar de todos los TomSelects de prendas activos en pantalla
+            document.querySelectorAll('.input-tipo').forEach(select => {
+                if (select.tomselect) {
+                    select.tomselect.removeOption(nombre);
+                }
+            });
+            if (typeof showToast === 'function') {
+                showToast("Prenda eliminada del catálogo exitosamente.", "success");
+            }
+        } else {
+            if (typeof showToast === 'function') {
+                showToast("No se pudo eliminar la prenda del catálogo.", "error");
+            }
+        }
+    })
+    .catch(err => console.error("Error eliminando prenda:", err));
+}
 
 // Escuchar evento de envío del formulario usando delegación global
 document.addEventListener('submit', function(e) {

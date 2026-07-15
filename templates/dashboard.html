@@ -64,7 +64,7 @@
                 <div class="metric-card">
                     <div class="metric-info">
                         <span class="metric-title">Ingresos del Día</span>
-                        <span class="metric-value">${{ ingresos_hoy|floatformat:2 }}</span>
+                        <span class="metric-value">{{ config.simbolo_moneda }}{{ ingresos_hoy|floatformat:2 }}</span>
                         <div class="metric-trend trend-up">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
                             <span>+8%</span>
@@ -149,7 +149,7 @@
                                             <span class="badge state-entregada">Entregada</span>
                                         {% endif %}
                                     </td>
-                                    <td class="font-medium">${{ orden.total_a_pagar|floatformat:2 }}</td>
+                                    <td class="font-medium">{{ config.simbolo_moneda }}{{ orden.total_a_pagar|floatformat:2 }}</td>
                                 </tr>
                                 {% empty %}
                                 <!-- Mostrar datos simulados si la base de datos está vacía -->
@@ -265,7 +265,7 @@
             data: {
                 labels: ingresosLabels,
                 datasets: [{
-                    label: 'Ingresos ($)',
+                    label: 'Ingresos ({{ config.simbolo_moneda }})',
                     data: ingresosData,
                     backgroundColor: 'rgba(37, 99, 235, 0.8)',
                     borderColor: 'rgba(37, 99, 235, 1)',

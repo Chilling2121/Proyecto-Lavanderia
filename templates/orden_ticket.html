@@ -242,17 +242,23 @@
 
         /* Configuración de Impresión */
         @media print {
+            @page {
+                margin: 0; /* Remove default browser headers (URL, date, etc) */
+            }
             body {
                 background-color: white;
                 padding: 0;
                 display: block;
+                min-height: auto;
             }
             .ticket-wrapper {
                 width: 100%;
+                max-width: 350px; /* En ticketeras térmicas ocupará el 100%, en A4 se detendrá en 350px para no estirarse deforme */
                 box-shadow: none;
                 border: none;
-                margin: 0;
-                padding: 0;
+                margin: 0 auto; /* Lo centra si la hoja es grande como una A4 */
+                padding: 15px 5px; /* Un pequeño padding interno */
+                page-break-inside: avoid;
             }
             .ticket-wrapper::before, .ticket-wrapper::after {
                 display: none;
@@ -346,7 +352,7 @@
             <div class="item-block">
                 <div class="item-main">
                     <span>{{ item.prenda.cantidad }}x {{ item.prenda.tipo_prenda }}</span>
-                    <span>${{ item.subtotal|floatformat:2 }}</span>
+                    <span>{{ config.simbolo_moneda }}{{ item.subtotal|floatformat:2 }}</span>
                 </div>
                 <div class="item-sub">
                     <span>{{ item.prenda.servicio.nombre }}</span>
@@ -367,25 +373,25 @@
         <div class="total-block">
             <div class="total-row">
                 <span>Subtotal:</span>
-                <span>${{ orden.total|floatformat:2 }}</span>
+                <span>{{ config.simbolo_moneda }}{{ orden.total|floatformat:2 }}</span>
             </div>
             {% if orden.descuento > 0 %}
             <div class="total-row" style="color: red;">
                 <span>Descuento:</span>
-                <span>-${{ orden.descuento|floatformat:2 }}</span>
+                <span>-{{ config.simbolo_moneda }}{{ orden.descuento|floatformat:2 }}</span>
             </div>
             {% endif %}
             <div class="total-row grand-total">
                 <span>TOTAL A PAGAR:</span>
-                <span>${{ orden.total_a_pagar|floatformat:2 }}</span>
+                <span>{{ config.simbolo_moneda }}{{ orden.total_a_pagar|floatformat:2 }}</span>
             </div>
             <div class="total-row">
                 <span>Total Abonado:</span>
-                <span>${{ orden.anticipo|floatformat:2 }}</span>
+                <span>{{ config.simbolo_moneda }}{{ orden.anticipo|floatformat:2 }}</span>
             </div>
             <div class="total-row" style="font-weight: 700; color: {% if orden.saldo_pendiente > 0 %}red{% else %}var(--success){% endif %};">
                 <span>SALDO PENDIENTE:</span>
-                <span>${{ orden.saldo_pendiente|floatformat:2 }}</span>
+                <span>{{ config.simbolo_moneda }}{{ orden.saldo_pendiente|floatformat:2 }}</span>
             </div>
         </div>
 
@@ -397,7 +403,7 @@
             {% for pago in pagos %}
             <div class="pago-item">
                 <span>{{ pago.fecha_pago|date:"d/m/Y" }} - {{ pago.tipo_pago }} ({{ pago.metodo_pago }})</span>
-                <span>+${{ pago.monto|floatformat:2 }}</span>
+                <span>+{{ config.simbolo_moneda }}{{ pago.monto|floatformat:2 }}</span>
             </div>
             {% endfor %}
         </div>
@@ -450,6 +456,13 @@
                     </g>
                 </svg>
                 <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dark); letter-spacing: 2px;">*LF-{{ orden.id|stringformat:"06d" }}*</span>
+            </div>
+
+            <!-- Código QR de Rastreo -->
+            <div style="margin-top: 1.5rem; display: flex; flex-direction: column; align-items: center; padding-top: 1rem; border-top: 1px dashed var(--border-color);">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ tracking_url|urlencode }}" alt="QR Rastreo" style="width: 100px; height: 100px; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-dark);">Estado de tu ropa</span>
+                <span style="font-size: 0.65rem; color: var(--text-gray); max-width: 200px; margin-top: 0.2rem;">Escanea el código QR con tu cámara para ver el estado en tiempo real.</span>
             </div>
         </div>
 

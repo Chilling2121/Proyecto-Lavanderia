@@ -91,7 +91,7 @@
                 <div class="metric-card">
                     <div class="metric-info">
                         <span class="metric-title">Ingresos Totales</span>
-                        <span class="metric-value">${{ ingresos_totales|floatformat:2 }}</span>
+                        <span class="metric-value">{{ config.simbolo_moneda }}{{ ingresos_totales|floatformat:2 }}</span>
                         <div class="metric-trend trend-up" style="color: var(--text-muted);">
                             <span>Total de órdenes: <b>{{ total_ordenes }}</b></span>
                         </div>
@@ -105,8 +105,8 @@
                     <div class="metric-info">
                         <span class="metric-title">Efectivo vs Bancos</span>
                         <div style="display: flex; flex-direction: column; gap: 0.2rem; margin-top: 0.5rem;">
-                            <span style="font-size: 0.9rem; font-weight: 700; color: var(--success);">Efectivo: ${{ ingresos_efectivo|floatformat:2 }}</span>
-                            <span style="font-size: 0.9rem; font-weight: 700; color: hsl(200, 95%, 45%);">Transf: ${{ ingresos_transferencia|floatformat:2 }}</span>
+                            <span style="font-size: 0.9rem; font-weight: 700; color: var(--success);">Efectivo: {{ config.simbolo_moneda }}{{ ingresos_efectivo|floatformat:2 }}</span>
+                            <span style="font-size: 0.9rem; font-weight: 700; color: hsl(200, 95%, 45%);">Transf: {{ config.simbolo_moneda }}{{ ingresos_transferencia|floatformat:2 }}</span>
                         </div>
                     </div>
                     <div class="metric-icon-container icon-blue">
@@ -117,7 +117,7 @@
                 <div class="metric-card">
                     <div class="metric-info">
                         <span class="metric-title">Cuentas por Cobrar</span>
-                        <span class="metric-value" style="color: var(--danger);">${{ total_por_cobrar|floatformat:2 }}</span>
+                        <span class="metric-value" style="color: var(--danger);">{{ config.simbolo_moneda }}{{ total_por_cobrar|floatformat:2 }}</span>
                         <a href="#deudores" class="metric-trend" style="color: var(--danger); font-weight: 600;">Revisar deudores</a>
                     </div>
                     <div class="metric-icon-container" style="background-color: hsl(350, 80%, 95%); color: var(--danger);">
@@ -151,7 +151,7 @@
                                     <tr>
                                         <td class="font-medium" style="color: var(--primary);">{{ c.nombre_completo }}</td>
                                         <td style="text-align: center;">{{ c.total_ordenes }}</td>
-                                        <td class="font-medium" style="text-align: right; color: var(--success);">${{ c.total_gastado|floatformat:2 }}</td>
+                                        <td class="font-medium" style="text-align: right; color: var(--success);">{{ config.simbolo_moneda }}{{ c.total_gastado|floatformat:2 }}</td>
                                     </tr>
                                     {% empty %}
                                     <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No hay información disponible.</td></tr>
@@ -181,7 +181,7 @@
                                     <tr>
                                         <td class="font-medium">#{{ o.id|stringformat:"06d" }}</td>
                                         <td>{{ o.cliente.nombre_completo }}</td>
-                                        <td class="font-medium" style="text-align: right; color: var(--danger);">${{ o.saldo_pendiente|floatformat:2 }}</td>
+                                        <td class="font-medium" style="text-align: right; color: var(--danger);">{{ config.simbolo_moneda }}{{ o.saldo_pendiente|floatformat:2 }}</td>
                                         <td style="text-align: center;">
                                             <a href="{% url 'orden_detail' o.id %}" class="badge" style="background-color: var(--primary-light); color: var(--primary); text-decoration: none; padding: 0.4rem 0.8rem; display: inline-block;">Cobrar Deuda</a>
                                         </td>

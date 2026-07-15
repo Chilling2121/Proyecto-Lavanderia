@@ -45,7 +45,7 @@
                         —
                     {% endfor %}
                 </td>
-                <td class="font-medium">${{ orden.total_a_pagar|floatformat:2 }}</td>
+                <td class="font-medium">{{ config.simbolo_moneda }}{{ orden.total_a_pagar|floatformat:2 }}</td>
                 <td>
                     {% if orden.estado_actual == 'Recibida' %}
                         <span class="badge state-recibida">Recibida</span>

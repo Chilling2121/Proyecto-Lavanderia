@@ -158,7 +158,7 @@
                                         <td style="text-align: center; font-weight: 600;">{{ item.prenda.cantidad }}</td>
                                         <td style="text-align: center;">{% if item.prenda.peso %}{{ item.prenda.peso|floatformat:2 }} kg{% else %}—{% endif %}</td>
                                         <td style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">{{ item.prenda.observaciones|default:"—" }}</td>
-                                        <td class="font-medium" style="text-align: right;">${{ item.subtotal|floatformat:2 }}</td>
+                                        <td class="font-medium" style="text-align: right;">{{ config.simbolo_moneda }}{{ item.subtotal|floatformat:2 }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -212,9 +212,9 @@
         let texto = `Hola *{{ orden.cliente.nombre_completo }}*, somos LavaFácil.\n\n`;
         texto += `Su orden de servicio *#{{ orden.id|stringformat:"06d" }}* ha sido registrada exitosamente y se encuentra en estado: *{{ orden.estado_actual }}*.\n\n`;
         texto += `*Resumen de cuenta:*\n`;
-        texto += `• Total a pagar: $ {{ orden.total_a_pagar }}\n`;
-        texto += `• Anticipo dado: $ {{ orden.anticipo }}\n`;
-        texto += `• Saldo pendiente: $ {{ orden.saldo_pendiente }}\n\n`;
+        texto += `• Total a pagar: {{ config.simbolo_moneda }} {{ orden.total_a_pagar }}\n`;
+        texto += `• Anticipo dado: {{ config.simbolo_moneda }} {{ orden.anticipo }}\n`;
+        texto += `• Saldo pendiente: {{ config.simbolo_moneda }} {{ orden.saldo_pendiente }}\n\n`;
         texto += `¡Gracias por su preferencia!`;
         
         const url = `https://wa.me/${telefono}?text=${encodeURIComponent(texto)}`;

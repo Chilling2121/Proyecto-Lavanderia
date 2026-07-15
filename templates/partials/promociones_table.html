@@ -13,7 +13,7 @@
             {% if promocion.tipo == 'Porcentaje' %}
                 {{ promocion.valor|floatformat:0 }}%
             {% else %}
-                ${{ promocion.valor|floatformat:2 }}
+                {{ config.simbolo_moneda }}{{ promocion.valor|floatformat:2 }}
             {% endif %}
         </div>
     </td>

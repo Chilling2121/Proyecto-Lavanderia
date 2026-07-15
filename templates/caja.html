@@ -49,7 +49,7 @@
                     <div class="metric-card">
                         <div class="metric-info">
                             <span class="metric-title">Fondo Inicial</span>
-                            <span class="metric-value" style="color: var(--primary);">${{ turno_abierto.saldo_inicial|floatformat:2 }}</span>
+                            <span class="metric-value" style="color: var(--primary);">{{ config.simbolo_moneda }}{{ turno_abierto.saldo_inicial|floatformat:2 }}</span>
                         </div>
                         <div class="metric-icon-container" style="background: rgba(59, 130, 246, 0.15); color: var(--primary);">
                             <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
@@ -59,7 +59,7 @@
                     <div class="metric-card">
                         <div class="metric-info">
                             <span class="metric-title">Saldo Esperado (Actual)</span>
-                            <span class="metric-value" style="color: var(--success);">${{ saldo_calculado|floatformat:2 }}</span>
+                            <span class="metric-value" style="color: var(--success);">{{ config.simbolo_moneda }}{{ saldo_calculado|floatformat:2 }}</span>
                         </div>
                         <div class="metric-icon-container icon-emerald">
                             <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
@@ -79,7 +79,7 @@
                             <div>
                                 <label style="display: block; font-size: 0.95rem; font-weight: 500; color: var(--text-muted); margin-bottom: 0.75rem;">Fondo de Caja (Efectivo inicial)</label>
                                 <div style="position: relative; display: flex; align-items: center;">
-                                    <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1.25rem;">$</span>
+                                    <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1.25rem;">{{ config.simbolo_moneda }}</span>
                                     <input type="number" step="0.01" min="10.00" name="saldo_inicial" required style="width: 260px; padding: 1rem 1rem 1rem 2.5rem; border-radius: var(--radius); border: 2px solid var(--border); background: var(--bg-card); color: var(--text); font-size: 1.5rem; font-weight: 700; text-align: left; transition: var(--transition); box-shadow: var(--shadow-sm);" value="10.00" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
                                 </div>
                             </div>
@@ -132,7 +132,7 @@
                                         </span>
                                     </td>
                                     <td>{{ m.concepto }}</td>
-                                    <td style="font-weight: 600; text-align: right;">${{ m.monto|floatformat:2 }}</td>
+                                    <td style="font-weight: 600; text-align: right;">{{ config.simbolo_moneda }}{{ m.monto|floatformat:2 }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No hay movimientos registrados</td></tr>
@@ -163,7 +163,7 @@
                                     <td><a href="{% url 'orden_detail' p.orden.id %}" style="color: var(--primary);">#{{ p.orden.id|stringformat:"06d" }}</a></td>
                                     <td>{{ p.fecha_pago|date:"h:i A" }}</td>
                                     <td>{{ p.metodo_pago }}</td>
-                                    <td style="font-weight: 600; text-align: right;">${{ p.monto|floatformat:2 }}</td>
+                                    <td style="font-weight: 600; text-align: right;">{{ config.simbolo_moneda }}{{ p.monto|floatformat:2 }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No hay cobros registrados</td></tr>
@@ -174,6 +174,110 @@
                 </section>
             </div>
             {% endif %}
+
+            <!-- HISTORIAL DE CAJA POR CIERRE -->
+            <section class="dashboard-card" style="margin-top: 2rem;">
+                <div class="card-header-row">
+                    <h2>Historial de Caja por Cierre</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Registro de todos los turnos finalizados y sus cuadres de caja.</p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem;">
+                    {% for turno in turnos_cerrados %}
+                        <div style="background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: stretch; justify-content: space-between; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-md)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+                            
+                            <!-- PERÍODO -->
+                            <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; justify-content: center; gap: 0.75rem; border-right: 1px solid var(--border); padding-right: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="background: rgba(34, 197, 94, 0.1); color: var(--success); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Apertura</span>
+                                        <strong style="font-size: 0.95rem; color: var(--text);">{{ turno.fecha_apertura|date:"d M Y, h:i A" }}</strong>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="background: rgba(239, 68, 68, 0.1); color: var(--danger); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Cierre</span>
+                                        <strong style="font-size: 0.95rem; color: var(--text);">{{ turno.fecha_cierre|date:"d M Y, h:i A" }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- RESPONSABLE -->
+                            <div style="flex: 1; min-width: 150px; display: flex; align-items: center; border-right: 1px solid var(--border); padding-right: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.5);">
+                                        {{ turno.usuario.username|make_list|first|upper }}
+                                    </div>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Cajero</span>
+                                        <span style="font-weight: 600; color: var(--text); font-size: 1.05rem;">{{ turno.usuario.get_full_name|default:turno.usuario.username }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- BALANCES -->
+                            <div style="flex: 1.5; min-width: 250px; display: flex; flex-direction: column; justify-content: center;">
+                                <div style="background: var(--bg-card); padding: 1rem; border-radius: var(--radius); border: 1px solid rgba(0,0,0,0.05); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-bottom: 0.35rem;">
+                                        <span style="color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem;"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted);"></span> Fondo Inicial:</span>
+                                        <span style="font-weight: 500; color: var(--text);">{{ config.simbolo_moneda|default:'$' }}{{ turno.saldo_inicial|floatformat:2 }}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+                                        <span style="color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem;"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted);"></span> Total Esperado:</span>
+                                        <span style="font-weight: 500; color: var(--text);">{{ config.simbolo_moneda|default:'$' }}{{ turno.saldo_final_esperado|floatformat:2 }}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1rem;">
+                                        <span style="font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 0.35rem;"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--primary);"></span> Físico Real:</span>
+                                        <strong style="color: var(--primary); font-size: 1.1rem;">{{ config.simbolo_moneda|default:'$' }}{{ turno.saldo_final_real|floatformat:2 }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- DIFERENCIA -->
+                            <div style="flex: 1; min-width: 180px; display: flex; align-items: center; justify-content: flex-end;">
+                                {% if turno.diferencia < 0 %}
+                                    <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); padding: 1rem; border-radius: var(--radius); display: flex; flex-direction: column; align-items: flex-end; width: 100%;">
+                                        <div style="display: flex; align-items: center; gap: 0.35rem; color: var(--danger); margin-bottom: 0.25rem;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                                            <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Faltante</span>
+                                        </div>
+                                        <strong style="color: var(--danger); font-size: 1.3rem; line-height: 1;">-{{ config.simbolo_moneda|default:'$' }}{{ turno.diferencia|stringformat:"f"|slice:"1:"|floatformat:2 }}</strong>
+                                    </div>
+                                {% elif turno.diferencia > 0 %}
+                                    <div style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.2); padding: 1rem; border-radius: var(--radius); display: flex; flex-direction: column; align-items: flex-end; width: 100%;">
+                                        <div style="display: flex; align-items: center; gap: 0.35rem; color: var(--success); margin-bottom: 0.25rem;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                            <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Sobrante</span>
+                                        </div>
+                                        <strong style="color: var(--success); font-size: 1.3rem; line-height: 1;">+{{ config.simbolo_moneda|default:'$' }}{{ turno.diferencia|floatformat:2 }}</strong>
+                                    </div>
+                                {% else %}
+                                    <div style="background: rgba(100, 116, 139, 0.08); border: 1px solid rgba(100, 116, 139, 0.2); padding: 1rem; border-radius: var(--radius); display: flex; flex-direction: column; align-items: flex-end; width: 100%;">
+                                        <div style="display: flex; align-items: center; gap: 0.35rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                            <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Cuadrado</span>
+                                        </div>
+                                        <strong style="color: var(--text-muted); font-size: 1.3rem; line-height: 1;">{{ config.simbolo_moneda|default:'$' }}0.00</strong>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div style="text-align: center; padding: 4rem 1rem; color: var(--text-muted); background: var(--bg-body); border-radius: var(--radius-lg); border: 2px dashed var(--border);">
+                            <div style="background: var(--bg-card); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; box-shadow: var(--shadow-sm);">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.6;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                            </div>
+                            <p style="font-size: 1.1rem; font-weight: 600; color: var(--text);">No hay un historial de cierres de caja todavía.</p>
+                            <p style="font-size: 0.9rem; max-width: 400px; margin: 0.5rem auto 0 auto; opacity: 0.8;">Cuando cierres un turno de caja, aparecerá aquí como una tarjeta de resumen detallado con sus cuadres respectivos.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
 
         </div>
     </main>
@@ -215,14 +319,14 @@
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.85rem; font-weight: 600;">Desglose del Cálculo Automático:</p>
             
             <div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.85rem; color: var(--text); margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed rgba(37,99,235,0.2);">
-                <div style="display: flex; justify-content: space-between;"><span>Fondo Inicial:</span> <strong>+ ${{ turno_abierto.saldo_inicial|floatformat:2 }}</strong></div>
-                <div style="display: flex; justify-content: space-between;"><span>Órdenes Pagadas hoy:</span> <strong style="color: var(--success);">+ ${{ ingresos_ordenes|floatformat:2 }}</strong></div>
-                <div style="display: flex; justify-content: space-between;"><span>Ingresos Extra:</span> <strong style="color: var(--success);">+ ${{ ingresos_extra|floatformat:2 }}</strong></div>
-                <div style="display: flex; justify-content: space-between;"><span>Egresos (Gastos):</span> <strong style="color: var(--danger);">- ${{ egresos|floatformat:2 }}</strong></div>
+                <div style="display: flex; justify-content: space-between;"><span>Fondo Inicial:</span> <strong>+ {{ config.simbolo_moneda }}{{ turno_abierto.saldo_inicial|floatformat:2 }}</strong></div>
+                <div style="display: flex; justify-content: space-between;"><span>Órdenes Pagadas hoy:</span> <strong style="color: var(--success);">+ {{ config.simbolo_moneda }}{{ ingresos_ordenes|floatformat:2 }}</strong></div>
+                <div style="display: flex; justify-content: space-between;"><span>Ingresos Extra:</span> <strong style="color: var(--success);">+ {{ config.simbolo_moneda }}{{ ingresos_extra|floatformat:2 }}</strong></div>
+                <div style="display: flex; justify-content: space-between;"><span>Egresos (Gastos):</span> <strong style="color: var(--danger);">- {{ config.simbolo_moneda }}{{ egresos|floatformat:2 }}</strong></div>
             </div>
 
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.35rem; font-weight: 500;">Según el sistema, debes tener en caja:</p>
-            <p style="font-size: 1.75rem; font-weight: 800; color: var(--primary);">${{ saldo_calculado|floatformat:2 }}</p>
+            <p style="font-size: 1.75rem; font-weight: 800; color: var(--primary);">{{ config.simbolo_moneda }}{{ saldo_calculado|floatformat:2 }}</p>
         </div>
         
         <form action="{% url 'caja_cerrar' %}" method="post" style="display: flex; flex-direction: column; gap: 1.25rem;">

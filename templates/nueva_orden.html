@@ -112,7 +112,7 @@
                         
                         <!-- Encabezados y filas de prendas -->
                         <div class="prendas-scroll-container">
-                        <div id="prendas-headers" style="display: none; grid-template-columns: 1.1fr 1.1fr 55px 45px 50px 1.1fr 65px 30px; gap: 0.5rem; padding: 0 0.5rem 0.4rem 0.5rem; border-bottom: 1.5px solid var(--border); margin-bottom: 0.25rem; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <div id="prendas-headers" style="display: none; grid-template-columns: 1.5fr 1.1fr 55px 45px 50px 0.8fr 65px 30px; gap: 0.5rem; padding: 0 0.5rem 0.4rem 0.5rem; border-bottom: 1.5px solid var(--border); margin-bottom: 0.25rem; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
                             <div>Prenda</div>
                             <div>Servicio</div>
                             <div style="text-align: center;">Tarifa</div>
@@ -188,33 +188,46 @@
                             <!-- Subtotal -->
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">Subtotal</span>
-                                <span id="label-subtotal" style="font-weight: 600; color: var(--text); font-size: 1.05rem;">$0.00</span>
+                                <span id="label-subtotal" style="font-weight: 600; color: var(--text); font-size: 1.05rem;">{{ config.simbolo_moneda }}0.00</span>
                                 <input type="hidden" name="total" id="input-subtotal" value="0.00">
                             </div>
 
                             <!-- Promoción (Oferta) -->
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">Aplicar Oferta</span>
-                                <select name="promocion_id" id="select-promocion" onchange="onPromotionChange()"
-                                        style="width: 150px; padding: 0.4rem 0.5rem; font-size: 0.85rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600;">
-                                    <option value="" data-tipo="" data-valor="0.00">Sin Oferta</option>
-                                    {% for p in promociones %}
-                                        <option value="{{ p.id }}" data-tipo="{{ p.tipo }}" data-valor="{{ p.valor }}">{{ p.nombre }} ({{ p.valor }}{% if p.tipo == 'Porcentaje' %}%{% else %}${% endif %})</option>
-                                    {% endfor %}
-                                </select>
+                                {% if promociones %}
+                                    <select name="promocion_id" id="select-promocion" onchange="onPromotionChange()"
+                                            style="width: 150px; padding: 0.4rem 0.5rem; font-size: 0.85rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600;">
+                                        <option value="" data-tipo="" data-valor="0.00">Sin Oferta</option>
+                                        {% for p in promociones %}
+                                            <option value="{{ p.id }}" data-tipo="{{ p.tipo }}" data-valor="{{ p.valor }}">{{ p.nombre }} ({{ p.valor }}{% if p.tipo == 'Porcentaje' %}%{% else %}${% endif %})</option>
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    <div style="padding: 0.35rem 0.6rem; font-size: 0.8rem; background-color: rgba(220, 53, 69, 0.08); border: 1px solid rgba(220, 53, 69, 0.2); border-radius: var(--radius-sm); color: var(--danger); display: flex; align-items: center; gap: 0.4rem; font-weight: 500;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                        No hay cupones disponibles
+                                    </div>
+                                {% endif %}
                             </div>
                             
                             <!-- Descuento -->
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">Descuento ($)</span>
+                                <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">Descuento ({{ config.simbolo_moneda }})</span>
                                 <input type="number" name="descuento" id="input-descuento" min="0" step="0.01" value="0.00" oninput="calculateOrderTotals()"
                                        style="width: 100px; padding: 0.4rem 0.75rem; text-align: right; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600;">
+                            </div>
+                            
+                            <!-- IVA -->
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">IVA (<span id="label-iva-porcentaje">0</span>%)</span>
+                                <span id="label-iva-monto" style="font-weight: 600; color: var(--text-muted); font-size: 1.05rem;">{{ config.simbolo_moneda }}0.00</span>
                             </div>
                             
                             <!-- Total a Pagar -->
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
                                 <span style="font-weight: 700; color: var(--text); font-size: 1rem;">Total a Pagar</span>
-                                <span id="label-total-pagar" style="font-weight: 800; color: var(--primary); font-size: 1.35rem;">$0.00</span>
+                                <span id="label-total-pagar" style="font-weight: 800; color: var(--primary); font-size: 1.35rem;">{{ config.simbolo_moneda }}0.00</span>
                                 <input type="hidden" name="total_a_pagar" id="input-total-pagar" value="0.00">
                             </div>
                         </div>
@@ -233,7 +246,7 @@
                             
                             <!-- Anticipo (Abono) -->
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">Anticipo / Abono ($)</span>
+                                <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">Anticipo / Abono ({{ config.simbolo_moneda }})</span>
                                 <input type="number" name="anticipo" id="input-anticipo" min="0" step="0.01" value="0.00" oninput="calculateOrderTotals()"
                                        style="width: 100px; padding: 0.4rem 0.75rem; text-align: right; font-size: 0.95rem; font-family: var(--font); background-color: var(--bg-app); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600; {% if not caja_abierta %}opacity: 0.5; cursor: not-allowed;{% endif %}"
                                        {% if not caja_abierta %}disabled title="Abre un turno de caja para registrar pagos"{% endif %}>
@@ -253,7 +266,7 @@
                             <!-- Saldo Pendiente -->
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
                                 <span style="font-weight: 700; color: var(--text); font-size: 1rem;">Saldo Pendiente</span>
-                                <span id="label-saldo-pendiente" style="font-weight: 800; color: var(--danger); font-size: 1.25rem;">$0.00</span>
+                                <span id="label-saldo-pendiente" style="font-weight: 800; color: var(--danger); font-size: 1.25rem;">{{ config.simbolo_moneda }}0.00</span>
                             </div>
                         </div>
 

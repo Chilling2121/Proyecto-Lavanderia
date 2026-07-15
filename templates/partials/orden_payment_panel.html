@@ -6,15 +6,15 @@
     <div class="payment-change-alert">
         <div class="payment-change-row">
             <span>Monto Cobrado (Deuda):</span>
-            <span>${{ cambio_info.monto_cobrado|floatformat:2 }}</span>
+            <span>{{ config.simbolo_moneda }}{{ cambio_info.monto_cobrado|floatformat:2 }}</span>
         </div>
         <div class="payment-change-row">
             <span>Efectivo Recibido:</span>
-            <span>${{ cambio_info.efectivo_recibido|floatformat:2 }}</span>
+            <span>{{ config.simbolo_moneda }}{{ cambio_info.efectivo_recibido|floatformat:2 }}</span>
         </div>
         <div class="payment-change-total">
             <span>Cambio a Devolver:</span>
-            <span>${{ cambio_info.cambio|floatformat:2 }}</span>
+            <span>{{ config.simbolo_moneda }}{{ cambio_info.cambio|floatformat:2 }}</span>
         </div>
     </div>
     {% endif %}
@@ -23,25 +23,25 @@
     <div class="payment-summary">
         <div class="payment-row">
             <label>Subtotal</label>
-            <span>${{ orden.total|floatformat:2 }}</span>
+            <span>{{ config.simbolo_moneda }}{{ orden.total|floatformat:2 }}</span>
         </div>
         {% if orden.descuento > 0 %}
         <div class="payment-row">
             <label>Descuento</label>
-            <span style="color: var(--danger); font-weight: 600;">-${{ orden.descuento|floatformat:2 }}</span>
+            <span style="color: var(--danger); font-weight: 600;">-{{ config.simbolo_moneda }}{{ orden.descuento|floatformat:2 }}</span>
         </div>
         {% endif %}
         <div class="payment-row-border">
             <label style="font-weight: 700; color: var(--text);">Total a Pagar</label>
-            <span class="payment-value-price">${{ orden.total_a_pagar|floatformat:2 }}</span>
+            <span class="payment-value-price">{{ config.simbolo_moneda }}{{ orden.total_a_pagar|floatformat:2 }}</span>
         </div>
         <div class="payment-row">
             <label>Total Abonado</label>
-            <span style="color: var(--success); font-weight: 600;">${{ orden.anticipo|floatformat:2 }}</span>
+            <span style="color: var(--success); font-weight: 600;">{{ config.simbolo_moneda }}{{ orden.anticipo|floatformat:2 }}</span>
         </div>
         <div class="payment-row-border">
             <label style="font-weight: 700; color: var(--text);">Saldo Pendiente</label>
-            <span class="{% if orden.saldo_pendiente > 0 %}payment-value-danger{% else %}payment-value-success{% endif %}">${{ orden.saldo_pendiente|floatformat:2 }}</span>
+            <span class="{% if orden.saldo_pendiente > 0 %}payment-value-danger{% else %}payment-value-success{% endif %}">{{ config.simbolo_moneda }}{{ orden.saldo_pendiente|floatformat:2 }}</span>
         </div>
         <div class="payment-row">
             <label>Estado de Pago</label>
@@ -80,7 +80,7 @@
             
             <div class="payment-form-grid">
                 <div class="payment-form-field">
-                    <label class="payment-form-label">Monto ($)</label>
+                    <label class="payment-form-label">Monto ({{ config.simbolo_moneda }})</label>
                     <input type="number" name="monto" id="pago-monto-input" step="0.01" min="0.01" max="{{ orden.saldo_pendiente|stringformat:'.2f' }}" placeholder="0.00" required class="payment-form-input">
                 </div>
                 <div class="payment-form-field">
@@ -131,7 +131,7 @@
                         <p class="meta-title">{{ pago.tipo_pago }} — {{ pago.metodo_pago }}</p>
                         <p class="meta-date" style="margin-top: 0.15rem;">{{ pago.fecha_pago|date:"d/m/Y H:i" }}</p>
                     </div>
-                    <span class="payment-history-monto">+${{ pago.monto|floatformat:2 }}</span>
+                    <span class="payment-history-monto">+{{ config.simbolo_moneda }}{{ pago.monto|floatformat:2 }}</span>
                 </div>
                 {% if pago.observaciones %}
                 <div style="font-size: 0.76rem; color: var(--text-muted); padding-top: 0.35rem; border-top: 1px dashed var(--border); display: flex; align-items: center; gap: 0.25rem;">

@@ -1,13 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializar Flatpickr con idioma español en rango
     const fechaRango = document.getElementById("fecha_rango");
+    const clearFechaBtn = document.getElementById("clear_fecha");
+    
     if (fechaRango) {
-        flatpickr("#fecha_rango", {
+        const fp = flatpickr("#fecha_rango", {
             mode: "range",
             dateFormat: "Y-m-d",
             locale: "es",
             maxDate: "today",
             onChange: function(selectedDates, dateStr, instance) {
+                // Mostrar u ocultar el boton de limpiar
+                if (clearFechaBtn) {
+                    clearFechaBtn.style.display = dateStr ? 'block' : 'none';
+                }
+                
                 // Forzar trigger de cambio para que HTMX capture el valor
                 const input = document.getElementById('fecha_rango');
                 if (input && (selectedDates.length === 2 || dateStr === "")) {
@@ -15,6 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+        
+        if (clearFechaBtn) {
+            clearFechaBtn.addEventListener('click', () => {
+                fp.clear(); // Limpia Flatpickr (esto dispara onChange con dateStr="")
+            });
+        }
     }
 
     // Inicializar Tom Select para selects
@@ -30,6 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.control_input.disabled = true;
                     this.control_input.style.display = 'none';
                 }
+            },
+            onChange: function() {
+                this.input.dispatchEvent(new Event('change', { bubbles: true }));
             }
         });
     }
@@ -45,6 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.control_input.disabled = true;
                     this.control_input.style.display = 'none';
                 }
+            },
+            onChange: function() {
+                this.input.dispatchEvent(new Event('change', { bubbles: true }));
             }
         });
     }

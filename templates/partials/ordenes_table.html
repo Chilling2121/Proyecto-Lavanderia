@@ -4,10 +4,10 @@
     <td class="font-medium">{{ orden.cliente.nombre_completo }}</td>
     <td>{{ orden.fecha_recepcion|date:"d/m/Y H:i" }}</td>
     <td>{{ orden.fecha_entrega_estimada|date:"d/m/Y H:i"|default:"—" }}</td>
-    <td class="font-medium" style="text-align: right;">${{ orden.total_a_pagar|floatformat:2 }}</td>
-    <td style="text-align: right; color: var(--success); font-weight: 500;">${{ orden.anticipo|floatformat:2 }}</td>
+    <td class="font-medium" style="text-align: right;">{{ config.simbolo_moneda }}{{ orden.total_a_pagar|floatformat:2 }}</td>
+    <td style="text-align: right; color: var(--success); font-weight: 500;">{{ config.simbolo_moneda }}{{ orden.anticipo|floatformat:2 }}</td>
     <td class="font-medium" style="text-align: right; color: {% if orden.saldo_pendiente > 0 %}var(--danger){% else %}var(--success){% endif %};">
-        ${{ orden.saldo_pendiente|floatformat:2 }}
+        {{ config.simbolo_moneda }}{{ orden.saldo_pendiente|floatformat:2 }}
     </td>
     <td>
         {% if orden.estado_pago == 'Liquidado' %}

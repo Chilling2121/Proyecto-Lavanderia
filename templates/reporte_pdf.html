@@ -73,10 +73,10 @@
                 
                 <h3 class="text-lg font-bold border-b border-white/30 pb-3 mb-5">Rendimiento General</h3>
                 <div class="space-y-4 relative z-10">
-                    <div class="flex justify-between items-center"><span class="text-sm opacity-90 font-semibold">Ingresos Totales</span><span class="text-2xl font-bold">${{ ingresos_totales|floatformat:2 }}</span></div>
-                    <div class="flex justify-between items-center"><span class="text-sm opacity-90 font-semibold">Efectivo Recaudado</span><span class="text-xl font-bold">${{ ingresos_efectivo|floatformat:2 }}</span></div>
+                    <div class="flex justify-between items-center"><span class="text-sm opacity-90 font-semibold">Ingresos Totales</span><span class="text-2xl font-bold">{{ config.simbolo_moneda }}{{ ingresos_totales|floatformat:2 }}</span></div>
+                    <div class="flex justify-between items-center"><span class="text-sm opacity-90 font-semibold">Efectivo Recaudado</span><span class="text-xl font-bold">{{ config.simbolo_moneda }}{{ ingresos_efectivo|floatformat:2 }}</span></div>
                     <div class="flex justify-between items-center"><span class="text-sm opacity-90 font-semibold">Órdenes Procesadas</span><span class="text-xl font-bold">{{ total_ordenes }}</span></div>
-                    <div class="flex justify-between items-center"><span class="text-sm opacity-90 font-semibold">Cuentas por Cobrar</span><span class="text-xl font-bold">${{ total_por_cobrar|floatformat:2 }}</span></div>
+                    <div class="flex justify-between items-center"><span class="text-sm opacity-90 font-semibold">Cuentas por Cobrar</span><span class="text-xl font-bold">{{ config.simbolo_moneda }}{{ total_por_cobrar|floatformat:2 }}</span></div>
                 </div>
             </div>
             
@@ -102,7 +102,7 @@
                 <tr>
                     <td class="font-semibold text-gray-800">{{ c.nombre_completo }}</td>
                     <td class="text-center font-bold text-gray-600">{{ c.total_ordenes }}</td>
-                    <td class="text-right font-bold text-blue-700">${{ c.total_gastado|floatformat:2 }}</td>
+                    <td class="text-right font-bold text-blue-700">{{ config.simbolo_moneda }}{{ c.total_gastado|floatformat:2 }}</td>
                 </tr>
                 {% empty %}
                 <tr><td colspan="3" class="text-center py-6 text-gray-500 italic">No hay datos suficientes para mostrar top de clientes.</td></tr>
@@ -157,7 +157,7 @@
                 <tr>
                     <td class="font-bold text-gray-500">{{ o.id|stringformat:"06d" }}</td>
                     <td class="font-semibold text-gray-800">{{ o.cliente.nombre_completo }}</td>
-                    <td class="text-right font-bold text-red-600">${{ o.saldo_pendiente|floatformat:2 }}</td>
+                    <td class="text-right font-bold text-red-600">{{ config.simbolo_moneda }}{{ o.saldo_pendiente|floatformat:2 }}</td>
                 </tr>
                 {% empty %}
                 <tr><td colspan="3" class="text-center py-6 text-blue-600 font-bold bg-blue-50">🎉 No hay cuentas pendientes de cobro. ¡Excelente!</td></tr>

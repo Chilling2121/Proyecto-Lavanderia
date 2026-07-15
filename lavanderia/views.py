@@ -3,7 +3,8 @@ from django.contrib.auth.decorators import login_required
 from .decorators import group_required
 from django.db.models import Sum, Count, Q, ProtectedError
 from django.utils import timezone
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
@@ -382,6 +383,22 @@ def ordenes_search(request):
         ordenes = ordenes.filter(estado_actual=estado)
         
     return render(request, 'partials/ordenes_table.html', {'ordenes': ordenes})
+
+@require_POST
+@login_required
+@group_required('Administrador', 'Cajero')
+def catalogo_prenda_delete(request):
+    try:
+        data = json.loads(request.body)
+        nombre = data.get('nombre')
+        if nombre:
+            from .models import CatalogoPrenda
+            CatalogoPrenda.objects.filter(nombre=nombre).delete()
+            return JsonResponse({'status': 'ok'})
+    except Exception:
+        pass
+    return JsonResponse({'status': 'error'}, status=400)
+
 
 @login_required
 @group_required('Administrador', 'Cajero')
@@ -844,11 +861,7 @@ def orden_register_payment(request, orden_id):
             'orden': orden,
             'pagos': pagos,
             'efectivo_disponible': efectivo_disponible,
-            'cambio_info': {
-                'monto_cobrado': monto_registrado,
-                'efectivo_recibido': efectivo_recibido,
-                'cambio': cambio
-            } if cambio > 0 else None
+            'cambio_info': None
         }
 
         response = render(request, 'partials/orden_payment_panel.html', context)
@@ -907,6 +920,11 @@ def pagos_search(request):
     tipo = request.GET.get('tipo_pago', '').strip()
     fecha_rango = request.GET.get('fecha_rango', '').strip()
 
+    if metodo == 'all':
+        metodo = ''
+    if tipo == 'all':
+        tipo = ''
+
     pagos = Pago.objects.select_related('orden__cliente').all().order_by('-fecha_pago')
 
     if query:
@@ -924,11 +942,12 @@ def pagos_search(request):
         pagos = pagos.filter(tipo_pago=tipo)
 
     if fecha_rango:
-        if " to " in fecha_rango:
+        if " to " in fecha_rango or " a " in fecha_rango:
             try:
-                start_str, end_str = fecha_rango.split(" to ")
-                start_date = timezone.datetime.strptime(start_str, "%Y-%m-%d")
-                end_date = timezone.datetime.strptime(end_str, "%Y-%m-%d")
+                separator = " to " if " to " in fecha_rango else " a "
+                start_str, end_str = fecha_rango.split(separator)
+                start_date = timezone.datetime.strptime(start_str.strip(), "%Y-%m-%d")
+                end_date = timezone.datetime.strptime(end_str.strip(), "%Y-%m-%d")
                 start_datetime = timezone.make_aware(start_date.replace(hour=0, minute=0, second=0, microsecond=0))
                 end_datetime = timezone.make_aware(end_date.replace(hour=23, minute=59, second=59, microsecond=999999))
                 pagos = pagos.filter(fecha_pago__range=(start_datetime, end_datetime))
@@ -970,12 +989,31 @@ def orden_ticket(request, orden_id):
             'subtotal': subtotal
         })
 
+    from django.urls import reverse
+    tracking_url = request.build_absolute_uri(reverse('rastreo_publico', args=[orden.id]))
+
     context = {
         'orden': orden,
         'prendas_detalle': prendas_detalle,
         'pagos': pagos,
+        'tracking_url': tracking_url,
     }
     return render(request, 'orden_ticket.html', context)
+
+def rastreo_publico(request, orden_id):
+    try:
+        orden = Orden.objects.select_related('cliente').get(id=orden_id)
+    except Orden.DoesNotExist:
+        return render(request, 'rastreo.html', {'error': 'La orden solicitada no existe o el enlace es incorrecto.'})
+    
+    prendas = PrendaOrden.objects.filter(orden=orden).select_related('servicio')
+    
+    context = {
+        'orden': orden,
+        'prendas': prendas,
+        'config': Configuracion.objects.first(),
+    }
+    return render(request, 'rastreo.html', context)
 
 # ==========================================
 # GESTIÓN DE USUARIOS
@@ -988,12 +1026,17 @@ def usuarios_list(request):
     total_usuarios = usuarios.count()
     activos_count = usuarios.filter(is_active=True).count()
     inactivos_count = usuarios.filter(is_active=False).count()
+    
+    # Extraer información de contraseña restablecida si existe en la sesión
+    reset_info = request.session.pop('reset_password_info', None)
+    
     context = {
         'usuarios': usuarios,
         'total_usuarios': total_usuarios,
         'activos_count': activos_count,
         'inactivos_count': inactivos_count,
-        'active_tab': 'usuarios'
+        'active_tab': 'usuarios',
+        'reset_info': reset_info
     }
     return render(request, 'usuarios.html', context)
 
@@ -1116,6 +1159,39 @@ def usuario_toggle_status(request, id):
         usuario.save()
         estado = "activado" if usuario.is_active else "desactivado"
         messages.success(request, f'Usuario {estado} exitosamente.')
+    return redirect('usuarios_list')
+
+@login_required
+@group_required('Administrador')
+def usuario_reset_password(request, id):
+    if request.method == 'POST':
+        try:
+            usuario = User.objects.get(id=id)
+        except User.DoesNotExist:
+            messages.error(request, 'El usuario solicitado no existe.')
+            return redirect('usuarios_list')
+        
+        import string
+        import random
+        # Generar contraseña segura de 8 caracteres
+        chars = string.ascii_letters + string.digits
+        new_password = ''.join(random.SystemRandom().choice(chars) for _ in range(8))
+        
+        usuario.set_password(new_password)
+        usuario.save()
+        
+        # Guardar en la sesión para levantar el modal automático de Gmail en el listado
+        request.session['reset_password_info'] = {
+            'username': usuario.username,
+            'email': usuario.email or '',
+            'first_name': usuario.first_name,
+            'new_password': new_password
+        }
+        
+        messages.success(
+            request,
+            f'La contraseña de "{usuario.username}" fue restablecida exitosamente.'
+        )
     return redirect('usuarios_list')
 
 # ==========================================
@@ -1456,6 +1532,11 @@ def caja_dashboard(request):
         ingresos_extra = Decimal('0.00')
         egresos = Decimal('0.00')
 
+    from django.db.models import F
+    turnos_cerrados = TurnoCaja.objects.filter(estado='Cerrada').annotate(
+        diferencia=F('saldo_final_real') - F('saldo_final_esperado')
+    ).order_by('-fecha_cierre')
+
     context = {
         'turno_abierto': turno_abierto,
         'movimientos': movimientos,
@@ -1464,6 +1545,7 @@ def caja_dashboard(request):
         'ingresos_extra': ingresos_extra,
         'egresos': egresos,
         'saldo_calculado': saldo_calculado,
+        'turnos_cerrados': turnos_cerrados,
         'active_tab': 'caja'
     }
     return render(request, 'caja.html', context)

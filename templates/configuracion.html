@@ -71,18 +71,52 @@
                         <div class="login-field">
                             <label for="id_simbolo_moneda" style="display: flex; justify-content: space-between;">Símbolo de Moneda * <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Aparece en tickets y paneles)</span></label>
                             <div class="login-input-wrapper">
-                                <span class="login-input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></span>
-                                <input type="text" name="simbolo_moneda" id="id_simbolo_moneda" value="{{ form.simbolo_moneda.value|default:'$' }}" required>
+                                <select name="simbolo_moneda" id="id_simbolo_moneda" required style="width: 100%; border: none; background: transparent; padding: 0.85rem 0.5rem; font-size: 0.95rem; color: var(--text); outline: none; cursor: pointer; font-family: var(--font);">
+                                    <option value="$" {% if form.simbolo_moneda.value == '$' or not form.simbolo_moneda.value %}selected{% endif %}>$ (Dólar)</option>
+                                    <option value="€" {% if form.simbolo_moneda.value == '€' %}selected{% endif %}>€ (Euro)</option>
+                                    <option value="S/" {% if form.simbolo_moneda.value == 'S/' %}selected{% endif %}>S/ (Sol peruano)</option>
+                                    <option value="Bs." {% if form.simbolo_moneda.value == 'Bs.' %}selected{% endif %}>Bs. (Bolívar, Boliviano)</option>
+                                    <option value="Q" {% if form.simbolo_moneda.value == 'Q' %}selected{% endif %}>Q (Quetzal guatemalteco)</option>
+                                    <option value="L" {% if form.simbolo_moneda.value == 'L' %}selected{% endif %}>L (Lempira hondureño)</option>
+                                    <option value="₡" {% if form.simbolo_moneda.value == '₡' %}selected{% endif %}>₡ (Colón)</option>
+                                    <option value="₲" {% if form.simbolo_moneda.value == '₲' %}selected{% endif %}>₲ (Guaraní paraguayo)</option>
+                                    <option value="R$" {% if form.simbolo_moneda.value == 'R$' %}selected{% endif %}>R$ (Real brasileño)</option>
+                                    <option value="£" {% if form.simbolo_moneda.value == '£' %}selected{% endif %}>£ (Libra esterlina)</option>
+                                </select>
                             </div>
                         </div>
                         <div class="login-field">
                             <label for="id_impuesto_porcentaje" style="display: flex; justify-content: space-between;">Porcentaje IVA/IGV (%) <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(0 si no aplica)</span></label>
                             <div class="login-input-wrapper">
                                 <span class="login-input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg></span>
-                                <input type="number" step="0.01" name="impuesto_porcentaje" id="id_impuesto_porcentaje" value="{{ form.impuesto_porcentaje.value|default:'0.00' }}">
+                                <input type="number" step="0.01" min="0" max="100" name="impuesto_porcentaje" id="id_impuesto_porcentaje" value="{{ form.impuesto_porcentaje.value|stringformat:'g'|default:'0' }}" oninput="if(this.value > 100) this.value = 100; if(this.value.length > 5) this.value = this.value.slice(0,5);">
                             </div>
                         </div>
                     </div>
+
+                    <!-- SECCIÓN: PERSONALIZACIÓN VISUAL -->
+                    <div style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-top: 3rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                        Personalización Visual
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="login-field">
+                                <label for="id_color_tema" style="display: flex; align-items: baseline; gap: 0.5rem;">Color Principal (Tema) <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">Botones y detalles</span></label>
+                                <div class="login-input-wrapper" style="padding: 0.5rem; display: flex; align-items: center; gap: 1rem;">
+                                    <input type="color" name="color_tema" id="id_color_tema" value="{{ form.color_tema.value|default:'#2174ea' }}" style="width: 50px; height: 35px; border: none; cursor: pointer; padding: 0; background: none;">
+                                    <span style="color: var(--text-muted); font-size: 0.9rem;">Representa el color de tu marca.</span>
+                                </div>
+                            </div>
+
+                            <div class="login-field">
+                                <label for="id_color_secundario" style="display: flex; align-items: baseline; gap: 0.5rem;">Color Secundario (Barra Lateral) <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">Menú izquierdo</span></label>
+                                <div class="login-input-wrapper" style="padding: 0.5rem; display: flex; align-items: center; gap: 1rem;">
+                                    <input type="color" name="color_secundario" id="id_color_secundario" value="{{ form.color_secundario.value|default:'#0f172a' }}" style="width: 50px; height: 35px; border: none; cursor: pointer; padding: 0; background: none;">
+                                    <span style="color: var(--text-muted); font-size: 0.9rem;">Color de fondo para el menú.</span>
+                                </div>
+                            </div>
+                        </div>
 
                     <!-- SECCIÓN: TICKET -->
                     <div style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-top: 3rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
@@ -118,4 +152,42 @@
         </div>
     </main>
 </div>
+
+<style>
+    /* Estilos para igualar el selector de moneda con los demás inputs */
+    #id_simbolo_moneda-ts-control,
+    .login-input-wrapper .ts-wrapper.single .ts-control {
+        padding: 1rem 1rem !important;
+        background-color: var(--bg-app) !important;
+        border: 1.5px solid transparent !important;
+        border-radius: var(--radius) !important;
+        font-size: 0.95rem !important;
+        font-family: var(--font) !important;
+        box-shadow: none !important;
+        display: flex;
+        align-items: center;
+        transition: var(--transition) !important;
+    }
+    .login-input-wrapper .ts-wrapper.focus .ts-control {
+        background-color: var(--bg-card) !important;
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 4px rgba(37,99,235,0.1) !important;
+    }
+    .login-input-wrapper .ts-wrapper .ts-control > input {
+        display: none !important; /* Ocultamos el input interno porque está en modo solo selección */
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if(document.getElementById('id_simbolo_moneda')) {
+            new TomSelect('#id_simbolo_moneda', {
+                create: false,
+                maxOptions: null,
+                controlInput: null,
+                placeholder: "Seleccione un símbolo..."
+            });
+        }
+    });
+</script>
 {% endblock %}

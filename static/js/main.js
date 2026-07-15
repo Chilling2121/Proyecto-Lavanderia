@@ -165,13 +165,33 @@ document.body.addEventListener('htmx:confirm', function(e) {
     });
 });
 
+
+// Función auxiliar para traducir mensajes nativos del navegador
+function translateValidationMessage(msg) {
+    if (!msg) return "";
+    msg = msg.toLowerCase();
+    if (msg.includes("please fill out this field")) return "Por favor, complete este campo obligatorio.";
+    if (msg.includes("please select an item")) return "Por favor, seleccione una opción válida de la lista.";
+    if (msg.includes("please match the requested format")) return "Por favor, respete el formato solicitado para este campo.";
+    if (msg.includes("value must be greater than or equal to")) return msg.replace("value must be greater than or equal to", "El valor debe ser mayor o igual a");
+    if (msg.includes("value must be less than or equal to")) return msg.replace("value must be less than or equal to", "El valor debe ser menor o igual a");
+    if (msg.includes("please enter a valid email address")) return "Por favor, ingrese un correo electrónico válido.";
+    if (msg.includes("please enter a number")) return "Por favor, ingrese solo números.";
+    // Fallback: si no conocemos el mensaje exacto, devolver algo genérico pero amigable
+    if (msg.length > 5) {
+        return "El dato ingresado es inválido. Por favor, verifíquelo.";
+    }
+    return msg;
+}
+
 // Interceptar errores de validación nativos/HTMX para mostrar toast de advertencia
 document.body.addEventListener('htmx:validation:failed', function(e) {
     // Para identificar qué campo falló
     const elt = e.detail.elt;
     if (elt && elt.validationMessage) {
         if (typeof showToast === 'function') {
-            showToast("Campo requerido: " + elt.validationMessage, "error");
+            const translated = translateValidationMessage(elt.validationMessage);
+            showToast("Atención: " + translated, "error");
         }
         // Enfocar el elemento y ponerle borde rojo temporal
         elt.focus();
@@ -212,7 +232,8 @@ document.addEventListener('invalid', function(e) {
         if (label) {
             labelText = label.textContent.replace('*', '').trim() + ': ';
         }
-        showToast(labelText + elt.validationMessage, "error");
+        const translatedMsg = translateValidationMessage(elt.validationMessage);
+        showToast(labelText + translatedMsg, "error");
     }
     
     // Marcar el borde del input en rojo temporalmente

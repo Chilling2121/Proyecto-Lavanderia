@@ -5,13 +5,13 @@
 
 {% block content %}
 <div class="dashboard-container">
-    
+
     <!-- BARRA LATERAL (SIDEBAR) -->
     {% include 'includes/sidebar.html' with active_tab='auditoria' %}
 
     <!-- CUERPO PRINCIPAL (MAIN LAYOUT) -->
     <main class="main-layout">
-        
+
         <!-- CABECERA SUPERIOR (HEADER) -->
         {% include 'includes/header.html' with page_title='Auditoría de Seguridad' %}
 
@@ -19,7 +19,8 @@
         <div class="content-wrapper">
 
             <!-- PANEL SUPERIOR: TÍTULO + DESCRIPCIÓN -->
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
                 <div>
                     <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
                         <i class="fas fa-shield-alt" style="color: var(--danger); margin-right: 0.25rem;"></i>
@@ -32,11 +33,20 @@
             <div class="dashboard-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 1.5rem;">
                 <section class="dashboard-card" style="padding: 1.25rem;">
                     <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: rgba(220, 53, 69, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        <div
+                            style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: rgba(220, 53, 69, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc3545"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                                </path>
+                                <line x1="12" y1="9" x2="12" y2="13"></line>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
                         </div>
                         <div>
-                            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Intrusiones Detectadas</p>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Intrusiones Detectadas
+                            </p>
                             <p style="font-size: 1.6rem; font-weight: 700; color: var(--danger); margin: 0;">
                                 {{ registros|length }}
                             </p>
@@ -46,13 +56,22 @@
 
                 <section class="dashboard-card" style="padding: 1.25rem;">
                     <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: rgba(37, 99, 235, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        <div
+                            style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: rgba(37, 99, 235, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
                         </div>
                         <div>
                             <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Estado del Sistema</p>
                             <p style="font-size: 1rem; font-weight: 600; color: var(--success); margin: 0;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle; margin-right: 3px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" style="vertical-align: middle; margin-right: 3px;">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
                                 Monitoreando
                             </p>
                         </div>
@@ -61,13 +80,21 @@
 
                 <section class="dashboard-card" style="padding: 1.25rem;">
                     <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: rgba(16, 185, 129, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        <div
+                            style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: rgba(16, 185, 129, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
                         </div>
                         <div>
                             <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Protección RBAC</p>
                             <p style="font-size: 1rem; font-weight: 600; color: var(--success); margin: 0;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle; margin-right: 3px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" style="vertical-align: middle; margin-right: 3px;">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
                                 Activa
                             </p>
                         </div>
@@ -76,7 +103,8 @@
             </div>
 
             <!-- TABLA DE REGISTROS DE AUDITORÍA -->
-            <section class="dashboard-card" style="max-height: 520px; overflow: hidden; display: flex; flex-direction: column;">
+            <section class="dashboard-card"
+                style="max-height: 520px; overflow: hidden; display: flex; flex-direction: column;">
                 <div class="card-header-row" style="margin-bottom: 0.5rem;">
                     <h2>Historial de Incidentes</h2>
                 </div>
@@ -98,17 +126,20 @@
                             <tr>
                                 <td>
                                     {% if registro.nivel_severidad == 'WARNING' %}
-                                        <span style="background: rgba(220, 53, 69, 0.15); color: var(--danger); padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;">
-                                            <i class="fas fa-exclamation-triangle"></i> Intrusión
-                                        </span>
+                                    <span
+                                        style="background: rgba(220, 53, 69, 0.15); color: var(--danger); padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;">
+                                        <i class="fas fa-exclamation-triangle"></i> Intrusión
+                                    </span>
                                     {% elif registro.nivel_severidad == 'ERROR' %}
-                                        <span style="background: rgba(220, 53, 69, 0.25); color: #ff4d4f; padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;">
-                                            <i class="fas fa-times-circle"></i> Crítico
-                                        </span>
+                                    <span
+                                        style="background: rgba(220, 53, 69, 0.25); color: #ff4d4f; padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;">
+                                        <i class="fas fa-times-circle"></i> Crítico
+                                    </span>
                                     {% else %}
-                                        <span style="background: rgba(37, 99, 235, 0.1); color: var(--primary); padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;">
-                                            <i class="fas fa-info-circle"></i> Info
-                                        </span>
+                                    <span
+                                        style="background: rgba(37, 99, 235, 0.1); color: var(--primary); padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;">
+                                        <i class="fas fa-info-circle"></i> Info
+                                    </span>
                                     {% endif %}
                                 </td>
                                 <td>{{ registro.fecha|date:"d/m/Y H:i:s" }}</td>
@@ -117,7 +148,9 @@
                                     <br>
                                     <span style="font-size: 0.78rem; color: var(--text-muted);">{{ registro.usuario.groups.first.name|default:"Sin Rol" }}</span>
                                 </td>
-                                <td><code style="background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">{{ registro.modulo }}</code></td>
+                                <td><code
+                                        style="background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">{{ registro.modulo }}</code>
+                                </td>
                                 <td>{{ registro.accion }}</td>
                                 <td><code style="font-size: 0.8rem;">{{ registro.ip_address|default:"N/A" }}</code></td>
                             </tr>
@@ -125,10 +158,13 @@
                             <tr>
                                 <td colspan="6" style="text-align: center; padding: 4rem 2rem;">
                                     <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-                                        <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center;">
-                                            <i class="fas fa-check-circle" style="font-size: 1.8rem; color: var(--success);"></i>
+                                        <div
+                                            style="width: 64px; height: 64px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-check-circle"
+                                                style="font-size: 1.8rem; color: var(--success);"></i>
                                         </div>
-                                        <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">Todo limpio. No se han detectado intrusiones ni incidentes de seguridad.</p>
+                                        <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">Todo limpio.
+                                            No se han detectado intrusiones ni incidentes de seguridad.</p>
                                     </div>
                                 </td>
                             </tr>

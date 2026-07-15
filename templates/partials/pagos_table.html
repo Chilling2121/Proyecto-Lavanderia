@@ -50,7 +50,7 @@
                 </span>
             </td>
             <td style="text-align: right;">
-                <span style="font-weight: 850; color: var(--success); font-size: 0.98rem;">+${{ pago.monto|floatformat:2 }}</span>
+                <span style="font-weight: 850; color: var(--success); font-size: 0.98rem;">+{{ config.simbolo_moneda }}{{ pago.monto|floatformat:2 }}</span>
             </td>
             <td style="text-align: right;">
                 <div style="display: flex; justify-content: flex-end; gap: 0.4rem;">

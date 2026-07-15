@@ -37,6 +37,7 @@
             {% for message in messages %}
                 <div class="toast-item {{ message.tags }}" style="min-width: 320px; padding: 1rem 1.25rem; border-radius: var(--radius); background-color: var(--bg-card); border-left: 5px solid {% if message.tags == 'error' %}var(--danger){% elif message.tags == 'success' %}var(--success){% else %}var(--primary){% endif %}; box-shadow: var(--shadow-lg); pointer-events: auto; animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
+
                         {% if message.tags == 'error' %}
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                         {% elif message.tags == 'success' %}
@@ -57,7 +58,26 @@
     <!-- Script principal -->
     <script src="{% static 'js/main.js' %}?v={% now 'U' %}"></script>
 
-
+    <!-- Variables Globales desde Configuración -->
+    <script>
+        window.IVA_PORCENTAJE = {{ config.impuesto_porcentaje|stringformat:"g"|default:"0" }};
+    </script>
+    
+    {% if config.color_tema %}
+    <style>
+        :root {
+            --primary: {{ config.color_tema }};
+            --sidebar-bg: {{ config.color_secundario|default:'#0f172a' }};
+            /* Generamos versiones más claras y oscuras para hovers y fondos usando color-mix o opacity */
+            --primary-hover: color-mix(in srgb, var(--primary) 85%, black);
+            --primary-light: color-mix(in srgb, var(--primary) 10%, white);
+        }
+        
+        .sidebar {
+            background: var(--sidebar-bg) !important;
+        }
+    </style>
+    {% endif %}
 
     {% block content %}
     {% endblock %}

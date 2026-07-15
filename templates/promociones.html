@@ -141,7 +141,7 @@
             
             <div class="promo-modal-field">
                 <label>Nombre de la Promoción</label>
-                <input type="text" id="nombre_promocion" name="nombre" class="promo-modal-input" required placeholder="Ej: Descuento de Verano">
+                <input type="text" id="nombre_promocion" name="nombre" class="promo-modal-input" required placeholder="Ej: Descuento 20% Verano" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\%]+" title="Solo se permiten letras, números y el símbolo %" oninput="this.value = this.value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\%]/g, '')">
             </div>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -149,7 +149,7 @@
                     <label>Tipo de Descuento</label>
                     <select id="tipo_promocion" name="tipo" required style="cursor: pointer;">
                         <option value="Porcentaje">Porcentaje (%)</option>
-                        <option value="Fijo">Monto Fijo ($)</option>
+                        <option value="Fijo">Monto Fijo ({{ config.simbolo_moneda }})</option>
                     </select>
                 </div>
                 <div class="promo-modal-field">

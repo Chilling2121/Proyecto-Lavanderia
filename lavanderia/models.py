@@ -153,6 +153,8 @@ class Configuracion(models.Model):
     
     simbolo_moneda = models.CharField(max_length=10, default="$", help_text="Símbolo a mostrar en la interfaz (ej. $, S/, €)")
     impuesto_porcentaje = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Porcentaje de IVA/IGV (ej. 16.00)")
+    color_tema = models.CharField(max_length=20, default="#2174ea", help_text="Color principal del sistema en Hexadecimal (ej. #2174ea)")
+    color_secundario = models.CharField(max_length=20, default="#0f172a", help_text="Color secundario/barra lateral en Hexadecimal (ej. #0f172a)")
     
     mensaje_ticket_cabecera = models.TextField(blank=True, null=True, default="RFC: XXXXXX000000\n¡Bienvenido!")
     mensaje_ticket_pie = models.TextField(blank=True, null=True, default="¡Gracias por su preferencia!\nLas prendas no reclamadas después de 30 días causarán recargo de almacenaje o serán donadas.")
