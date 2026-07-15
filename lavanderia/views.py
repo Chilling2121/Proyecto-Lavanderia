@@ -529,7 +529,7 @@ def orden_create(request):
     promociones_activas = Promocion.objects.filter(
         esta_activa=True,
         fecha_inicio__lte=today,
-        fecha_fin__ge=today
+        fecha_fin__gte=today
     )
     
     prendas_catalog = [p.nombre for p in CatalogoPrenda.objects.all().order_by('nombre')]
@@ -1588,69 +1588,104 @@ def caja_movimiento_crear(request):
 # ==========================================
 #  EXPORTACIONES A CSV
 # ==========================================
-import csv
-
+import openpyxl
+from openpyxl.styles import Font, PatternFill
 @login_required
 @group_required('Administrador', 'Cajero')
 def export_clientes_csv(request):
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="clientes.csv"'
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="clientes.xlsx"'
     
-    writer = csv.writer(response)
-    writer.writerow(['ID', 'Cédula', 'Nombres', 'Apellidos', 'Teléfono', 'Correo', 'Dirección'])
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Clientes"
+    
+    headers = ['ID', 'Cédula', 'Nombres', 'Apellidos', 'Teléfono', 'Correo', 'Dirección']
+    ws.append(headers)
+    
+    # Estilos para cabecera
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="2563EB") # Azul primario
+    for cell in ws[1]:
+        cell.font = header_font
+        cell.fill = header_fill
     
     clientes = Cliente.objects.all().order_by('id')
     for c in clientes:
-        writer.writerow([c.id, c.cedula, c.nombre, c.apellido, c.telefono, c.correo or '', c.direccion or ''])
+        ws.append([c.id, c.cedula, c.nombre, c.apellido, c.telefono, c.correo or '', c.direccion or ''])
         
+    wb.save(response)
     return response
 
 @login_required
 @group_required('Administrador', 'Cajero')
 def export_ordenes_csv(request):
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="ordenes.csv"'
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="ordenes.xlsx"'
     
-    writer = csv.writer(response)
-    writer.writerow(['ID', 'Cliente', 'Fecha Recepcion', 'Estado Actual', 'Estado Pago', 'Total', 'Anticipo', 'Saldo Pendiente'])
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Ordenes"
+    
+    headers = ['ID', 'Cliente', 'Fecha Recepcion', 'Estado Actual', 'Estado Pago', 'Total', 'Anticipo', 'Saldo Pendiente']
+    ws.append(headers)
+    
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="2563EB")
+    for cell in ws[1]:
+        cell.font = header_font
+        cell.fill = header_fill
     
     ordenes = Orden.objects.select_related('cliente').all().order_by('-fecha_recepcion')
     for o in ordenes:
-        writer.writerow([
+        # Convertir montos a flotantes para que excel los lea como número y no como texto
+        ws.append([
             o.id, 
             o.cliente.nombre_completo, 
             timezone.localtime(o.fecha_recepcion).strftime("%Y-%m-%d %H:%M"), 
             o.estado_actual, 
             o.estado_pago, 
-            o.total_a_pagar, 
-            o.anticipo, 
-            o.saldo_pendiente
+            float(o.total_a_pagar), 
+            float(o.anticipo), 
+            float(o.saldo_pendiente)
         ])
         
+    wb.save(response)
     return response
 
 @login_required
 @group_required('Administrador', 'Cajero')
 def export_pagos_csv(request):
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="pagos.csv"'
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="pagos.xlsx"'
     
-    writer = csv.writer(response)
-    writer.writerow(['ID Pago', 'Orden ID', 'Fecha', 'Metodo', 'Tipo', 'Monto', 'Cajero/Turno'])
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Pagos"
+    
+    headers = ['ID Pago', 'Orden ID', 'Fecha', 'Metodo', 'Tipo', 'Monto', 'Cajero/Turno']
+    ws.append(headers)
+    
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="2563EB")
+    for cell in ws[1]:
+        cell.font = header_font
+        cell.fill = header_fill
     
     pagos = Pago.objects.select_related('orden', 'turno__usuario').all().order_by('-fecha_pago')
     for p in pagos:
         cajero = p.turno.usuario.username if p.turno and p.turno.usuario else ''
-        writer.writerow([
+        ws.append([
             p.id, 
             p.orden.id, 
             timezone.localtime(p.fecha_pago).strftime("%Y-%m-%d %H:%M"), 
             p.metodo_pago, 
             p.tipo_pago, 
-            p.monto, 
+            float(p.monto), 
             cajero
         ])
         
+    wb.save(response)
     return response
 
 # ==========================================
@@ -1723,6 +1758,11 @@ def promocion_create(request):
         fecha_fin_str = request.POST.get('fecha_fin')
         
         try:
+            valor_float = float(valor)
+            if tipo == 'Porcentaje' and valor_float > 100:
+                messages.error(request, 'El descuento por porcentaje no puede ser mayor al 100%.')
+                return redirect('promociones_list')
+                
             fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()
             fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d').date()
             
@@ -1750,6 +1790,12 @@ def promocion_edit(request, id):
         promocion.valor = request.POST.get('valor')
         
         try:
+            valor_float = float(request.POST.get('valor'))
+            if promocion.tipo == 'Porcentaje' and valor_float > 100:
+                messages.error(request, 'El descuento por porcentaje no puede ser mayor al 100%.')
+                return redirect('promociones_list')
+                
+
             promocion.fecha_inicio = datetime.strptime(request.POST.get('fecha_inicio'), '%Y-%m-%d').date()
             promocion.fecha_fin = datetime.strptime(request.POST.get('fecha_fin'), '%Y-%m-%d').date()
             promocion.save()
@@ -1762,9 +1808,10 @@ def promocion_edit(request, id):
 @login_required
 @group_required('Administrador')
 def promocion_delete(request, id):
-    promocion = get_object_or_404(Promocion, id=id)
-    promocion.delete()
-    messages.success(request, 'Promoción eliminada exitosamente.')
+    promocion = Promocion.objects.filter(id=id).first()
+    if promocion:
+        promocion.delete()
+        messages.success(request, 'Promoción eliminada exitosamente.')
     return redirect('promociones_list')
 
 # ==========================================

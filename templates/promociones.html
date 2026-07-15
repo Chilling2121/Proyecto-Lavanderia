@@ -154,7 +154,7 @@
                 </div>
                 <div class="promo-modal-field">
                     <label>Valor</label>
-                    <input type="number" step="0.01" min="0.01" id="valor_promocion" name="valor" class="promo-modal-input" required placeholder="Ej: 15.00" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/^0+(?=\d)/, ''); if(this.value.length > 8) this.value = this.value.slice(0, 8);">
+                    <input type="number" step="0.01" min="0.01" id="valor_promocion" name="valor" class="promo-modal-input" required placeholder="Ej: 15.00" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/^0+(?=\d)/, ''); if(document.getElementById('tipo_promocion').value === 'Porcentaje' && parseFloat(this.value) > 100) this.value = '100'; if(this.value.length > 8) this.value = this.value.slice(0, 8);">
                 </div>
             </div>
             

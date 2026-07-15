@@ -121,7 +121,7 @@
                         <span class="login-input-icon">
                             <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         </span>
-                        <input type="text" name="nombre" id="id_nombre" placeholder="Nombres" required>
+                        <input type="text" name="nombre" id="id_nombre" placeholder="Nombres" required pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios" oninvalid="this.setCustomValidity('Solo se permiten letras y espacios')" oninput="this.setCustomValidity(''); this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')">
                     </div>
                 </div>
 
@@ -132,7 +132,7 @@
                         <span class="login-input-icon">
                             <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         </span>
-                        <input type="text" name="apellido" id="id_apellido" placeholder="Apellidos" required>
+                        <input type="text" name="apellido" id="id_apellido" placeholder="Apellidos" required pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios" oninvalid="this.setCustomValidity('Solo se permiten letras y espacios')" oninput="this.setCustomValidity(''); this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')">
                     </div>
                 </div>
             </div>
@@ -213,7 +213,7 @@
                         <span class="login-input-icon">
                             <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         </span>
-                        <input type="text" name="nombre" id="edit_nombre" placeholder="Nombres" required>
+                        <input type="text" name="nombre" id="edit_nombre" placeholder="Nombres" required pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios" oninvalid="this.setCustomValidity('Solo se permiten letras y espacios')" oninput="this.setCustomValidity(''); this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')">
                     </div>
                 </div>
 
@@ -224,7 +224,7 @@
                         <span class="login-input-icon">
                             <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         </span>
-                        <input type="text" name="apellido" id="edit_apellido" placeholder="Apellidos" required>
+                        <input type="text" name="apellido" id="edit_apellido" placeholder="Apellidos" required pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios" oninvalid="this.setCustomValidity('Solo se permiten letras y espacios')" oninput="this.setCustomValidity(''); this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')">
                     </div>
                 </div>
             </div>
