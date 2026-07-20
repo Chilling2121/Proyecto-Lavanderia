@@ -402,7 +402,7 @@
     <footer class="footer">
         {% if not error %}
             <p><strong>¿Tienes alguna duda?</strong></p>
-            <p style="margin-top: 0.25rem;">Contáctanos al {{ config.telefono|default:"+1 234 567 8900" }}</p>
+            <p style="margin-top: 0.25rem;">Contáctanos al {{ config.telefono_contacto|default:"+1 234 567 8900" }}</p>
         {% endif %}
         <p style="margin-top: 1.5rem; opacity: 0.5;">LavaFácil &copy; {% now "Y" %}</p>
     </footer>

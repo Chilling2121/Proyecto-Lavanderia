@@ -808,9 +808,13 @@ def orden_register_payment(request, orden_id):
 
         pagos = Pago.objects.filter(orden=orden).order_by('fecha_pago')
 
+        from .models import Configuracion
+        config = Configuracion.load()
+        simbolo = config.simbolo_moneda
+
         if monto <= 0:
             return render(request, 'partials/orden_payment_panel.html', {
-                'orden': orden, 'pagos': pagos, 'payment_error': 'El monto debe ser mayor a $0.00.'
+                'orden': orden, 'pagos': pagos, 'payment_error': f'El monto debe ser mayor a {simbolo}0.00.'
             })
 
         saldo_actual = Decimal(str(orden.saldo_pendiente))
@@ -824,7 +828,7 @@ def orden_register_payment(request, orden_id):
             monto = saldo_actual
         
         monto_registrado = monto
-        observaciones_db = observaciones_pago or f"Pago registrado (${monto_registrado:.2f})"
+        observaciones_db = observaciones_pago or f"Pago registrado ({simbolo}{monto_registrado:.2f})"
 
         with transaction.atomic():
             tipo_pago = 'Saldo Final' if monto_registrado >= saldo_actual else 'Abono'
@@ -1244,7 +1248,10 @@ def seguimiento_advance_status(request, orden_id):
                 
                 # Validación contable: No entregar si tiene saldo pendiente
                 if nuevo_estado == 'Entregada' and orden.saldo_pendiente > 0:
-                    messages.error(request, f"No se puede entregar la orden #{orden.id:06d} porque tiene un saldo pendiente de ${orden.saldo_pendiente:.2f}. El pago total es obligatorio.")
+                    from .models import Configuracion
+                    config = Configuracion.load()
+                    simbolo = config.simbolo_moneda
+                    messages.error(request, f"No se puede entregar la orden #{orden.id:06d} porque tiene un saldo pendiente de {simbolo}{orden.saldo_pendiente:.2f}. El pago total es obligatorio.")
                 else:
                     with transaction.atomic():
                         orden.estado_actual = nuevo_estado
@@ -1414,11 +1421,16 @@ def reportes_export_excel(request):
             cell.fill = header_fill
             cell.alignment = header_align
             
-    ws.append(["Ingresos Totales", f"${data['ingresos_totales']:.2f}"])
-    ws.append(["Efectivo", f"${data['ingresos_efectivo']:.2f}"])
-    ws.append(["Transferencia", f"${data['ingresos_transferencia']:.2f}"])
-    ws.append(["Tarjeta", f"${data['ingresos_tarjeta']:.2f}"])
-    ws.append(["Cuentas por Cobrar", f"${data['total_por_cobrar']:.2f}"])
+    # Load config for symbol
+    from .models import Configuracion
+    config = Configuracion.load()
+    simbolo = config.simbolo_moneda
+
+    ws.append(["Ingresos Totales", f"{simbolo}{data['ingresos_totales']:.2f}"])
+    ws.append(["Efectivo", f"{simbolo}{data['ingresos_efectivo']:.2f}"])
+    ws.append(["Transferencia", f"{simbolo}{data['ingresos_transferencia']:.2f}"])
+    ws.append(["Tarjeta", f"{simbolo}{data['ingresos_tarjeta']:.2f}"])
+    ws.append(["Cuentas por Cobrar", f"{simbolo}{data['total_por_cobrar']:.2f}"])
     ws.append(["Total de Órdenes", data['total_ordenes']])
     
     ws.column_dimensions['A'].width = 25
@@ -1431,7 +1443,7 @@ def reportes_export_excel(request):
             cell.font = header_font
             cell.fill = header_fill
     for c in data['top_clientes']:
-        ws2.append([c.nombre_completo, c.total_ordenes, f"${c.total_gastado:.2f}"])
+        ws2.append([c.nombre_completo, c.total_ordenes, f"{simbolo}{c.total_gastado:.2f}"])
     ws2.column_dimensions['A'].width = 30
     ws2.column_dimensions['C'].width = 15
 
@@ -1442,7 +1454,7 @@ def reportes_export_excel(request):
             cell.font = header_font
             cell.fill = header_fill
     for d in data['top_deudores']:
-        ws3.append([f"#{d.id:06d}", d.cliente.nombre_completo, d.cliente.telefono, f"${d.saldo_pendiente:.2f}"])
+        ws3.append([f"#{d.id:06d}", d.cliente.nombre_completo, d.cliente.telefono, f"{simbolo}{d.saldo_pendiente:.2f}"])
     ws3.column_dimensions['A'].width = 15
     ws3.column_dimensions['B'].width = 30
     ws3.column_dimensions['C'].width = 15
@@ -1563,8 +1575,12 @@ def caja_abrir(request):
         except InvalidOperation:
             saldo_inicial = Decimal('0.00')
             
+        from .models import Configuracion
+        config = Configuracion.load()
+        simbolo = config.simbolo_moneda
+
         if saldo_inicial < Decimal('10.00'):
-            messages.error(request, 'El turno de caja debe iniciarse con un fondo mínimo obligatorio de $10.00 para asegurar el cambio inicial.')
+            messages.error(request, f'El turno de caja debe iniciarse con un fondo mínimo obligatorio de {simbolo}10.00 para asegurar el cambio inicial.')
             return redirect('caja_dashboard')
             
         TurnoCaja.objects.create(
@@ -1572,7 +1588,7 @@ def caja_abrir(request):
             saldo_inicial=saldo_inicial,
             estado='Abierta'
         )
-        messages.success(request, f'Turno de caja abierto exitosamente con ${saldo_inicial}.')
+        messages.success(request, f'Turno de caja abierto exitosamente con {simbolo}{saldo_inicial}.')
         
     return redirect('caja_dashboard')
 
@@ -1609,7 +1625,10 @@ def caja_cerrar(request):
         # Validar cuadre obligatorio
         diferencia = abs(saldo_esperado - saldo_real)
         if diferencia > Decimal('0.01') and not observaciones:
-            messages.error(request, f'⚠️ Descuadre detectado (Diferencia: ${diferencia}). Es OBLIGATORIO escribir observaciones explicando el motivo del faltante o sobrante.')
+            from .models import Configuracion
+            config = Configuracion.load()
+            simbolo = config.simbolo_moneda
+            messages.error(request, f'⚠️ Descuadre detectado (Diferencia: {simbolo}{diferencia}). Es OBLIGATORIO escribir observaciones explicando el motivo del faltante o sobrante.')
             return redirect('caja_dashboard')
         
         turno.saldo_final_esperado = saldo_esperado
@@ -1652,7 +1671,10 @@ def caja_movimiento_crear(request):
                 saldo_calculado = turno.saldo_inicial + ingresos_ordenes + ingresos_extra - egresos
                 
                 if monto > saldo_calculado:
-                    messages.error(request, f'No se puede registrar el egreso. Fondos insuficientes en caja (Disponible: ${saldo_calculado:.2f}).')
+                    from .models import Configuracion
+                    config = Configuracion.load()
+                    simbolo = config.simbolo_moneda
+                    messages.error(request, f'No se puede registrar el egreso. Fondos insuficientes en caja (Disponible: {simbolo}{saldo_calculado:.2f}).')
                     return redirect('caja_dashboard')
 
             MovimientoCaja.objects.create(

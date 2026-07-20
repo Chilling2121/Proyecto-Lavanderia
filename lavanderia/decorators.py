@@ -16,7 +16,11 @@ def group_required(*group_names):
                     return view_func(request, *args, **kwargs)
                 else:
                     # Registrar intrusión silenciosamente
-                    ip = request.META.get('REMOTE_ADDR')
+                    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+                    if x_forwarded_for:
+                        ip = x_forwarded_for.split(',')[0].strip()
+                    else:
+                        ip = request.META.get('REMOTE_ADDR')
                     RegistroAuditoria.objects.create(
                         usuario=user,
                         accion=f'Intento de acceso denegado por falta de privilegios.',

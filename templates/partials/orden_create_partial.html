@@ -185,7 +185,7 @@
         <button type="button" hx-get="{% url 'cliente_historial' cliente.id %}" hx-target="#historial-container" class="login-btn" style="width: auto; background-color: var(--bg-app); border: 1px solid var(--border); color: var(--text); box-shadow: none; font-size: 0.88rem; padding: 0.6rem 1.25rem; border-radius: var(--radius-sm);">
             Cancelar
         </button>
-        <button type="submit" class="login-btn" style="width: auto; font-size: 0.88rem; padding: 0.6rem 1.5rem; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 0.35rem; {% if not caja_abierta %}opacity: 0.5; cursor: not-allowed;{% endif %}" {% if not caja_abierta %}disabled title="Abre un turno de caja para registrar órdenes"{% endif %}>
+        <button type="submit" class="login-btn" hx-disabled-elt="this" style="width: auto; font-size: 0.88rem; padding: 0.6rem 1.5rem; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 0.35rem; {% if not caja_abierta %}opacity: 0.5; cursor: not-allowed;{% endif %}" {% if not caja_abierta %}disabled title="Abre un turno de caja para registrar órdenes"{% endif %}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline></svg>
             <span>Guardar Orden</span>
         </button>
