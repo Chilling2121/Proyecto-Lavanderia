@@ -282,7 +282,14 @@
             
             <div class="card">
                 <h1 class="greeting">Hola, {{ orden.cliente.nombre.split|first }}</h1>
-                <div class="order-number">Orden #{{ orden.id|stringformat:"06d" }}</div>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                    <div class="order-number" style="margin-bottom: 0;">Orden #{{ orden.id|stringformat:"06d" }}</div>
+                    {% if orden.fecha_entrega_estimada %}
+                    <div class="order-number" style="background: rgba(245, 158, 11, 0.12); color: #d97706; margin-bottom: 0;">
+                        📅 Entrega: {{ orden.fecha_entrega_estimada|date:"d/m/Y h:i A" }}
+                    </div>
+                    {% endif %}
+                </div>
 
                 <div class="status-container">
                     
@@ -354,6 +361,17 @@
                         </div>
                     </div>
 
+                    {% if whatsapp_url %}
+                    <div style="margin-top: 1.75rem; display: flex; justify-content: center; border-top: 1px solid var(--border); padding-top: 1.25rem;">
+                        <a href="{{ whatsapp_url }}" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #25D366; color: white; padding: 0.7rem 1.35rem; border-radius: 50px; font-weight: 700; font-size: 0.9rem; text-decoration: none; box-shadow: 0 6px 15px rgba(37, 211, 102, 0.2); transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 20px rgba(37, 211, 102, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 15px rgba(37, 211, 102, 0.2)';">
+                            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.02 11.967.02c3.182.001 6.176 1.24 8.426 3.497 2.25 2.256 3.487 5.253 3.484 8.437-.006 6.617-5.345 11.946-11.913 11.946-2.005-.001-3.973-.505-5.724-1.464L0 24zm6.582-2.529c1.663.987 3.323 1.51 5.318 1.512 5.518 0 10.007-4.48 10.01-9.986.002-2.667-1.033-5.176-2.914-7.062C17.17 4.05 14.67 3.01 12.015 3.01 6.5 3.01 2.01 7.49 2.007 13c-.001 1.95.508 3.564 1.47 5.228L2.484 22.02l4.155-1.09.001-.548zM17.487 14.39c-.3-.15-1.774-.875-2.026-.967-.25-.09-.433-.135-.615.135-.183.27-.707.875-.867 1.057-.16.183-.32.203-.62.053-1.206-.605-1.996-1.066-2.79-2.42-.23-.396.23-.368.66-.192.16.06.32.15.48.24.16.1.25.18.3.28.1.18.05.33-.03.48-.08.15-.7 1.687-.96 2.307-.25.61-.51.53-.7.52-.16-.01-.35-.01-.54-.01-.19 0-.51.07-.77.36-.26.29-1 1.002-1 2.443 0 1.44 1.05 2.83 1.2 3.03.15.2 2.07 3.16 5.02 4.43.702.302 1.25.482 1.677.618.706.224 1.35.19 1.86.115.567-.083 1.774-.726 2.026-1.397.252-.67.252-1.246.177-1.396-.075-.15-.27-.24-.57-.39z"/>
+                            </svg>
+                            <span>Contactar por WhatsApp</span>
+                        </a>
+                    </div>
+                    {% endif %}
+
                 </div>
             </div>
 
@@ -366,7 +384,12 @@
                     {% for prenda in prendas %}
                     <li class="item">
                         <div>
-                            <div class="item-name">{{ prenda.servicio.nombre|default:"Prenda" }}</div>
+                            <div class="item-name" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                <span>{{ prenda.servicio.nombre|default:"Prenda" }}</span>
+                                {% if prenda.es_delicada %}
+                                <span style="background: rgba(239, 68, 68, 0.12); color: #ef4444; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Delicada</span>
+                                {% endif %}
+                            </div>
                             <div class="item-service">{{ prenda.observaciones|default:"Sin observaciones extra" }}</div>
                         </div>
                         <div class="item-qty">

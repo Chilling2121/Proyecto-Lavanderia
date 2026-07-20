@@ -1028,14 +1028,29 @@ def rastreo_publico(request, orden_id):
     elif estado == 'Entregada':
         is_entregada = True
 
+    from .models import Configuracion
+    config = Configuracion.load()
+
+    # Generar enlace de WhatsApp para contacto rápido desde el móvil
+    whatsapp_url = None
+    if config and config.telefono_contacto:
+        import re
+        num_limpio = re.sub(r'\D', '', config.telefono_contacto)
+        if len(num_limpio) == 10 and num_limpio.startswith('09'):
+            num_limpio = '593' + num_limpio[1:]
+        elif len(num_limpio) == 10:
+            num_limpio = '593' + num_limpio
+        whatsapp_url = f"https://wa.me/{num_limpio}?text=Hola%20LavaF%C3%A1cil!%20Consulto%20sobre%20mi%20orden%20%23{orden.id:06d}"
+
     context = {
         'orden': orden,
         'prendas': prendas,
-        'config': Configuracion.objects.first(),
+        'config': config,
         'is_recibida': is_recibida,
         'is_proceso': is_proceso,
         'is_lista': is_lista,
         'is_entregada': is_entregada,
+        'whatsapp_url': whatsapp_url,
     }
     return render(request, 'rastreo.html', context)
 
