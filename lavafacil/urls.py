@@ -14,12 +14,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import os
 from django.contrib import admin
 from django.urls import path, include
 from lavanderia import views
 
+# Obtener ruta secreta para el panel de administración
+admin_url = os.getenv('ADMIN_URL', 'control-interno-lavafacil/')
+if admin_url and not admin_url.endswith('/'):
+    admin_url += '/'
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path(admin_url, admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('perfil/', views.mi_perfil, name='mi_perfil'),
     path('dashboard/', views.dashboard, name='dashboard'),
