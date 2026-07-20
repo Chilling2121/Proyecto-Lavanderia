@@ -1,5 +1,5 @@
 <!-- Panel Financiero y Pagos (HTMX Partial) -->
-<div id="payment-panel-inner" data-saldo-pendiente="{{ orden.saldo_pendiente }}" data-efectivo-disponible="{{ efectivo_disponible|default:'0.00' }}" hx-get="{% url 'orden_detail' orden.id %}" hx-trigger="statusUpdated from:body" hx-select="#payment-panel-inner" hx-swap="outerHTML" class="payment-panel-wrapper">
+<div id="payment-panel-inner" data-saldo-pendiente="{{ orden.saldo_pendiente }}" data-efectivo-disponible="{{ efectivo_disponible|default:'0.00' }}" data-simbolo-moneda="{{ config.simbolo_moneda|default:'$' }}" hx-get="{% url 'orden_detail' orden.id %}" hx-trigger="statusUpdated from:body" hx-select="#payment-panel-inner" hx-swap="outerHTML" class="payment-panel-wrapper">
     
     <!-- Alerta de vuelto / cambio entregado al cliente -->
     {% if cambio_info %}

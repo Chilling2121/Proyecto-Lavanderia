@@ -15,6 +15,8 @@
         const efectivoDisponibleAttr = panel.getAttribute("data-efectivo-disponible") || "0";
         const efectivoDisponible = parseFloat(efectivoDisponibleAttr.replace(',', '.')) || 0;
 
+        const simboloMoneda = panel.getAttribute("data-simbolo-moneda") || '$';
+
         // Inicializar Tom Select para el selector de método de pago
         if (typeof TomSelect !== 'undefined' && metodoSelect && !metodoSelect.tomselect) {
             new TomSelect(metodoSelect, {
@@ -84,15 +86,14 @@
             }
 
             if (cambio > 0) {
-                let alertClass = '';
-                let alertText = `🪙 Cambio a devolver: $${cambio.toFixed(2)}`;
+                let alertText = `🪙 Cambio a devolver: ${simboloMoneda}${cambio.toFixed(2)}`;
 
                 if (descripcion) {
                     alertText += ` — ${descripcion}`;
                 }
 
                 if (cambio > efectivoDisponible) {
-                    alertText = `⚠️ Cambio necesario: $${cambio.toFixed(2)} — La caja solo tiene $${efectivoDisponible.toFixed(2)}. Fondos insuficientes.`;
+                    alertText = `⚠️ Cambio necesario: ${simboloMoneda}${cambio.toFixed(2)} — La caja solo tiene ${simboloMoneda}${efectivoDisponible.toFixed(2)}. Fondos insuficientes.`;
                     cambioPreview.style.background = 'hsl(350, 80%, 96%)';
                     cambioPreview.style.color = 'var(--danger)';
                 } else {
