@@ -24,6 +24,14 @@
                 </div>
 
                 {% if turno_abierto %}
+                
+                {% if turno_abierto.usuario != request.user %}
+                <div style="background-color: hsl(45, 90%, 96%); border: 1px solid hsl(45, 90%, 85%); border-radius: var(--radius-sm); padding: 0.85rem 1.25rem; margin-top: 1.25rem; display: flex; align-items: center; gap: 0.75rem; color: #b45309; font-size: 0.88rem; font-weight: 550; line-height: 1.4;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: #d97706;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>⚠️ Atención: Estás visualizando la caja abierta de <b>{{ turno_abierto.usuario.get_full_name|default:turno_abierto.usuario.username }}</b>. Cualquier cobro, movimiento o egreso que realices quedará registrado bajo su responsabilidad.</span>
+                </div>
+                {% endif %}
+
                 <section class="metrics-grid" style="margin-top: 1.5rem;">
                     <div class="metric-card">
                         <div class="metric-info">

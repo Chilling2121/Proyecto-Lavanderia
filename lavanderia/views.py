@@ -775,6 +775,7 @@ def orden_detail(request, orden_id):
         'estado_actual_idx': ESTADOS_LAVADO.index(estado_actual) if estado_actual in ESTADOS_LAVADO else 0,
         'efectivo_disponible': efectivo_disponible,
         'caja_abierta': turno_activo is not None,
+        'turno_activo': turno_activo,
         'config': config,
     }
 
@@ -951,6 +952,7 @@ def orden_register_payment(request, orden_id):
             'config': config,
             'efectivo_disponible': efectivo_disponible,
             'caja_abierta': True,
+            'turno_activo': turno_activo,
             'cambio_info': cambio_info,
         }
 
