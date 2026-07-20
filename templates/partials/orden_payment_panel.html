@@ -108,7 +108,7 @@
             <!-- Campo de Efectivo Entregado (solo visible cuando el método es Efectivo) -->
             <div id="efectivo-entregado-wrapper" style="display: flex; flex-direction: column; gap: 0.3rem;">
                 <label class="payment-form-label">Efectivo entregado por el cliente ({{ config.simbolo_moneda }}) <span style="font-weight: 400; color: var(--text-muted);">— opcional</span></label>
-                <input type="number" name="efectivo_entregado" id="pago-efectivo-entregado" step="0.01" min="0" placeholder="Ej. 20.00 si el cliente da un billete de 20" class="payment-form-input">
+                <input type="number" name="efectivo_entregado" id="pago-efectivo-entregado" step="0.01" min="0" max="999999" placeholder="Ej. 20.00 si el cliente da un billete de 20" class="payment-form-input">
                 <span id="cambio-preview" style="display: none; font-size: 0.82rem; font-weight: 700; color: var(--success); padding: 0.4rem 0.65rem; background: hsl(142, 72%, 95%); border-radius: 6px; margin-top: 0.15rem;">
                 </span>
             </div>
@@ -143,18 +143,29 @@
         
         <div class="payment-history-list">
             {% for pago in pagos %}
-            <div class="payment-history-item" style="flex-direction: column; align-items: stretch; gap: 0.35rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <div class="payment-history-meta">
-                        <p class="meta-title">{{ pago.tipo_pago }} — {{ pago.metodo_pago }}</p>
-                        <p class="meta-date" style="margin-top: 0.15rem;">{{ pago.fecha_pago|date:"d/m/Y H:i" }}</p>
+            <div class="payment-history-item" style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.85rem; background: var(--bg-app); margin-bottom: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; transition: var(--transition);">
+                <div style="display: flex; justify-content: space-between; align-items: start; gap: 0.5rem;">
+                    <div>
+                        <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
+                            {% if pago.tipo_pago == 'Anticipo' %}
+                                <span style="font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 4px; background: rgba(33, 116, 234, 0.1); color: var(--primary); text-transform: uppercase;">Anticipo</span>
+                            {% elif pago.tipo_pago == 'Saldo Final' %}
+                                <span style="font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 4px; background: rgba(34, 197, 94, 0.1); color: var(--success); text-transform: uppercase;">Saldo Final</span>
+                            {% else %}
+                                <span style="font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 4px; background: rgba(245, 158, 11, 0.1); color: var(--warning); text-transform: uppercase;">Abono</span>
+                            {% endif %}
+                            
+                            <span style="font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.45rem; border-radius: 4px; background: rgba(100, 116, 139, 0.1); color: var(--text-muted);">{{ pago.metodo_pago }}</span>
+                        </div>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem;">📅 {{ pago.fecha_pago|date:"d/m/Y h:i A" }}</p>
                     </div>
-                    <span class="payment-history-monto">+{{ config.simbolo_moneda }}{{ pago.monto|floatformat:2 }}</span>
+                    <span style="font-size: 1.05rem; font-weight: 800; color: var(--success);">+{{ config.simbolo_moneda }}{{ pago.monto|floatformat:2 }}</span>
                 </div>
+                
                 {% if pago.observaciones %}
-                <div style="font-size: 0.76rem; color: var(--text-muted); padding-top: 0.35rem; border-top: 1px dashed var(--border); display: flex; align-items: center; gap: 0.25rem;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--primary);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                    <span style="line-height: 1.3;">{{ pago.observaciones }}</span>
+                <div style="font-size: 0.76rem; color: var(--text-muted); background: var(--bg-card); padding: 0.5rem 0.75rem; border-radius: 6px; border-left: 3px solid var(--primary); display: flex; align-items: start; gap: 0.35rem; margin-top: 0.25rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--primary); margin-top: 0.1rem;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span style="line-height: 1.4;">{{ pago.observaciones }}</span>
                 </div>
                 {% endif %}
             </div>

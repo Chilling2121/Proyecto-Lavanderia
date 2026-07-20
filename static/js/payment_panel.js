@@ -33,6 +33,7 @@
                 },
                 onChange: function() {
                     toggleEfectivoEntregado();
+                    restrictMonto();
                     calcularCambioPreview();
                 }
             });
@@ -108,32 +109,53 @@
             }
         }
 
-        // Restringir monto para pagos electrónicos (no pueden exceder la deuda)
-        function restrictMontoElectronico() {
+        // Restringir monto para que nunca exceda la deuda pendiente (en transferencia/tarjeta) ni genere números infinitos
+        function restrictMonto() {
+            if (!montoInput) return;
+            let val = montoInput.value;
+            // Evitar desbordamiento de caracteres para prevenir notación científica
+            if (val.length > 9) {
+                montoInput.value = val.slice(0, 9);
+                val = montoInput.value;
+            }
+            
             const metodo = getMetodo();
-            if (metodo !== 'Efectivo' && montoInput) {
-                let monto = parseFloat(montoInput.value) || 0;
+            if (metodo !== 'Efectivo') {
+                let monto = parseFloat(val) || 0;
                 if (monto > maxDeuda) {
                     montoInput.value = maxDeuda.toFixed(2);
                 }
             }
         }
 
+        // Restringir efectivo entregado para evitar números infinitos
+        function restrictEfectivoEntregado() {
+            if (!efectivoEntregadoInput) return;
+            let val = efectivoEntregadoInput.value;
+            if (val.length > 9) {
+                efectivoEntregadoInput.value = val.slice(0, 9);
+            }
+        }
+
         // Event listeners
         if (montoInput) {
             montoInput.addEventListener("input", function() {
-                restrictMontoElectronico();
+                restrictMonto();
                 calcularCambioPreview();
             });
         }
 
         if (efectivoEntregadoInput) {
-            efectivoEntregadoInput.addEventListener("input", calcularCambioPreview);
+            efectivoEntregadoInput.addEventListener("input", function() {
+                restrictEfectivoEntregado();
+                calcularCambioPreview();
+            });
         }
 
         if (metodoSelect && !metodoSelect.tomselect) {
             metodoSelect.addEventListener("change", function() {
                 toggleEfectivoEntregado();
+                restrictMonto();
                 calcularCambioPreview();
             });
         }
