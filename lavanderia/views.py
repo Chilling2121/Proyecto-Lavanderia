@@ -1012,10 +1012,30 @@ def rastreo_publico(request, orden_id):
     
     prendas = PrendaOrden.objects.filter(orden=orden).select_related('servicio')
     
+    # Pre-calcular banderas de estado para evitar usar tags {% set %} inválidos en Django templates
+    estado = orden.estado_actual
+    is_recibida = False
+    is_proceso = False
+    is_lista = False
+    is_entregada = False
+
+    if estado in ['Recibida', 'Clasificada']:
+        is_recibida = True
+    elif estado in ['En lavado', 'En secado', 'En planchado']:
+        is_proceso = True
+    elif estado in ['Empaquetada', 'Lista para entrega']:
+        is_lista = True
+    elif estado == 'Entregada':
+        is_entregada = True
+
     context = {
         'orden': orden,
         'prendas': prendas,
         'config': Configuracion.objects.first(),
+        'is_recibida': is_recibida,
+        'is_proceso': is_proceso,
+        'is_lista': is_lista,
+        'is_entregada': is_entregada,
     }
     return render(request, 'rastreo.html', context)
 

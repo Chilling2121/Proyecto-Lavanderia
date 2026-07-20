@@ -286,22 +286,7 @@
 
                 <div class="status-container">
                     
-                    {# Determinando la etapa actual #}
-                    {% set estado = orden.estado_actual %}
-                    {% set is_recibida = False %}
-                    {% set is_proceso = False %}
-                    {% set is_lista = False %}
-                    {% set is_entregada = False %}
-
-                    {% if orden.estado_actual == 'Recibida' or orden.estado_actual == 'Clasificada' %}
-                        {% set is_recibida = True %}
-                    {% elif orden.estado_actual == 'En lavado' or orden.estado_actual == 'En secado' or orden.estado_actual == 'En planchado' %}
-                        {% set is_proceso = True %}
-                    {% elif orden.estado_actual == 'Empaquetada' or orden.estado_actual == 'Lista para entrega' %}
-                        {% set is_lista = True %}
-                    {% elif orden.estado_actual == 'Entregada' %}
-                        {% set is_entregada = True %}
-                    {% endif %}
+                    {# Banderas de estado calculadas y enviadas desde la vista en views.py #}
 
                     <div class="status-hero">
                         {% if is_entregada %}

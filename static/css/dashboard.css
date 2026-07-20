@@ -13,6 +13,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1.25rem;
     box-shadow: var(--shadow-sm);
     transition: var(--transition);
     min-width: 0;
@@ -29,6 +30,7 @@
     flex-direction: column;
     gap: 0.25rem;
     min-width: 0;
+    flex: 1;
 }
 
 .metric-title {
@@ -40,10 +42,12 @@
 }
 
 .metric-value {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: 800;
     color: var(--text);
     line-height: 1.2;
+    word-break: break-all;
+    overflow-wrap: anywhere;
 }
 
 .metric-trend {
