@@ -762,6 +762,9 @@ def orden_detail(request, orden_id):
     turno_activo = TurnoCaja.objects.filter(estado='Abierta').first()
     efectivo_disponible = turno_activo.efectivo_disponible if turno_activo else Decimal('0.00')
 
+    from .models import Configuracion
+    config = Configuracion.load()
+
     context = {
         'orden': orden,
         'prendas_detalle': prendas_detalle,
@@ -771,6 +774,8 @@ def orden_detail(request, orden_id):
         'estados_lavado': ESTADOS_LAVADO,
         'estado_actual_idx': ESTADOS_LAVADO.index(estado_actual) if estado_actual in ESTADOS_LAVADO else 0,
         'efectivo_disponible': efectivo_disponible,
+        'caja_abierta': turno_activo is not None,
+        'config': config,
     }
 
     return render(request, 'orden_detalle.html', context)
@@ -786,53 +791,124 @@ def orden_register_payment(request, orden_id):
         except Orden.DoesNotExist:
             return HttpResponse("<p style='color:var(--danger);'>Orden no encontrada.</p>", status=404)
 
-        # Validar si el turno de caja está abierto antes de registrar cobros
-        turno_activo = TurnoCaja.objects.filter(estado='Abierta').first()
-        if not turno_activo:
-            pagos = Pago.objects.filter(orden=orden).order_by('fecha_pago')
-            return render(request, 'partials/orden_payment_panel.html', {
-                'orden': orden,
-                'pagos': pagos,
-                'payment_error': 'No se pueden registrar cobros si el turno de caja está cerrado. Abre un turno en el módulo de Caja primero.'
-            })
-
-        try:
-            monto_str = request.POST.get('monto', '0.00').strip()
-            monto = Decimal(monto_str or '0.00')
-        except InvalidOperation:
-            monto = Decimal('0.00')
-
-        metodo_pago = request.POST.get('metodo_pago', 'Efectivo')
-        observaciones_pago = request.POST.get('observaciones_pago', '').strip()
-        confirmacion_cambio = request.POST.get('confirmar_cambio')
-
-        pagos = Pago.objects.filter(orden=orden).order_by('fecha_pago')
-
         from .models import Configuracion
         config = Configuracion.load()
         simbolo = config.simbolo_moneda
 
-        if monto <= 0:
+        # --- 1. Validar turno de caja abierto ---
+        turno_activo = TurnoCaja.objects.filter(estado='Abierta').first()
+        pagos = Pago.objects.filter(orden=orden).order_by('fecha_pago')
+
+        if not turno_activo:
             return render(request, 'partials/orden_payment_panel.html', {
-                'orden': orden, 'pagos': pagos, 'payment_error': f'El monto debe ser mayor a {simbolo}0.00.'
+                'orden': orden,
+                'pagos': pagos,
+                'config': config,
+                'payment_error': '🔒 No se pueden registrar cobros porque el turno de caja está cerrado. Abre un turno en el módulo de Caja primero.'
             })
 
+        # --- 2. Leer y validar monto ingresado ---
+        try:
+            monto_str = request.POST.get('monto', '0.00').strip()
+            monto = Decimal(monto_str or '0.00')
+        except InvalidOperation:
+            return render(request, 'partials/orden_payment_panel.html', {
+                'orden': orden, 'pagos': pagos, 'config': config,
+                'payment_error': '⚠️ El monto ingresado no es un número válido. Ingresa solo valores numéricos (ej. 15.50).'
+            })
+
+        metodo_pago = request.POST.get('metodo_pago', 'Efectivo')
+        observaciones_pago = request.POST.get('observaciones_pago', '').strip()
+
+        # Leer campo de "efectivo entregado" (solo aplica para pagos en efectivo)
+        try:
+            efectivo_entregado_str = request.POST.get('efectivo_entregado', '').strip()
+            efectivo_entregado = Decimal(efectivo_entregado_str) if efectivo_entregado_str else None
+        except InvalidOperation:
+            efectivo_entregado = None
+
+        efectivo_disponible = turno_activo.efectivo_disponible if turno_activo else Decimal('0.00')
+
+        def _render_error(msg):
+            return render(request, 'partials/orden_payment_panel.html', {
+                'orden': orden, 'pagos': pagos, 'config': config,
+                'efectivo_disponible': efectivo_disponible,
+                'caja_abierta': True,
+                'payment_error': msg
+            })
+
+        # --- 3. Validar monto positivo ---
+        if monto <= 0:
+            return _render_error(f'⚠️ El monto debe ser mayor a {simbolo}0.00.')
+
         saldo_actual = Decimal(str(orden.saldo_pendiente))
-        
-        # Si la orden ya está liquidada (saldo 0) y llega un cobro redundante, lo ignoramos sin lanzar error
+
+        # --- 4. Orden ya liquidada ---
         if saldo_actual <= 0:
-            return render(request, 'partials/orden_payment_panel.html', {'orden': orden, 'pagos': pagos})
+            return render(request, 'partials/orden_payment_panel.html', {
+                'orden': orden, 'pagos': pagos, 'config': config,
+                'efectivo_disponible': efectivo_disponible,
+                'caja_abierta': True,
+            })
 
-        # Autocorrección: si por alguna razón técnica el monto supera el saldo real, simplemente lo limitamos
-        if monto > saldo_actual:
-            monto = saldo_actual
+        # --- 5. Validaciones según método de pago ---
+        cambio = Decimal('0.00')
+
+        if metodo_pago in ('Transferencia', 'Tarjeta'):
+            # Pagos electrónicos: NO pueden exceder el saldo pendiente
+            if monto > saldo_actual:
+                return _render_error(
+                    f'⚠️ El monto de {simbolo}{monto:.2f} excede el saldo pendiente de {simbolo}{saldo_actual:.2f}. '
+                    f'En pagos por {metodo_pago.lower()} no se puede dar cambio/vuelto. '
+                    f'Ingresa exactamente lo que el cliente debe.'
+                )
+            monto_registrado = monto
+
+        else:
+            # Pago en EFECTIVO: puede exceder el saldo (el cliente da un billete grande)
+            if monto > saldo_actual:
+                # El cajero ingresó más que la deuda → hay cambio que devolver
+                cambio = monto - saldo_actual
+                monto_registrado = saldo_actual  # Solo registramos lo que realmente se cobra
+
+                # Verificar que la caja tenga suficiente efectivo para dar el cambio
+                if cambio > efectivo_disponible:
+                    return _render_error(
+                        f'💰 El cliente entrega {simbolo}{monto:.2f} pero la deuda es {simbolo}{saldo_actual:.2f}, '
+                        f'generando un cambio de {simbolo}{cambio:.2f}. '
+                        f'Sin embargo, la caja solo tiene {simbolo}{efectivo_disponible:.2f} en efectivo. '
+                        f'No hay fondos suficientes para dar el vuelto. '
+                        f'Pide al cliente un monto más exacto o agrega un ingreso manual a la caja.'
+                    )
+            elif efectivo_entregado and efectivo_entregado > monto:
+                # El cajero especificó cuánto recibió físicamente y es mayor al monto a cobrar
+                cambio = efectivo_entregado - monto
+                monto_registrado = monto
+
+                if cambio > efectivo_disponible:
+                    return _render_error(
+                        f'💰 El cliente entrega {simbolo}{efectivo_entregado:.2f} para pagar {simbolo}{monto:.2f}, '
+                        f'generando un cambio de {simbolo}{cambio:.2f}. '
+                        f'Sin embargo, la caja solo tiene {simbolo}{efectivo_disponible:.2f} en efectivo. '
+                        f'No hay fondos suficientes para dar el vuelto.'
+                    )
+            else:
+                monto_registrado = monto
+
+        # --- 6. Construir observaciones descriptivas ---
+        partes_obs = []
+        if observaciones_pago:
+            partes_obs.append(observaciones_pago)
         
-        monto_registrado = monto
-        observaciones_db = observaciones_pago or f"Pago registrado ({simbolo}{monto_registrado:.2f})"
+        if cambio > 0:
+            efectivo_recibido = monto if monto > saldo_actual else (efectivo_entregado or monto)
+            partes_obs.append(f"Recibido: {simbolo}{efectivo_recibido:.2f} | Cambio entregado: {simbolo}{cambio:.2f}")
 
+        observaciones_db = ' — '.join(partes_obs) if partes_obs else f"Pago registrado ({simbolo}{monto_registrado:.2f})"
+
+        # --- 7. Registrar el pago en base de datos ---
         with transaction.atomic():
             tipo_pago = 'Saldo Final' if monto_registrado >= saldo_actual else 'Abono'
-            turno_activo = TurnoCaja.objects.filter(estado='Abierta').first()
 
             Pago.objects.create(
                 orden=orden,
@@ -856,16 +932,26 @@ def orden_register_payment(request, orden_id):
 
             orden.save()
 
+        # --- 8. Preparar respuesta con info de cambio si aplica ---
         pagos = Pago.objects.filter(orden=orden).order_by('fecha_pago')
-        
-        # Calcular efectivo disponible actualizado después de registrar el pago
         efectivo_disponible = turno_activo.efectivo_disponible if turno_activo else Decimal('0.00')
+
+        cambio_info = None
+        if cambio > 0:
+            efectivo_recibido = monto if monto > saldo_actual else (efectivo_entregado or monto)
+            cambio_info = {
+                'monto_cobrado': monto_registrado,
+                'efectivo_recibido': efectivo_recibido,
+                'cambio': cambio,
+            }
 
         context = {
             'orden': orden,
             'pagos': pagos,
+            'config': config,
             'efectivo_disponible': efectivo_disponible,
-            'cambio_info': None
+            'caja_abierta': True,
+            'cambio_info': cambio_info,
         }
 
         response = render(request, 'partials/orden_payment_panel.html', context)
@@ -897,11 +983,12 @@ def pagos_list(request):
     # Calcular cuánto efectivo salió de la caja como "cambio" hoy
     total_cambio_entregado = Decimal('0.00')
     for p in pagos_hoy_efectivo:
-        if p.observaciones and 'Cambio entregado: $' in p.observaciones:
+        if p.observaciones and 'Cambio entregado:' in p.observaciones:
             try:
-                m = re.search(r'Cambio entregado: \$([\d\.]+)', p.observaciones)
+                m = re.search(r'Cambio entregado:\s*\S?([\d.,]+)', p.observaciones)
                 if m:
-                    total_cambio_entregado += Decimal(m.group(1))
+                    valor_str = m.group(1).replace(',', '.')
+                    total_cambio_entregado += Decimal(valor_str)
             except (InvalidOperation, ValueError):
                 pass
 

@@ -1,19 +1,23 @@
 <!-- Panel Financiero y Pagos (HTMX Partial) -->
 <div id="payment-panel-inner" data-saldo-pendiente="{{ orden.saldo_pendiente }}" data-efectivo-disponible="{{ efectivo_disponible|default:'0.00' }}" hx-get="{% url 'orden_detail' orden.id %}" hx-trigger="statusUpdated from:body" hx-select="#payment-panel-inner" hx-swap="outerHTML" class="payment-panel-wrapper">
     
-    <!-- Alerta de vuelto / cambio a entregar al cliente -->
+    <!-- Alerta de vuelto / cambio entregado al cliente -->
     {% if cambio_info %}
     <div class="payment-change-alert">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--success); flex-shrink: 0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span style="font-weight: 700; color: var(--success); font-size: 0.9rem;">Pago registrado con éxito</span>
+        </div>
         <div class="payment-change-row">
-            <span>Monto Cobrado (Deuda):</span>
+            <span>Monto cobrado (deuda):</span>
             <span>{{ config.simbolo_moneda }}{{ cambio_info.monto_cobrado|floatformat:2 }}</span>
         </div>
         <div class="payment-change-row">
-            <span>Efectivo Recibido:</span>
+            <span>Efectivo recibido:</span>
             <span>{{ config.simbolo_moneda }}{{ cambio_info.efectivo_recibido|floatformat:2 }}</span>
         </div>
         <div class="payment-change-total">
-            <span>Cambio a Devolver:</span>
+            <span>🪙 Cambio a devolver:</span>
             <span>{{ config.simbolo_moneda }}{{ cambio_info.cambio|floatformat:2 }}</span>
         </div>
     </div>
@@ -80,8 +84,8 @@
             
             <div class="payment-form-grid">
                 <div class="payment-form-field">
-                    <label class="payment-form-label">Monto ({{ config.simbolo_moneda }})</label>
-                    <input type="number" name="monto" id="pago-monto-input" step="0.01" min="0.01" max="{{ orden.saldo_pendiente|stringformat:'.2f' }}" placeholder="0.00" required class="payment-form-input">
+                    <label class="payment-form-label">Monto a cobrar ({{ config.simbolo_moneda }})</label>
+                    <input type="number" name="monto" id="pago-monto-input" step="0.01" min="0.01" placeholder="0.00" required class="payment-form-input">
                 </div>
                 <div class="payment-form-field">
                     <label class="payment-form-label">Método</label>
@@ -93,8 +97,14 @@
                 </div>
             </div>
             
-            <!-- Eliminados los campos de Efectivo Entregado y Confirmación de Cambio -->
-            
+            <!-- Campo de Efectivo Entregado (solo visible cuando el método es Efectivo) -->
+            <div id="efectivo-entregado-wrapper" style="display: flex; flex-direction: column; gap: 0.3rem;">
+                <label class="payment-form-label">Efectivo entregado por el cliente ({{ config.simbolo_moneda }}) <span style="font-weight: 400; color: var(--text-muted);">— opcional</span></label>
+                <input type="number" name="efectivo_entregado" id="pago-efectivo-entregado" step="0.01" min="0" placeholder="Ej. 20.00 si el cliente da un billete de 20" class="payment-form-input">
+                <span id="cambio-preview" style="display: none; font-size: 0.82rem; font-weight: 700; color: var(--success); padding: 0.4rem 0.65rem; background: hsl(142, 72%, 95%); border-radius: 6px; margin-top: 0.15rem;">
+                </span>
+            </div>
+
             <!-- Notas / Observaciones del Pago -->
             <div style="display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.3rem;">
                 <label class="payment-form-label">Notas / Observaciones</label>
